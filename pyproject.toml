@@ -1,0 +1,41 @@
+[project]
+name = "fintech-ai-segmentation"
+version = "0.1.0"
+description = "Customer behavior analysis with recommendation system powered by AI"
+authors = [
+    {name = "Paulo Calçada",email = "pauloabcalcada@gmail.com"}
+]
+license = {text = "MIT"}
+requires-python = ">=3.12,<4.0"
+dependencies = [
+    "pandas (>=3.0.1,<4.0.0)",
+    "scikit-learn (>=1.8.0,<2.0.0)",
+    "faker (>=40.11.0,<41.0.0)",
+    "fastapi (>=0.135.1,<0.136.0)",
+    "uvicorn[standard] (>=0.42.0,<0.43.0)",
+    "sqlalchemy (>=2.0.48,<3.0.0)",
+    "pydantic (>=2.12.5,<3.0.0)",
+    "psycopg2-binary (>=2.9.11,<3.0.0)",
+    "asyncpg (>=0.31.0,<0.32.0)",
+    "langgraph (>=1.1.2,<2.0.0)",
+    "openai (>=2.28.0,<3.0.0)"
+]
+
+
+[build-system]
+requires = ["poetry-core>=2.0.0,<3.0.0"]
+build-backend = "poetry.core.masonry.api"
+
+[tool.poetry]
+packages = [{include = "fintech_ai_segmentation", from = "src"}]
+
+[dependency-groups]
+dev = [
+    "ruff (>=0.15.6,<0.16.0)",
+    "black (>=26.3.1,<27.0.0)",
+    "ipykernel (>=7.2.0,<8.0.0)",
+    "jupyter (>=1.1.1,<2.0.0)",
+    "pytest (>=9.0.2,<10.0.0)",
+    "pytest-cov (>=7.0.0,<8.0.0)",
+    "httpx (>=0.28.1,<0.29.0)"
+]
