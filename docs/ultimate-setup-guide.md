@@ -379,10 +379,10 @@ poetry add pandas scikit-learn faker fastapi "uvicorn[standard]" sqlalchemy pyda
 These packages are only needed during development — they are NOT installed in production or Docker:
 
 ```bash
-poetry add --group dev ruff black ipykernel jupyter pytest pytest-cov httpx
+poetry add --group dev ruff black ipykernel jupyter pytest pytest-cov httpx matplotlib seaborn
 ```
 
-> `--group dev` creates a separate `[tool.poetry.group.dev.dependencies]` section in `pyproject.toml`.  
+> `--group dev` adds packages to the dev dependency group in `pyproject.toml` (Poetry 2 uses `[dependency-groups]` / PEP 735).  
 > This group is excluded when you run `poetry install --without dev` (e.g. in Docker).
 >
 > **What each dev package does:**
@@ -396,6 +396,8 @@ poetry add --group dev ruff black ipykernel jupyter pytest pytest-cov httpx
 > | `pytest` | Test runner for unit and integration tests |
 > | `pytest-cov` | Measures how much of the code is covered by tests |
 > | `httpx` | Async HTTP client — required to test FastAPI endpoints with `TestClient` |
+> | `matplotlib` | Plotting library for EDA charts and visualizations in notebooks |
+> | `seaborn` | Statistical plots on top of matplotlib — used alongside pandas in EDA |
 
 ---
 
@@ -671,7 +673,7 @@ poetry init
 mkdir -p src/my_package && touch src/my_package/__init__.py
 poetry env use python3
 poetry add pandas scikit-learn faker fastapi "uvicorn[standard]" sqlalchemy pydantic psycopg2-binary asyncpg langgraph openai
-poetry add --group dev ruff black ipykernel jupyter pytest pytest-cov httpx
+poetry add --group dev ruff black ipykernel jupyter pytest pytest-cov httpx matplotlib seaborn
 poetry install
 
 # GitHub
