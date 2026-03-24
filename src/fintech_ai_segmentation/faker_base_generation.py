@@ -14,6 +14,8 @@ etc.) must be computed later in notebooks / ETL code from these raw tables.
 
 from __future__ import annotations
 
+import re
+import unicodedata
 import uuid
 from datetime import datetime, timedelta
 from typing import Dict, Iterable, List, Tuple
@@ -42,13 +44,44 @@ REGISTRATION_START = TODAY - timedelta(days=730)  # ~24 months
 MAX_HISTORY_MONTHS = 24
 
 SEGMENT_DISTRIBUTION: Dict[SegmentLabel, int] = {
-    "high_value_active": 2_000,
-    "mid_value_regular": 3_000,
-    "low_value_dormant": 3_000,
-    "at_risk_churner": 2_000,
+    "high_value_active": 1_600,
+    "mid_value_regular": 2_400,
+    "low_value_dormant": 2_400,
+    "at_risk_churner": 1_600,
 }
 
 ACQUISITION_CHANNELS = ["paid_ads", "organic", "referral", "partnership"]
+EMAIL_DOMAINS = ["gmail.com", "outlook.com", "hotmail.com", "yahoo.com.br"]
+
+STATE_PROBS: Dict[str, float] = {
+    "SP": 0.30,
+    "RJ": 0.12,
+    "MG": 0.10,
+    "ES": 0.02,
+    "BA": 0.06,
+    "PE": 0.04,
+    "CE": 0.04,
+    "PR": 0.06,
+    "RS": 0.05,
+    "SC": 0.04,
+    "DF": 0.03,
+    "GO": 0.03,
+    "PA": 0.02,
+    "AM": 0.02,
+    "MA": 0.02,
+    "PB": 0.01,
+    "RN": 0.01,
+    "PI": 0.01,
+    "AL": 0.01,
+    "SE": 0.01,
+    "MT": 0.01,
+    "MS": 0.01,
+    "RO": 0.006,
+    "TO": 0.006,
+    "AC": 0.003,
+    "AP": 0.003,
+    "RR": 0.003,
+}
 
 
 def _random_registration_date() -> datetime:
@@ -62,6 +95,54 @@ def _choice_with_probs(options: Iterable[str], probs: Iterable[float]) -> str:
     return str(np.random.choice(list(options), p=list(probs)))
 
 
+def _sample_state() -> str:
+    states = list(STATE_PROBS.keys())
+    probs = np.array(list(STATE_PROBS.values()), dtype=float)
+    probs = probs / probs.sum()
+    return str(np.random.choice(states, p=probs))
+
+
+def _normalize_email_token(value: str) -> str:
+    normalized = unicodedata.normalize("NFKD", value).encode("ascii", "ignore").decode("ascii")
+    normalized = normalized.lower()
+    normalized = re.sub(r"[^a-z0-9]+", ".", normalized)
+    normalized = re.sub(r"\.+", ".", normalized).strip(".")
+    return normalized or "cliente"
+
+
+def _generate_unique_identity(used_names: set[str], used_emails: set[str]) -> Tuple[str, str]:
+    for _ in range(200):
+        full_name = " ".join(fake.name().split())
+        if full_name in used_names:
+            continue
+
+        parts = [part for part in full_name.split(" ") if part]
+        first_name = parts[0] if parts else "cliente"
+        last_name = parts[-1] if len(parts) > 1 else "cliente"
+        email_local = f"{_normalize_email_token(first_name)}.{_normalize_email_token(last_name)}"
+        email_domain = str(np.random.choice(EMAIL_DOMAINS))
+        email = f"{email_local}@{email_domain}"
+
+        if email in used_emails:
+            suffix = np.random.randint(10, 9999)
+            email = f"{email_local}{suffix}@{email_domain}"
+
+        if email in used_emails:
+            continue
+
+        used_names.add(full_name)
+        used_emails.add(email)
+        return full_name, email
+
+    # Fallback for very high collision scenarios.
+    fallback_idx = len(used_names) + 1
+    full_name = f"Cliente {fallback_idx}"
+    email = f"cliente.{fallback_idx}@synaptiqpay.com.br"
+    used_names.add(full_name)
+    used_emails.add(email)
+    return full_name, email
+
+
 def generate_customers_raw() -> pd.DataFrame:
     """Generate the `customers_raw` table.
 
@@ -69,13 +150,15 @@ def generate_customers_raw() -> pd.DataFrame:
     """
 
     rows: List[CustomerRaw] = []
+    used_names: set[str] = set()
+    used_emails: set[str] = set()
 
     for segment_label, segment_size in SEGMENT_DISTRIBUTION.items():
         for _ in range(segment_size):
             age = int(np.random.normal(loc=35, scale=10))
             age = int(np.clip(age, 18, 80))
 
-            state = fake.estado_sigla()
+            state = _sample_state()
             registration_date = _random_registration_date()
 
             if segment_label == "high_value_active":
@@ -104,12 +187,13 @@ def generate_customers_raw() -> pd.DataFrame:
                 acquisition_cost = float(np.random.normal(190, 45))
 
             acquisition_cost = float(max(acquisition_cost, 20.0))
+            name, email = _generate_unique_identity(used_names, used_emails)
 
             rows.append(
                 CustomerRaw(
                     customer_id=str(uuid.uuid4()),
-                    name=fake.name(),
-                    email=fake.email(),
+                    name=name,
+                    email=email,
                     age=age,
                     state=state,
                     registration_date=registration_date,
@@ -308,4 +392,3 @@ __all__ = [
     "generate_customer_products_raw",
     "generate_all_base_tables",
 ]
-

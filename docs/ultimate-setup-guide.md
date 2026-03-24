@@ -360,7 +360,7 @@ poetry add pandas scikit-learn faker fastapi "uvicorn[standard]" sqlalchemy pyda
 > |---|---|
 > | `pandas` | EDA, RFM scoring, cohort analysis, unit economics pipeline |
 > | `scikit-learn` | K-Means clustering + Logistic Regression churn model |
-> | `faker` | Generates the 10,000 synthetic SynaptiqPay customer dataset |
+> | `faker` | Generates the 8,000 synthetic SynaptiqPay customer dataset |
 > | `fastapi` | REST API serving `/dashboard`, `/customers`, `/customers/{id}/analyze` |
 > | `uvicorn[standard]` | ASGI server that runs FastAPI; `[standard]` includes performance extras |
 > | `sqlalchemy` | ORM for all Supabase (PostgreSQL) interactions |

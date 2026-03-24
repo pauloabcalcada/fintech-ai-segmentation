@@ -2,7 +2,7 @@
 
 This file is a concise, storytelling log of how we are building the Fintech AI Segmentation project. It is written as if explaining the project to a curious data/ML practitioner or hiring manager and can be reused directly for LinkedIn posts or portfolio write-ups.
 
-SynaptiqPay is a Brazilian fintech with 10,000 digital wallet customers, but their commercial manager still treats everyone the same — identical offers, communication, and retention tactics. This one-size-fits-all approach wastes time and money because some customers are highly engaged and profitable, while others are dormant or close to churning. Our goal with this project is to replace weekly spreadsheet firefighting with a segmentation- and AI-driven workflow that surfaces who the customers are, how they behave, how valuable they are, who is at risk, and which concrete action the manager should take next.
+SynaptiqPay is a Brazilian fintech with 8,000 digital wallet customers, but their commercial manager still treats everyone the same — identical offers, communication, and retention tactics. This one-size-fits-all approach wastes time and money because some customers are highly engaged and profitable, while others are dormant or close to churning. Our goal with this project is to replace weekly spreadsheet firefighting with a segmentation- and AI-driven workflow that surfaces who the customers are, how they behave, how valuable they are, who is at risk, and which concrete action the manager should take next.
 
 ---
 
@@ -21,3 +21,11 @@ Today we moved from the “synthetic data” stage to the database loading stage
 After creating the four raw tables (`customers_raw`, `products_raw`, `transactions_raw`, and `customer_products_raw`) and loading the CSV data, we validated that the database schema matches our intended data model (primary keys, foreign keys, and the expected column types). The screenshot below is our reference point for what “done” looks like in Supabase’s table view: it confirms that the raw ingestion layer is structurally correct and ready for the next SQL-based segmentation steps.
 
 ![Raw schema after table creation and CSV loads](./images/Tables_Loaded.png)
+
+### 2026-03-23 — Improving synthetic data realism and freezing EDA outputs
+
+Today we focused on making the synthetic customer base more believable before moving into the next analysis cycle. We updated generation assumptions to better reflect Brazilian market concentration by state (with stronger weight in the Southeast), improved identity quality by generating unique customer names and name-linked emails, and intentionally resized the dataset while preserving the planted segment mix. This matters because many downstream business questions (especially channel and geography decisions) are only as credible as the realism of the raw inputs.
+
+In parallel, we strengthened the EDA narrative so it explicitly connects observed plots to generator assumptions. We added diagnostics for skewness/kurtosis, state distribution caveats, segment and channel proportion checks versus intended design, and segment-level acquisition-cost comparisons. The key lesson is that synthetic projects become much more interview- and production-ready when assumptions are transparent and testable in the notebook, instead of being hidden in generation code.
+
+Finally, we introduced a “freeze” workflow for reproducibility by creating a dated snapshot of the EDA notebook and exporting it to HTML. This gives us a stable historical report we can reference after regenerating/loading new data versions, without losing today’s baseline results or narrative context.
