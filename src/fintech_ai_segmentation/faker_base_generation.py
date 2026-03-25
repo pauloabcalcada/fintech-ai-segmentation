@@ -53,6 +53,35 @@ SEGMENT_DISTRIBUTION: Dict[SegmentLabel, int] = {
 ACQUISITION_CHANNELS = ["paid_ads", "organic", "referral", "partnership"]
 EMAIL_DOMAINS = ["gmail.com", "outlook.com", "hotmail.com", "yahoo.com.br"]
 
+# Cost-per-acquisition profile per channel (R$).
+CHANNEL_CAC_PROFILES: Dict[str, Dict[str, float]] = {
+    "organic":     {"mean": 25.0,  "std": 10.0},
+    "referral":    {"mean": 55.0,  "std": 15.0},
+    "partnership": {"mean": 110.0, "std": 25.0},
+    "paid_ads":    {"mean": 230.0, "std": 50.0},
+}
+
+# P(segment | channel) — channels naturally attract different segment profiles.
+# Order: [high_value_active, mid_value_regular, low_value_dormant, at_risk_churner]
+CHANNEL_SEGMENT_BIAS: Dict[str, List[float]] = {
+    "organic":     [0.15, 0.35, 0.30, 0.20],
+    "referral":    [0.45, 0.35, 0.15, 0.05],
+    "partnership": [0.20, 0.40, 0.25, 0.15],
+    "paid_ads":    [0.10, 0.20, 0.30, 0.40],
+}
+
+# Derive P(channel | segment) via Bayes with uniform channel priors.
+# Rows are channels (ACQUISITION_CHANNELS order), cols are segments
+# (SEGMENT_DISTRIBUTION order).
+_bias_matrix = np.array([CHANNEL_SEGMENT_BIAS[ch] for ch in ACQUISITION_CHANNELS])
+_channel_probs_by_segment = (_bias_matrix / _bias_matrix.sum(axis=0, keepdims=True)).T
+# Shape: (n_segments, n_channels) — one row per segment, probabilities over channels.
+_SEGMENT_ORDER = ["high_value_active", "mid_value_regular", "low_value_dormant", "at_risk_churner"]
+CHANNEL_PROBS_BY_SEGMENT: Dict[str, List[float]] = {
+    seg: _channel_probs_by_segment[i].tolist()
+    for i, seg in enumerate(_SEGMENT_ORDER)
+}
+
 STATE_PROBS: Dict[str, float] = {
     "SP": 0.30,
     "RJ": 0.12,
@@ -161,32 +190,14 @@ def generate_customers_raw() -> pd.DataFrame:
             state = _sample_state()
             registration_date = _random_registration_date()
 
-            if segment_label == "high_value_active":
-                acq_channel = _choice_with_probs(
-                    ACQUISITION_CHANNELS,
-                    probs=[0.30, 0.20, 0.30, 0.20],
-                )
-                acquisition_cost = float(np.random.normal(180, 40))
-            elif segment_label == "mid_value_regular":
-                acq_channel = _choice_with_probs(
-                    ACQUISITION_CHANNELS,
-                    probs=[0.25, 0.30, 0.25, 0.20],
-                )
-                acquisition_cost = float(np.random.normal(150, 35))
-            elif segment_label == "low_value_dormant":
-                acq_channel = _choice_with_probs(
-                    ACQUISITION_CHANNELS,
-                    probs=[0.20, 0.40, 0.20, 0.20],
-                )
-                acquisition_cost = float(np.random.normal(110, 25))
-            else:
-                acq_channel = _choice_with_probs(
-                    ACQUISITION_CHANNELS,
-                    probs=[0.35, 0.15, 0.30, 0.20],
-                )
-                acquisition_cost = float(np.random.normal(190, 45))
-
-            acquisition_cost = float(max(acquisition_cost, 20.0))
+            acq_channel = _choice_with_probs(
+                ACQUISITION_CHANNELS,
+                probs=CHANNEL_PROBS_BY_SEGMENT[segment_label],
+            )
+            cac_profile = CHANNEL_CAC_PROFILES[acq_channel]
+            acquisition_cost = float(
+                max(np.random.normal(cac_profile["mean"], cac_profile["std"]), 10.0)
+            )
             name, email = _generate_unique_identity(used_names, used_emails)
 
             rows.append(
