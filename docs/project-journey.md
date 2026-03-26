@@ -30,7 +30,7 @@ In parallel, we strengthened the EDA narrative so it explicitly connects observe
 
 Finally, we introduced a “freeze” workflow for reproducibility by creating a dated snapshot of the EDA notebook and exporting it to HTML. This gives us a stable historical report we can reference after regenerating/loading new data versions, without losing today’s baseline results or narrative context.
 
-### 2026-03-25 — Iterating STEP 1 EDA and validating v2 data in Supabase
+### 2026-03-25 — STEP 1 EDA, channel economics, transactions aggregates, and aligned generation
 
 Today we iterated on the STEP 1 “Who do we have?” EDA after reloading the updated v2 dataset into Supabase. We verified that the base extract is consistent: schema and data types look correct, nulls are absent, and the v2 fixes (state sampling realism and unique, consistently paired name/email identities) hold up in the loaded table.
 
@@ -43,3 +43,7 @@ We redesigned the acquisition-cost logic so unit economics emerge from channel s
 A key implementation lesson was operational, not just statistical: changing customer generation blindly can break downstream foreign-key relationships when IDs are already loaded in the warehouse. To avoid that, we switched to a safe update path that preserves existing `customer_id` values and updates only acquisition fields in place. This protected `transactions_raw` and `customer_products_raw` links while still letting us deploy the new economics assumptions in Supabase.
 
 We also updated the STEP 1 EDA narrative so interpretation matches the new design: CAC is now validated at the channel level, channel-segment mix is explained as business logic (not random variation), and geography commentary now distinguishes composition effects from channel policy. The broader insight is that synthetic data projects become much more credible when modeling assumptions, warehouse constraints, and notebook storytelling are all kept in sync.
+
+We extended the pipeline into **Notebook 2 — Transactions EDA and monthly aggregates**, wiring `transactions_raw` to `customers_raw` in Supabase (completed transactions only), building transaction months and per-customer monthly spend and activity counts, and documenting the notebook in the same Part-based style with jump links as STEP 1. On top of that foundation we added a first “who is most valuable now?” slice and implemented **M0–M3 strict-streak cohort retention** overall and by acquisition channel—directly feeding the roadmap questions on when cohorts disengage and which channels bring stickier customers. The lesson for the journey is that time-based behavior belongs in its own notebook layer: it keeps cohort and RFM work from being mixed into customer demographics, and it makes the later LTV and churn steps reuse clear, testable aggregates instead of one-off SQL.
+
+In the same pass we kept **Notebook 1** in sync with the evolving customer-generation story and adjusted **`faker_base_generation.py`** so synthetic outputs stay aligned with the channel economics and identity rules we validated in the warehouse—so generation code, Supabase data, and both EDA notebooks continue to tell one coherent story.
