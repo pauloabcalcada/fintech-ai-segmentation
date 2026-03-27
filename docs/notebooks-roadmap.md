@@ -32,7 +32,11 @@ Faker generates only **raw tables**; all analytical features are created step by
 
 ---
 
-### Notebook 2 — Transactions EDA & monthly aggregates (how do they behave?)
+### Notebook 2 — `notebooks/2.EDA_cohort_analysis.ipynb` (transactions + cohorts)
+
+The roadmap originally listed **transaction behavior** and **cohort retention** as separate next steps; both are implemented in this **single** notebook (three parts: data loading & joins → monthly aggregates & calendar-time EDA → cohort analysis).
+
+#### Transactions EDA & monthly aggregates (how do they behave?)
 
 - **Inputs**:
   - `transactions_raw` joined with `customers_raw`.
@@ -43,15 +47,13 @@ Faker generates only **raw tables**; all analytical features are created step by
     - `monthly_spent`
     - basic recency indicators.
 - **Outputs**:
-  - Intermediate aggregate tables to be reused by cohort, RFM, and unit economics notebooks.
+  - Intermediate aggregate tables to be reused by RFM and unit economics notebooks.
 
----
-
-### Notebook 3 — Cohort analysis (when did they arrive, how do cohorts retain?)
+#### Cohort analysis (when did they arrive, how do cohorts retain?)
 
 - **Inputs**:
   - Registration dates from `customers_raw`.
-  - Activity indicators from transactions monthly aggregates.
+  - Activity indicators from transaction monthly aggregates built above.
 - **Focus**:
   - Define cohorts by `cohort_month`.
   - Compute retention curves over tenure (e.g., active vs inactive by month).
@@ -61,10 +63,10 @@ Faker generates only **raw tables**; all analytical features are created step by
 
 ---
 
-### Notebook 4 — RFM scoring & clustering (behavioral segments)
+### Notebook 3 — RFM scoring & clustering (behavioral segments)
 
 - **Inputs**:
-  - Per-customer aggregates from Notebook 2.
+  - Per-customer aggregates from the transaction & cohort notebook (`notebooks/2.EDA_cohort_analysis.ipynb`).
 - **Focus**:
   - Compute RFM metrics:
     - `recency_days`, `frequency_transactions`, `monetary_value`.
@@ -75,12 +77,12 @@ Faker generates only **raw tables**; all analytical features are created step by
 
 ---
 
-### Notebook 5 — Unit economics (LTV, CAC, payback)
+### Notebook 4 — Unit economics (LTV, CAC, payback)
 
 - **Inputs**:
   - Acquisition data from `customers_raw`.
   - Revenue-related aggregates from transactions.
-  - RFM / segments from Notebook 4.
+  - RFM / segments from Notebook 3.
 - **Focus**:
   - Compute:
     - `avg_monthly_revenue`
@@ -92,7 +94,7 @@ Faker generates only **raw tables**; all analytical features are created step by
 
 ---
 
-### Notebook 6 — Churn modeling (Logistic Regression)
+### Notebook 5 — Churn modeling (Logistic Regression)
 
 - **Inputs**:
   - All previously engineered features (cohorts, RFM, unit economics, engagement).
