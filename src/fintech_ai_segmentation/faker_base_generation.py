@@ -86,6 +86,34 @@ CHANNEL_PROBS_BY_SEGMENT: Dict[str, List[float]] = {
     for i, seg in enumerate(_SEGMENT_ORDER)
 }
 
+# Monthly transaction-volume multiplier (Brazilian calendar).
+# Captures the 13th-salary bonus (Nov/Dec), Black Friday (Nov),
+# Carnival lull (Feb), and the post-holiday drop (Jan).
+MONTHLY_SEASONALITY_FACTOR: Dict[int, float] = {
+    1:  0.80,   # January  — post-holiday financial hangover
+    2:  0.85,   # February — Carnival (spending shifts, not increases)
+    3:  0.95,
+    4:  0.95,
+    5:  1.05,   # May      — Mother's Day (2nd Sunday)
+    6:  1.05,   # June     — mid-year 13th-salary advance starts
+    7:  0.95,   # July     — winter school holidays
+    8:  0.95,
+    9:  1.00,
+    10: 1.05,   # October  — Children's Day (Oct 12)
+    11: 1.20,   # November — Black Friday + 13th-salary 1st installment
+    12: 1.30,   # December — Christmas + 13th-salary 2nd installment
+}
+
+# How strongly each segment's activity responds to seasonal peaks.
+# Applied as: effective_factor = 1 + (base_factor - 1) * sensitivity
+# so a sensitivity of 0 means no seasonal effect at all.
+SEASONAL_SENSITIVITY: Dict[str, float] = {
+    "high_value_active": 1.00,  # full effect — engaged, discretionary spenders
+    "mid_value_regular": 0.70,  # moderate response
+    "low_value_dormant": 0.30,  # barely moves regardless of season
+    "at_risk_churner":   0.20,  # disengaged — seasonality won't wake them up
+}
+
 STATE_PROBS: Dict[str, float] = {
     "SP": 0.30,
     "RJ": 0.12,
@@ -421,15 +449,21 @@ def generate_transactions_raw(
 
         # M1 is the first full calendar month; M0 uses index -1 (before the main loop).
         # For decay purposes M0 counts as the earliest possible slot (index 0 in decay).
+
+        # Seasonal multiplier for M0 (based on the registration calendar month).
+        _m0_base_factor = MONTHLY_SEASONALITY_FACTOR[reg_month_start.month]
+        _m0_sensitivity = SEASONAL_SENSITIVITY[segment]
+        _m0_seasonal = 1.0 + (_m0_base_factor - 1.0) * _m0_sensitivity
+
         if segment == "at_risk_churner":
-            p_active_m0 = min(p_active_base * day_fraction_m0, p_active_base)
+            p_active_m0 = min(p_active_base * day_fraction_m0 * (1.0 + (_m0_base_factor - 1.0) * _m0_sensitivity * 0.5), p_active_base)
         elif segment == "low_value_dormant":
-            p_active_m0 = min(p_active_base * day_fraction_m0, p_active_base)
+            p_active_m0 = min(p_active_base * day_fraction_m0 * (1.0 + (_m0_base_factor - 1.0) * _m0_sensitivity * 0.5), p_active_base)
         else:
-            p_active_m0 = min(p_active_base * day_fraction_m0, 0.99)
+            p_active_m0 = min(p_active_base * day_fraction_m0 * (1.0 + (_m0_base_factor - 1.0) * _m0_sensitivity * 0.5), 0.99)
 
         if next_month_start <= last_complete_month and np.random.rand() <= p_active_m0:
-            n_tx_m0 = int(np.random.poisson(max(avg_tx_per_active_month * day_fraction_m0, 0.5)))
+            n_tx_m0 = int(np.random.poisson(max(avg_tx_per_active_month * day_fraction_m0 * _m0_seasonal, 0.5)))
             for _ in range(n_tx_m0):
                 day_offset = np.random.randint(0, max(days_remaining_m0, 1))
                 hour = np.random.randint(0, 24)
@@ -439,7 +473,7 @@ def generate_transactions_raw(
                 amount = float(max(np.random.normal(avg_ticket, avg_ticket * 0.4), 5.0))
                 tx_type = np.random.choice(
                     ["purchase", "transfer", "cash_withdrawal", "fee", "refund"],
-                    p=[0.65, 0.15, 0.10, 0.07, 0.03],
+                    p=[0.72, 0.18, 0.04, 0.02, 0.04],
                 )
                 product_type = str(np.random.choice(product_pool))
                 channel = _sample_channel_for_product_type(product_type)
@@ -486,21 +520,27 @@ def generate_transactions_raw(
             if month_idx > churn_after_n_months:
                 break
 
-            # Decay p_active for churn-prone segments.
+            # Seasonal factor for this calendar month.
+            _base_factor = MONTHLY_SEASONALITY_FACTOR[month_start_dt.month]
+            _sensitivity = SEASONAL_SENSITIVITY[segment]
+            _seasonal = 1.0 + (_base_factor - 1.0) * _sensitivity
+            _seasonal_p = 1.0 + (_base_factor - 1.0) * _sensitivity * 0.5
+
+            # Decay p_active for churn-prone segments, then apply seasonal nudge.
             if segment == "at_risk_churner":
                 decay = np.exp(-0.25 * month_idx)
-                p_active = min(p_active_base * decay + 0.05, p_active_base)
+                p_active = min((p_active_base * decay + 0.05) * _seasonal_p, p_active_base)
             elif segment == "low_value_dormant":
                 decay = np.exp(-0.05 * month_idx)
-                p_active = min(p_active_base * decay + 0.10, p_active_base)
+                p_active = min((p_active_base * decay + 0.10) * _seasonal_p, p_active_base)
             else:
                 recency_boost = 0.02 * (month_idx / max(tenure_len - 1, 1))
-                p_active = min(p_active_base + recency_boost, 0.99)
+                p_active = min((p_active_base + recency_boost) * _seasonal_p, 0.99)
 
             if np.random.rand() > p_active:
                 continue
 
-            n_tx = int(np.random.poisson(avg_tx_per_active_month))
+            n_tx = int(np.random.poisson(avg_tx_per_active_month * _seasonal))
             if n_tx == 0:
                 continue
 
@@ -517,7 +557,7 @@ def generate_transactions_raw(
                 amount = float(max(np.random.normal(avg_ticket, avg_ticket * 0.4), 5.0))
                 tx_type = np.random.choice(
                     ["purchase", "transfer", "cash_withdrawal", "fee", "refund"],
-                    p=[0.65, 0.15, 0.10, 0.07, 0.03],
+                    p=[0.72, 0.18, 0.04, 0.02, 0.04],
                 )
                 product_type = str(np.random.choice(product_pool))
                 channel = _sample_channel_for_product_type(product_type)
