@@ -40,8 +40,12 @@ Faker.seed(RANDOM_SEED)
 
 
 TODAY = datetime(2026, 3, 1)
-REGISTRATION_START = TODAY - timedelta(days=730)  # ~24 months
-MAX_HISTORY_MONTHS = 24
+
+# Mid-stage fintech: customer history extends ~4 years back so that the
+# observation window (Apr 2024 – Mar 2026) begins with an already-mature
+# portfolio rather than starting near zero.
+REGISTRATION_START = datetime(2022, 1, 1)
+MAX_HISTORY_MONTHS = 50  # approx months from REGISTRATION_START to TODAY
 
 SEGMENT_DISTRIBUTION: Dict[SegmentLabel, int] = {
     "high_value_active": 1_600,
@@ -114,10 +118,25 @@ STATE_PROBS: Dict[str, float] = {
 
 
 def _random_registration_date() -> datetime:
-    """Sample a registration date within the last 24 months."""
+    """Sample a registration date following a Gamma(2, 360) acquisition curve.
 
-    days_offset = np.random.randint(0, (TODAY - REGISTRATION_START).days + 1)
-    return REGISTRATION_START + timedelta(days=int(days_offset))
+    Gamma(shape=2, scale=360 days) naturally models a startup's acquisition life-cycle:
+      - Ramps from zero in Jan 2022 (company just launched).
+      - Peaks around month 12 (Jan 2023) — the hyper-growth phase.
+      - Declines gradually but stays visible all the way to Feb 2026
+        (~50-60 customers/month in the tail, not near-zero).
+
+    This avoids the Beta tail-collapse problem (Beta(2,4) → ~1 customer in
+    the last month) while keeping ~65 % of customers registered before
+    Jan 2024, giving the observation window a stable legacy baseline.
+    """
+    total_days = (TODAY - REGISTRATION_START).days
+    for _ in range(500):
+        days_offset = int(np.random.gamma(shape=2.0, scale=360.0))
+        if 0 <= days_offset < total_days:
+            return REGISTRATION_START + timedelta(days=days_offset)
+    # Fallback: uniform (triggered only if Gamma tail overshoots repeatedly).
+    return REGISTRATION_START + timedelta(days=int(np.random.randint(0, total_days)))
 
 
 def _choice_with_probs(options: Iterable[str], probs: Iterable[float]) -> str:
@@ -218,99 +237,307 @@ def generate_customers_raw() -> pd.DataFrame:
     return df
 
 
-def _segment_transaction_profile(segment: SegmentLabel) -> Tuple[float, float]:
-    """Return (avg_tx_per_month, avg_ticket) for a segment."""
+def _segment_transaction_profile(segment: SegmentLabel) -> Tuple[float, float, float]:
+    """Return (avg_tx_per_active_month, avg_ticket, p_active_per_month) for a segment.
+
+    ``p_active_per_month`` is the probability that a customer in this segment
+    transacts *at all* in any given calendar month of their tenure.  This drives
+    realistic inactivity gaps rather than scattering transactions uniformly across
+    every month (which inflated cohort M0-M6 active rates).
+
+    Segment profiles:
+    - high_value_active : very likely to transact every month, high frequency
+    - mid_value_regular : likely every month, moderate frequency
+    - low_value_dormant : often skips months, low frequency when active
+    - at_risk_churner   : rarely active, early-tenure heavy
+    """
 
     if segment == "high_value_active":
-        return 40.0, 220.0
+        return 40.0, 220.0, 0.95
     if segment == "mid_value_regular":
-        return 18.0, 160.0
+        return 18.0, 160.0, 0.85
     if segment == "low_value_dormant":
-        return 4.0, 90.0
-    return 1.5, 70.0
+        return 4.0, 90.0, 0.40
+    # at_risk_churner
+    return 3.0, 70.0, 0.25
 
 
-def generate_transactions_raw(customers_raw: pd.DataFrame) -> pd.DataFrame:
+# Monthly churn hazard rate per segment.
+# Each month the customer "survives" with probability (1 - hazard).
+# The number of full M1+ months before permanent churn is
+# Geometric(hazard) - 1  (0-indexed: 0 means churn after M0, no M1+ activity).
+# Customers whose drawn churn month exceeds their observable tenure are
+# right-censored — they appear active for the whole window.
+#
+# Calibration targets (fraction churning within 12 months):
+#   high_value_active  ~ 11 %   → hazard = 0.010
+#   mid_value_regular  ~ 38 %   → hazard = 0.040
+#   low_value_dormant  ~ 62 %   → hazard = 0.080
+#   at_risk_churner    ~ 90 %   → hazard = 0.180
+#
+# mid_value is intentionally more aggressive than the default "loyal" assumption
+# so that the aggregate TPV curve visibly bends after ~12 months and the M1→M6
+# retention decline is meaningful (~15-20 pp) rather than flat.
+_CHURN_HAZARD: Dict[str, float] = {
+    "high_value_active": 0.010,
+    "mid_value_regular": 0.040,
+    "low_value_dormant": 0.080,
+    "at_risk_churner":   0.180,
+}
+
+# Channel order: in_app, card_present, online, atm — sums must be 1.0 per product.
+_TX_CHANNELS: Tuple[str, ...] = ("in_app", "card_present", "online", "atm")
+_CHANNEL_PROBS_BY_PRODUCT_TYPE: Dict[str, Tuple[float, float, float, float]] = {
+    # Wallet: app + ATM cash-like usage.
+    "wallet": (0.55, 0.08, 0.32, 0.05),
+    # Card product: physical + e-commerce.
+    "credit_card": (0.12, 0.38, 0.45, 0.05),
+    # Investment / insurance / loan: mostly digital.
+    "investment": (0.48, 0.02, 0.48, 0.02),
+    "insurance": (0.52, 0.02, 0.44, 0.02),
+    "loan": (0.45, 0.02, 0.51, 0.02),
+}
+
+
+def _active_product_types_by_customer(
+    customer_products_raw: pd.DataFrame,
+    products_raw: pd.DataFrame,
+) -> Dict[str, List[str]]:
+    """Map each customer_id to distinct product types from *active* bridge rows."""
+
+    if customer_products_raw.empty:
+        return {}
+
+    merged = customer_products_raw.merge(
+        products_raw[["product_id", "product_type"]],
+        on="product_id",
+        how="left",
+    )
+    active = merged.loc[merged["is_active"] == True]  # noqa: E712
+    out: Dict[str, List[str]] = {}
+    for cid, group in active.groupby("customer_id"):
+        types = sorted({str(t) for t in group["product_type"].dropna().unique()})
+        out[str(cid)] = types
+    return out
+
+
+def _product_types_for_transactions(
+    customer_id: str,
+    active_by_customer: Dict[str, List[str]],
+) -> List[str]:
+    """Product types to sample from; fallback to wallet when there are no active products."""
+
+    owned = active_by_customer.get(str(customer_id), [])
+    if owned:
+        return owned
+    return ["wallet"]
+
+
+def _sample_channel_for_product_type(product_type: str) -> str:
+    probs = _CHANNEL_PROBS_BY_PRODUCT_TYPE.get(
+        product_type,
+        _CHANNEL_PROBS_BY_PRODUCT_TYPE["wallet"],
+    )
+    return str(np.random.choice(_TX_CHANNELS, p=list(probs)))
+
+
+def _month_start(dt: datetime) -> datetime:
+    """Return the first day of the month containing ``dt`` at midnight."""
+    return datetime(dt.year, dt.month, 1)
+
+
+def _add_months(dt: datetime, n: int) -> datetime:
+    """Add ``n`` calendar months to a month-start datetime."""
+    month = dt.month - 1 + n
+    year = dt.year + month // 12
+    month = month % 12 + 1
+    return datetime(year, month, 1)
+
+
+def generate_transactions_raw(
+    customers_raw: pd.DataFrame,
+    customer_products_raw: pd.DataFrame,
+    products_raw: pd.DataFrame,
+) -> pd.DataFrame:
     """Generate the `transactions_raw` table for all customers.
 
-    The planted `true_segment` drives:
-    - average number of transactions per month
-    - average ticket size
-    - basic recency behavior (some segments more active recently than others)
+    Generation model (month-by-month with dropout):
+    ─────────────────────────────────────────────────
+    For each customer we iterate over calendar months from M0 (the
+    registration month) through the last complete month before TODAY.
+
+    M0 is a **partial month**: the window is [registration_date, end of
+    registration month).  Both ``p_active`` and ``avg_tx`` are pro-rated by
+    the fraction of the month remaining after registration so that a customer
+    who registers on the 1st gets a nearly full M0 while one who registers
+    on the 28th gets a very short window — consistent with the product-start
+    dates already recorded in ``customer_products_raw``.
+
+    M1 onward are full calendar months.
+
+    Within each window the customer is active:
+    1. Draw ``active`` ~ Bernoulli(p_active_per_month × day_fraction | segment).
+    2. If active, draw ``n`` ~ Poisson(avg_tx_per_active_month × day_fraction).
+    3. For each of the ``n`` transactions, place it on a random day (and time)
+       within the available window.
+
+    ``p_active_per_month`` encodes realistic inactivity gaps per segment
+    instead of relying on Beta-distributed scattering to approximate them.
+
+    Churn behaviour for ``at_risk_churner`` and ``low_value_dormant`` is
+    reinforced by an additional per-month decay so that recent months have
+    lower expected activity for these segments.
+
+    Each row's ``product_type`` is sampled from that customer's **active**
+    products in ``customer_products_raw`` (joined to ``products_raw``).
+    Channel is sampled conditional on ``product_type``.
     """
+
+    active_by_customer = _active_product_types_by_customer(
+        customer_products_raw,
+        products_raw,
+    )
+
+    # Last complete calendar month we can observe (exclusive upper bound).
+    last_complete_month = _month_start(TODAY)
 
     tx_rows: List[TransactionRaw] = []
 
     for _, customer in customers_raw.iterrows():
         segment: SegmentLabel = customer["true_segment"]
         registration_date: datetime = customer["registration_date"]
+        customer_id = str(customer["customer_id"])
+        product_pool = _product_types_for_transactions(customer_id, active_by_customer)
 
-        avg_tx_per_month, avg_ticket = _segment_transaction_profile(segment)
+        avg_tx_per_active_month, avg_ticket, p_active_base = _segment_transaction_profile(segment)
 
-        # Number of months the customer could have been active.
-        tenure_months = max(
-            int((TODAY.year - registration_date.year) * 12 + (TODAY.month - registration_date.month)),
-            1,
-        )
-        tenure_months = int(min(tenure_months, MAX_HISTORY_MONTHS))
+        # ── M0: partial month [registration_date, end of registration month) ──
+        reg_month_start = _month_start(registration_date)
+        next_month_start = _add_months(reg_month_start, 1)
 
-        # Draw actual number of transactions with Poisson noise.
-        expected_txs = max(avg_tx_per_month * tenure_months, 0.5)
-        n_transactions = np.random.poisson(expected_txs)
-        n_transactions = int(max(n_transactions, 0))
+        days_in_reg_month = (next_month_start - reg_month_start).days
+        days_remaining_m0 = (next_month_start - registration_date).days
+        day_fraction_m0 = days_remaining_m0 / days_in_reg_month
 
-        if n_transactions == 0:
+        # M1 is the first full calendar month; M0 uses index -1 (before the main loop).
+        # For decay purposes M0 counts as the earliest possible slot (index 0 in decay).
+        if segment == "at_risk_churner":
+            p_active_m0 = min(p_active_base * day_fraction_m0, p_active_base)
+        elif segment == "low_value_dormant":
+            p_active_m0 = min(p_active_base * day_fraction_m0, p_active_base)
+        else:
+            p_active_m0 = min(p_active_base * day_fraction_m0, 0.99)
+
+        if next_month_start <= last_complete_month and np.random.rand() <= p_active_m0:
+            n_tx_m0 = int(np.random.poisson(max(avg_tx_per_active_month * day_fraction_m0, 0.5)))
+            for _ in range(n_tx_m0):
+                day_offset = np.random.randint(0, max(days_remaining_m0, 1))
+                hour = np.random.randint(0, 24)
+                minute = np.random.randint(0, 60)
+                tx_dt = registration_date + timedelta(days=int(day_offset), hours=hour, minutes=minute)
+                tx_dt = min(tx_dt, TODAY)
+                amount = float(max(np.random.normal(avg_ticket, avg_ticket * 0.4), 5.0))
+                tx_type = np.random.choice(
+                    ["purchase", "transfer", "cash_withdrawal", "fee", "refund"],
+                    p=[0.65, 0.15, 0.10, 0.07, 0.03],
+                )
+                product_type = str(np.random.choice(product_pool))
+                channel = _sample_channel_for_product_type(product_type)
+                status = np.random.choice(
+                    ["completed", "pending", "failed", "reversed"],
+                    p=[0.93, 0.03, 0.02, 0.02],
+                )
+                tx_rows.append(
+                    TransactionRaw(
+                        transaction_id=str(uuid.uuid4()),
+                        customer_id=customer_id,
+                        transaction_datetime=tx_dt,
+                        amount=amount,
+                        transaction_type=tx_type,  # type: ignore[arg-type]
+                        product_type=product_type,  # type: ignore[arg-type]
+                        channel=channel,  # type: ignore[arg-type]
+                        status=status,  # type: ignore[arg-type]
+                    )
+                )
+
+        # ── M1 onward: full calendar months ──────────────────────────────────
+        months: List[datetime] = []
+        m = next_month_start
+        while m < last_complete_month:
+            months.append(m)
+            m = _add_months(m, 1)
+
+        if not months:
             continue
 
-        # Older / at-risk segments should concentrate more activity in the past.
-        for _ in range(n_transactions):
-            months_offset = np.random.uniform(0, tenure_months)
+        tenure_len = len(months)
 
+        # Draw the customer's permanent churn point.
+        # churn_after_n_months = k means the customer is active during M1..Mk
+        # and permanently gone from M(k+1) onward.  Drawing from Geometric(p)
+        # and subtracting 1 gives the 0-indexed last active M1+ month.
+        # A value >= tenure_len means the customer does not churn within the
+        # observable window (right-censored).
+        hazard = _CHURN_HAZARD[segment]
+        churn_after_n_months: int = int(np.random.geometric(hazard)) - 1
+
+        for month_idx, month_start_dt in enumerate(months):
+            # Permanently churned customers stop transacting.
+            if month_idx > churn_after_n_months:
+                break
+
+            # Decay p_active for churn-prone segments.
             if segment == "at_risk_churner":
-                months_offset = np.random.beta(0.6, 2.5) * tenure_months
+                decay = np.exp(-0.25 * month_idx)
+                p_active = min(p_active_base * decay + 0.05, p_active_base)
             elif segment == "low_value_dormant":
-                months_offset = np.random.beta(0.8, 2.0) * tenure_months
+                decay = np.exp(-0.05 * month_idx)
+                p_active = min(p_active_base * decay + 0.10, p_active_base)
             else:
-                months_offset = np.random.beta(2.0, 1.0) * tenure_months
+                recency_boost = 0.02 * (month_idx / max(tenure_len - 1, 1))
+                p_active = min(p_active_base + recency_boost, 0.99)
 
-            tx_month = registration_date + timedelta(days=30 * months_offset)
-            tx_month = min(tx_month, TODAY)
+            if np.random.rand() > p_active:
+                continue
 
-            amount = float(max(np.random.normal(avg_ticket, avg_ticket * 0.4), 5.0))
+            n_tx = int(np.random.poisson(avg_tx_per_active_month))
+            if n_tx == 0:
+                continue
 
-            tx_type = np.random.choice(
-                ["purchase", "transfer", "cash_withdrawal", "fee", "refund"],
-                p=[0.65, 0.15, 0.10, 0.07, 0.03],
-            )
-            channel = np.random.choice(
-                ["in_app", "card_present", "online", "atm"],
-                p=[0.55, 0.20, 0.20, 0.05],
-            )
-            # Simple mapping from channel to product_type to tie behavior
-            # back to the product catalog. This can be refined later.
-            if channel in ("card_present", "online"):
-                product_type = "credit_card"
-            elif channel == "atm":
-                product_type = "wallet"
-            else:  # in_app
-                product_type = "wallet"
-            status = np.random.choice(
-                ["completed", "pending", "failed", "reversed"],
-                p=[0.93, 0.03, 0.02, 0.02],
-            )
+            next_month = _add_months(month_start_dt, 1)
+            days_in_month = (next_month - month_start_dt).days
 
-            tx_rows.append(
-                TransactionRaw(
-                    transaction_id=str(uuid.uuid4()),
-                    customer_id=customer["customer_id"],
-                    transaction_datetime=tx_month,
-                    amount=amount,
-                    transaction_type=tx_type,  # type: ignore[arg-type]
-                    product_type=product_type,  # type: ignore[arg-type]
-                    channel=channel,  # type: ignore[arg-type]
-                    status=status,  # type: ignore[arg-type]
+            for _ in range(n_tx):
+                day_offset = np.random.randint(0, days_in_month)
+                hour = np.random.randint(0, 24)
+                minute = np.random.randint(0, 60)
+                tx_dt = month_start_dt + timedelta(days=int(day_offset), hours=hour, minutes=minute)
+                tx_dt = min(tx_dt, TODAY)
+
+                amount = float(max(np.random.normal(avg_ticket, avg_ticket * 0.4), 5.0))
+                tx_type = np.random.choice(
+                    ["purchase", "transfer", "cash_withdrawal", "fee", "refund"],
+                    p=[0.65, 0.15, 0.10, 0.07, 0.03],
                 )
-            )
+                product_type = str(np.random.choice(product_pool))
+                channel = _sample_channel_for_product_type(product_type)
+                status = np.random.choice(
+                    ["completed", "pending", "failed", "reversed"],
+                    p=[0.93, 0.03, 0.02, 0.02],
+                )
+
+                tx_rows.append(
+                    TransactionRaw(
+                        transaction_id=str(uuid.uuid4()),
+                        customer_id=customer_id,
+                        transaction_datetime=tx_dt,
+                        amount=amount,
+                        transaction_type=tx_type,  # type: ignore[arg-type]
+                        product_type=product_type,  # type: ignore[arg-type]
+                        channel=channel,  # type: ignore[arg-type]
+                        status=status,  # type: ignore[arg-type]
+                    )
+                )
 
     df = pd.DataFrame([row.__dict__ for row in tx_rows])
     return df
@@ -380,13 +607,57 @@ def generate_customer_products_raw(
     return df
 
 
+def validate_base_tables_consistency(
+    transactions_raw: pd.DataFrame,
+    customer_products_raw: pd.DataFrame,
+    products_raw: pd.DataFrame,
+) -> None:
+    """Raise ``AssertionError`` if transactions reference unknown or disallowed product types.
+
+    Each transaction's ``product_type`` must appear in ``products_raw``. It must also
+    be among the customer's **active** product types; if the customer has no active
+    products, only ``wallet`` is allowed (matching the generator fallback).
+    """
+
+    catalog = set(products_raw["product_type"].astype(str).unique())
+    if not transactions_raw.empty:
+        tx_types = set(transactions_raw["product_type"].astype(str).unique())
+        assert tx_types.issubset(catalog), (
+            f"transactions_raw has product_type values not in catalog: {tx_types - catalog}"
+        )
+
+    active_by_customer = _active_product_types_by_customer(
+        customer_products_raw,
+        products_raw,
+    )
+
+    for customer_id, sub in transactions_raw.groupby("customer_id"):
+        cid = str(customer_id)
+        allowed = set(active_by_customer.get(cid, []))
+        if not allowed:
+            allowed = {"wallet"}
+        bad_mask = ~sub["product_type"].astype(str).isin(allowed)
+        assert not bool(bad_mask.any()), (
+            f"customer {cid}: transaction product_type not in allowed set {allowed}"
+        )
+
+
 def generate_all_base_tables() -> Dict[str, pd.DataFrame]:
     """Convenience function: generate all raw tables as a dict of DataFrames."""
 
     customers_raw = generate_customers_raw()
     products_raw = generate_products_raw()
-    transactions_raw = generate_transactions_raw(customers_raw)
     customer_products_raw = generate_customer_products_raw(customers_raw, products_raw)
+    transactions_raw = generate_transactions_raw(
+        customers_raw,
+        customer_products_raw,
+        products_raw,
+    )
+    validate_base_tables_consistency(
+        transactions_raw,
+        customer_products_raw,
+        products_raw,
+    )
 
     return {
         "customers_raw": customers_raw,
@@ -402,4 +673,5 @@ __all__ = [
     "generate_products_raw",
     "generate_customer_products_raw",
     "generate_all_base_tables",
+    "validate_base_tables_consistency",
 ]

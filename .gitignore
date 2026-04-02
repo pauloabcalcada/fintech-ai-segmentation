@@ -28,7 +28,7 @@ build/
 *.egg-info/
 
 # Documentation
-docs/fintech-ai-segmentation-summary.md
+#docs/fintech-ai-segmentation-summary.md
 
 # Data
 data/
