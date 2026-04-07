@@ -6,6 +6,25 @@ SynaptiqPay is a Brazilian fintech with 8,000 digital wallet customers, but thei
 
 ---
 
+## Prompt template for new entries
+
+Use this structure whenever adding a new journey update:
+
+1) What was discussed
+2) What was learned
+3) What was implemented/changed
+4) Key takeaways
+
+Suggested prompt:
+"Create a new `project-journey` entry in teaching tone, dated `YYYY-MM-DD` with a short title, and format the content using:
+1) What was discussed
+2) What was learned
+3) What was implemented/changed
+4) Key takeaways.
+Keep it concise, realistic, and business-relevant."
+
+---
+
 ### 2026-03-18 — Kicking off the project journey log
 
 Today we created a dedicated `project-journey` log to track the main steps in building the Fintech AI Segmentation project. Instead of burying decisions inside notebooks or long chats, this file will capture the narrative: problem framing, modeling choices, data design, engineering decisions, and what we learned along the way. The goal is to keep each update short and “LinkedIn-ready”, so that any entry can be turned into a post with minimal editing. This also forces us to explain our work in plain language, as if we were teaching a colleague who understands data but has not seen the code.
@@ -76,3 +95,25 @@ We also fixed the M0 partial-month problem. Transactions now begin on `registrat
 With the monthly dropout model in place, aggregate transaction volume still grew linearly over the 24-month window because dormant and at-risk customers kept generating sparse transactions indefinitely — they had no way to permanently exit. We added a **Geometric survival model**: at the start of each customer's tenure, a churn month is drawn from a segment-specific hazard rate (0.4% per month for high-value, 2% for mid-value, 8% for dormant, 18% for churners). Once that month is reached, `p_active` permanently drops to zero. This creates realistic right-censored churn behavior: most high-value customers never churn within the 24-month window, while ~90% of at-risk churners exit within a year.
 
 In parallel, we replaced the manual Supabase UI upload workflow with a scripted shell approach. Splitting `transactions_raw.csv` into three part files for the UI was taking 15–21 minutes and was blocked by statement-timeout errors when clearing old data. We built `scripts/load_raw_tables.sh`, which terminates competing connections, drops and recreates all four tables in FK-correct order, and bulk-loads the full (unsplit) CSV files via PostgreSQL's native `COPY` protocol — reducing total reload time to roughly 30–90 seconds. The key insight is that the Supabase UI routes through the PostgREST HTTP layer and enforces short statement timeouts, while a direct `psql` connection bypasses both constraints entirely.
+
+### 2026-04-02 — Tightening cohort EDA: comparable windows, clearer stories, and honest statistics
+
+We sharpened the cohort notebook so leadership questions are answered with **explicit rules** instead of implicit defaults. Activity used in retention grids is filtered to a **defined comparison window** aligned with the “safe core” cohort period, while the customer roster stays full-funnel—so denominators stay honest and we avoid pretending early or incomplete months are comparable to mature cohorts. Calendar-time charts gained richer commentary: **TPV** and **MAU** are read alongside **seasonality**, **channel mix**, and **plateau risk**, not as a single vanity curve.
+
+On the analytics side, we moved from “eyeball the line chart” to **structured comparisons**: boxplots of M3/M6 and strict-streak rates split by **first vs second half** of the window, plus **permutation tests** as an exploratory check—with the caveat that **time-ordered cohorts are not exchangeable**, so p-values support intuition, not causal proof. The **aggregate tenure curve** is now documented properly: the **M0→M1** jump reflects delayed first use more than “bad signups,” and the **steepest post-activation step-down** is **M2→M3**, which points lifecycle investment at a concrete window. **Channel-level rolling views** (strict streak vs M6 active) are paired with actionable governance: Referral as the quality benchmark, Paid as an audit-and-thresholds problem, Partnership and Organic when the two panels disagree.
+
+We closed the loop by **rewriting the notebook summary** so roadmap questions Q2–Q5 match this discipline: **quality vs volume** rankings need different reading, **aggregate “recent vs old”** is inconclusive without segmentation and uncertainty, and **channel** splits answer “who is healthy” better than a blended line. The meta-lesson is that **fintech retention storytelling fails when you mix scale, maturity, and mix shift**—explicit windows, eligibility, and segment cuts turn charts into decisions.
+
+### 2026-04-02 — Faker for identity, statistical models for behavior and history
+
+We clarified how the synthetic stack splits responsibilities: **Faker (`pt_BR`)** supplies believable identities—names and emails tied together—while **transaction history** is not “random faker events” but a deliberate sequence of distributions (registration timing, monthly activity, counts, product choice, and permanent churn). That separation matters because interviewers and stakeholders often assume “fake data” means unstructured noise; here, ground-truth segments and cohort stories only work because **time and money** are generated with explicit rules.
+
+Over the project we repeatedly **changed distributions** when the business narrative broke: acquisition moved toward a **Gamma-shaped** signup curve so the portfolio feels mature in the observation window; transactions moved from **Poisson totals scattered across months** (which made almost everyone active every month) to **month-by-month Bernoulli activity**, **Poisson counts when active**, **partial-month pro-rating from `registration_date`**, and finally **geometric survival** so some customers truly stop. The insight is that **history** in `transactions_raw` is the hardest layer to get right—once monthly silence and exit exist, dormant and at-risk segments become visible in cohorts without hand-waving in the notebook.
+
+### 2026-04-07 — Hardening the clustering feature space for business-ready segmentation
+
+Today we moved from “feature list assembly” to feature-space quality control for clustering. We redesigned the monetary signal by introducing **avg ticket** (value per transaction) so frequency and spend no longer double-count the same behavior, and we added **tenure_days** from registration date to capture lifecycle maturity explicitly. This matters for the business because commercial actions differ by maturity stage: a new customer with recent activity needs onboarding acceleration, while a long-tenure customer with similar recency may need retention or upsell logic.
+
+We also strengthened preprocessing discipline instead of adding complexity too early. We kept a targeted transform strategy (`log1p` for heavy-tailed variables, `sqrt` for bounded refund rate) and added notebook diagnostics that expose correlation and distribution shape before modeling. A practical lesson emerged: when sklearn transformers reorder columns by transform group, summary tables can silently mislabel metrics unless output columns are aligned deliberately. Fixing that alignment prevented wrong interpretations (like apparent jumps in max values) and made the EDA trustworthy again.
+
+The key takeaway is that segmentation quality depends as much on **feature semantics and diagnostic rigor** as on the clustering algorithm itself. By tightening definitions (avg ticket vs total spend), adding lifecycle context (tenure), and validating preprocessing outputs end-to-end, we set up a more stable and explainable path for the next K-means evaluation step.
