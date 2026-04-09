@@ -8,7 +8,9 @@ import pytest
 
 from fintech_ai_segmentation.rfm_features import (
     LOG1P_COLS,
+    MONETARY_SHARE_COLS,
     SQRT_COLS,
+    add_monetary_type_shares,
     build_behavioral_features,
     build_customer_feature_matrix,
     build_preprocessing_pipeline,
@@ -71,6 +73,37 @@ def test_cadence_imputation_window_span(as_of: pd.Timestamp) -> None:
     assert out["avg_days_between_tx"].iloc[0] == pytest.approx(expected)
 
 
+def test_add_monetary_type_shares_zero_total() -> None:
+    df = pd.DataFrame(
+        {
+            "customer_id": ["x"],
+            "monetary_total": [0.0],
+            "monetary_purchase": [0.0],
+            "monetary_transfer": [0.0],
+            "monetary_cash_withdrawal": [0.0],
+        }
+    )
+    out = add_monetary_type_shares(df)
+    assert out["monetary_purchase_share"].iloc[0] == 0.0
+    assert out["monetary_transfer_share"].iloc[0] == 0.0
+    assert out["monetary_cash_withdrawal_share"].iloc[0] == 0.0
+
+
+def test_add_monetary_type_shares_mix() -> None:
+    df = pd.DataFrame(
+        {
+            "monetary_total": [100.0],
+            "monetary_purchase": [60.0],
+            "monetary_transfer": [30.0],
+            "monetary_cash_withdrawal": [10.0],
+        }
+    )
+    out = add_monetary_type_shares(df)
+    assert out["monetary_purchase_share"].iloc[0] == pytest.approx(0.6)
+    assert out["monetary_transfer_share"].iloc[0] == pytest.approx(0.3)
+    assert out["monetary_cash_withdrawal_share"].iloc[0] == pytest.approx(0.1)
+
+
 def test_drop_correlated_splits() -> None:
     df = pd.DataFrame(
         {
@@ -81,7 +114,8 @@ def test_drop_correlated_splits() -> None:
             "monetary_cash_withdrawal": [0.2, 0.1, 0.7, 0.4],
         }
     )
-    cleaned, dropped = drop_correlated_splits(df, threshold=0.9)
+    cleaned, dropped, corr = drop_correlated_splits(df, threshold=0.9)
+    assert corr is not None
     assert "monetary_purchase" in dropped
     assert "monetary_purchase" not in cleaned.columns
 
@@ -113,6 +147,11 @@ def test_full_matrix_merge_has_only_numeric_demographics(as_of: pd.Timestamp) ->
 
     m = build_customer_feature_matrix(df_tx, df_cp, df_c, as_of)
     assert len(m) == 1
+    for c in MONETARY_SHARE_COLS:
+        assert c in m.columns
+    assert m["monetary_purchase_share"].iloc[0] == pytest.approx(1.0)
+    assert m["monetary_transfer_share"].iloc[0] == pytest.approx(0.0)
+    assert m["monetary_cash_withdrawal_share"].iloc[0] == pytest.approx(0.0)
     assert "age" in m.columns
     assert "acquisition_cost" in m.columns
     assert "tenure_days" in m.columns

@@ -21,6 +21,9 @@ Design decisions captured here:
   because they carry behavioural mix signal, but removed by ``drop_correlated_splits``
   if they correlate too strongly with ``monetary_total`` (redundant information
   that would double-count the same dimension in Euclidean space).
+- ``monetary_*_share`` columns (composition of spend by transaction type) are
+  always added in ``build_customer_feature_matrix`` via ``add_monetary_type_shares``
+  and typically retained for clustering even when raw splits are dropped.
 
 All public functions in this module return plain pandas DataFrames or sklearn
 objects, keeping orchestration (windowing, eligibility filtering) in the
@@ -71,6 +74,9 @@ SQRT_COLS = ["refund_rate"]
 #   compress the already tight spacing between categories.
 # Monetary splits: handled conditionally by ``drop_correlated_splits`` before
 #   the pipeline is built; if they survive they go straight to scaling.
+# Monetary type shares: compositional mix (purchase / transfer / cash_withdrawal
+#   as fractions of monetary_total). Kept even when raw splits are dropped for
+#   collinearity; bounded in [0, 1], passthrough-scaled like refund_rate.
 PASSTHROUGH_COLS = [
     "products_owned",
     "age",
@@ -78,6 +84,16 @@ PASSTHROUGH_COLS = [
     "monetary_purchase",
     "monetary_transfer",
     "monetary_cash_withdrawal",
+    "monetary_purchase_share",
+    "monetary_transfer_share",
+    "monetary_cash_withdrawal_share",
+]
+
+# Output column names for ``add_monetary_type_shares`` (clustering mix signal).
+MONETARY_SHARE_COLS = [
+    "monetary_purchase_share",
+    "monetary_transfer_share",
+    "monetary_cash_withdrawal_share",
 ]
 
 
@@ -305,6 +321,10 @@ def build_customer_feature_matrix(
     excluded: state is a weak geographic signal at this stage, channel is
     replaced by cost, and true_segment is the label we are trying to discover.
 
+    After the merge, ``add_monetary_type_shares`` appends
+    ``monetary_purchase_share``, ``monetary_transfer_share``, and
+    ``monetary_cash_withdrawal_share`` (composition of spend by transaction type).
+
     Returns one row per ``customer_id`` with all-numeric columns ready for
     ``drop_correlated_splits`` and ``build_preprocessing_pipeline``.
     """
@@ -322,7 +342,46 @@ def build_customer_feature_matrix(
     )
     customer_num = customer_num.drop(columns=["registration_date"])
 
-    return customer_num.merge(beh, on="customer_id", how="left")
+    merged = customer_num.merge(beh, on="customer_id", how="left")
+    return add_monetary_type_shares(merged)
+
+
+def add_monetary_type_shares(df: pd.DataFrame) -> pd.DataFrame:
+    """Add purchase / transfer / cash_withdrawal shares of ``monetary_total``.
+
+    Each share is the corresponding non-refund monetary split divided by
+    ``monetary_total``, clipped to ``[0, 1]``. When ``monetary_total`` is zero or
+    missing, all three shares are zero. Raw split columns are filled with 0.0
+    if absent (same convention as ``build_behavioral_features``).
+
+    These features capture *how* customers use the wallet (composition) rather
+    than only intensity, and are safe to keep when ``drop_correlated_splits``
+    removes redundant raw split columns that track ``monetary_total`` too
+    closely.
+    """
+    out = df.copy()
+    if "monetary_total" not in out.columns:
+        for c in MONETARY_SHARE_COLS:
+            out[c] = 0.0
+        return out
+
+    for col in ("monetary_purchase", "monetary_transfer", "monetary_cash_withdrawal"):
+        if col not in out.columns:
+            out[col] = 0.0
+        else:
+            out[col] = out[col].fillna(0.0)
+
+    denom = out["monetary_total"].replace(0, np.nan)
+    out["monetary_purchase_share"] = (
+        (out["monetary_purchase"] / denom).fillna(0.0).clip(0.0, 1.0)
+    )
+    out["monetary_transfer_share"] = (
+        (out["monetary_transfer"] / denom).fillna(0.0).clip(0.0, 1.0)
+    )
+    out["monetary_cash_withdrawal_share"] = (
+        (out["monetary_cash_withdrawal"] / denom).fillna(0.0).clip(0.0, 1.0)
+    )
+    return out
 
 
 def drop_correlated_splits(
@@ -354,7 +413,12 @@ def drop_correlated_splits(
 
     Returns
     -------
-    (cleaned_df, dropped_column_names)
+    cleaned_df : pd.DataFrame
+    dropped_column_names : list[str]
+    corr_monetary_splits : pd.DataFrame or None
+        Pearson correlation matrix among ``monetary_total`` and present split
+        columns (for notebooks: ``display(corr_monetary_splits)`` instead of
+        printing a wide text block). ``None`` if ``monetary_total`` is absent.
     """
     split_cols = [
         "monetary_purchase",
@@ -364,13 +428,12 @@ def drop_correlated_splits(
     dropped: list[str] = []
     keep_df = df.copy()
     if "monetary_total" not in keep_df.columns:
-        return keep_df, dropped
+        return keep_df, dropped, None
 
     corr_candidates = ["monetary_total"] + [c for c in split_cols if c in keep_df.columns]
+    corr_monetary_splits: pd.DataFrame | None = None
     if len(corr_candidates) > 1:
-        corr_matrix = keep_df[corr_candidates].corr()
-        print("Correlation matrix (monetary_total and split columns):")
-        print(corr_matrix)
+        corr_monetary_splits = keep_df[corr_candidates].corr()
 
     for col in split_cols:
         if col not in keep_df.columns:
@@ -381,7 +444,7 @@ def drop_correlated_splits(
 
     if dropped:
         keep_df = keep_df.drop(columns=dropped)
-    return keep_df, dropped
+    return keep_df, dropped, corr_monetary_splits
 
 
 def build_preprocessing_pipeline(feature_columns: Sequence[str]) -> Pipeline:
@@ -453,6 +516,8 @@ __all__ = [
     "LOG1P_COLS",
     "SQRT_COLS",
     "PASSTHROUGH_COLS",
+    "MONETARY_SHARE_COLS",
+    "add_monetary_type_shares",
     "build_behavioral_features",
     "build_customer_feature_matrix",
     "drop_correlated_splits",

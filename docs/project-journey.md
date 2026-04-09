@@ -16,12 +16,12 @@ Use this structure whenever adding a new journey update:
 4) Key takeaways
 
 Suggested prompt:
-"Create a new `project-journey` entry in teaching tone, dated `YYYY-MM-DD` with a short title, and format the content using:
-1) What was discussed
-2) What was learned
-3) What was implemented/changed
-4) Key takeaways.
-Keep it concise, realistic, and business-relevant."
+"Create a new `project-journey` entry in teaching tone, dated `YYYY-MM-DD` with a short title. Focus on:
+1) the key decisions we made
+2) why we made them (trade-offs and reasoning)
+3) the business insights we extracted
+4) what we learned through iterations.
+Keep it concise, realistic, and business-relevant. Avoid low-level implementation details unless they are essential to the decision story."
 
 ---
 
@@ -117,3 +117,11 @@ Today we moved from “feature list assembly” to feature-space quality control
 We also strengthened preprocessing discipline instead of adding complexity too early. We kept a targeted transform strategy (`log1p` for heavy-tailed variables, `sqrt` for bounded refund rate) and added notebook diagnostics that expose correlation and distribution shape before modeling. A practical lesson emerged: when sklearn transformers reorder columns by transform group, summary tables can silently mislabel metrics unless output columns are aligned deliberately. Fixing that alignment prevented wrong interpretations (like apparent jumps in max values) and made the EDA trustworthy again.
 
 The key takeaway is that segmentation quality depends as much on **feature semantics and diagnostic rigor** as on the clustering algorithm itself. By tightening definitions (avg ticket vs total spend), adding lifecycle context (tenure), and validating preprocessing outputs end-to-end, we set up a more stable and explainable path for the next K-means evaluation step.
+
+### 2026-04-08 — Converging on an operational clustering blueprint
+
+We made a key modeling decision: keep **k-means with `k=3`** as the operational segmentation baseline, even though internal metrics can sometimes favor a lower `k`. The reason is business usefulness: three clusters preserve enough behavioral contrast to support differentiated CRM strategies while still remaining interpretable for stakeholders.
+
+We also chose to formalize transaction-mix behavior as part of the core feature definition, not as an optional side experiment. That decision came from iteration: intensity variables alone (recency, frequency, ticket) explained activity volume but not always customer intent, while mix shares clarified how customers actually use the wallet. The business insight is that segmentation quality improves when we capture both **how much** customers transact and **how** they transact.
+
+Another important learning was methodological: unsupervised segmentation should not be forced to mirror synthetic label counts, and analysis should stay anchored to a defined business window rather than all historical data. This keeps decisions comparable over time and closer to production reality, while leaving a clear path for future improvement through richer temporal features, stability checks, and alternative clustering algorithms.
