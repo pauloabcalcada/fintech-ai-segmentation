@@ -178,6 +178,19 @@ def _sample_state() -> str:
     return str(np.random.choice(states, p=probs))
 
 
+# Tier-1 (high-activity) states for economic effects
+_TIER_1_STATES = {"SP", "RJ", "MG"}
+
+# Segment-specific age parameters for mild demographic correlation.
+# Updated 2026-04-10: Younger skew toward high-value (digital native), older toward dormant.
+_AGE_PARAMS_BY_SEGMENT: Dict[str, Dict[str, float]] = {
+    "high_value_active": {"loc": 38, "scale": 9},   # slightly older, more affluent
+    "mid_value_regular": {"loc": 33, "scale": 10},  # younger professional
+    "low_value_dormant": {"loc": 42, "scale": 12},  # broader range
+    "at_risk_churner":   {"loc": 27, "scale": 8},   # youngest, less committed
+}
+
+
 def _normalize_email_token(value: str) -> str:
     normalized = unicodedata.normalize("NFKD", value).encode("ascii", "ignore").decode("ascii")
     normalized = normalized.lower()
@@ -231,7 +244,8 @@ def generate_customers_raw() -> pd.DataFrame:
 
     for segment_label, segment_size in SEGMENT_DISTRIBUTION.items():
         for _ in range(segment_size):
-            age = int(np.random.normal(loc=35, scale=10))
+            age_params = _AGE_PARAMS_BY_SEGMENT.get(segment_label, {"loc": 35, "scale": 10})
+            age = int(np.random.normal(loc=age_params["loc"], scale=age_params["scale"]))
             age = int(np.clip(age, 18, 80))
 
             state = _sample_state()
@@ -277,7 +291,10 @@ def _segment_transaction_profile(segment: SegmentLabel) -> Tuple[float, float, f
     - high_value_active : very likely to transact every month, high frequency
     - mid_value_regular : likely every month, moderate frequency
     - low_value_dormant : often skips months, low frequency when active
-    - at_risk_churner   : rarely active, early-tenure heavy
+    - at_risk_churner   : rarely active, even lower frequency, lower ticket to differentiate from dormant
+
+    Updated 2026-04-10: Widened behavioral gap between low_value_dormant and at_risk_churner
+    to enable K-Means to recover k=4 clusters instead of collapsing to k=3.
     """
 
     if segment == "high_value_active":
@@ -285,9 +302,9 @@ def _segment_transaction_profile(segment: SegmentLabel) -> Tuple[float, float, f
     if segment == "mid_value_regular":
         return 18.0, 160.0, 0.85
     if segment == "low_value_dormant":
-        return 4.0, 90.0, 0.40
+        return 4.0, 100.0, 0.40  # avg_ticket: 90 → 100 (increased to distance from churner)
     # at_risk_churner
-    return 3.0, 70.0, 0.25
+    return 2.0, 45.0, 0.15  # avg_tx: 3→2, avg_ticket: 70→45, p_active: 0.25→0.15
 
 
 # Monthly churn hazard rate per segment.
@@ -324,6 +341,28 @@ _CHANNEL_PROBS_BY_PRODUCT_TYPE: Dict[str, Tuple[float, float, float, float]] = {
     "investment": (0.48, 0.02, 0.48, 0.02),
     "insurance": (0.52, 0.02, 0.44, 0.02),
     "loan": (0.45, 0.02, 0.51, 0.02),
+}
+
+# Product-type-specific amount distribution parameters.
+# Each product has a mean_scale (multiplier on segment avg_ticket) and std_scale
+# (coefficient of variation on the final amount).
+# Updated 2026-04-10 to add realism to transaction composition.
+_PRODUCT_AMOUNT_PARAMS: Dict[str, Dict[str, float]] = {
+    "wallet":      {"mean_scale": 0.30, "std_scale": 0.25, "min": 5.0},      # R$30–80 typical
+    "credit_card": {"mean_scale": 1.00, "std_scale": 0.40, "min": 15.0},     # segment avg_ticket
+    "investment":  {"mean_scale": 6.00, "std_scale": 2.50, "min": 100.0},    # large deposits
+    "insurance":   {"mean_scale": 0.60, "std_scale": 0.15, "min": 30.0},     # fixed premium-like
+    "loan":        {"mean_scale": 8.00, "std_scale": 2.00, "min": 200.0},    # large, periodic
+}
+
+# Segment-specific transaction type distributions.
+# Order: [purchase, transfer, cash_withdrawal, fee, refund]
+# Updated 2026-04-10: at_risk_churner shows dissatisfaction signals (more refunds, withdrawals)
+_TX_TYPE_PROBS_BY_SEGMENT: Dict[str, Tuple[float, float, float, float, float]] = {
+    "high_value_active": (0.68, 0.22, 0.04, 0.02, 0.04),  # more transfers (active engagement)
+    "mid_value_regular": (0.72, 0.18, 0.04, 0.02, 0.04),  # baseline
+    "low_value_dormant": (0.80, 0.10, 0.06, 0.02, 0.02),  # mostly purchases, fewer transfers
+    "at_risk_churner":   (0.60, 0.12, 0.10, 0.04, 0.14),  # more withdrawals, more refunds (dissatisfied)
 }
 
 
@@ -367,6 +406,30 @@ def _sample_channel_for_product_type(product_type: str) -> str:
         _CHANNEL_PROBS_BY_PRODUCT_TYPE["wallet"],
     )
     return str(np.random.choice(_TX_CHANNELS, p=list(probs)))
+
+
+def _sample_transaction_amount(product_type: str, segment_avg_ticket: float) -> float:
+    """Sample transaction amount conditioned on product type and segment.
+
+    Product types have different realistic amount distributions:
+    - Wallet: small frequent transfers (30% of segment avg)
+    - Credit card: baseline (100% of segment avg)
+    - Investment: large deposits (6x segment avg)
+    - Insurance: fixed premiums (60% of segment avg)
+    - Loan: large periodic drawdowns (8x segment avg)
+    """
+    params = _PRODUCT_AMOUNT_PARAMS.get(
+        product_type,
+        _PRODUCT_AMOUNT_PARAMS["wallet"],
+    )
+    mean_scale = params["mean_scale"]
+    std_scale = params["std_scale"]
+    min_amount = params["min"]
+
+    product_amount_mean = segment_avg_ticket * mean_scale
+    product_amount_std = product_amount_mean * std_scale
+    amount = float(np.random.normal(product_amount_mean, product_amount_std))
+    return float(max(amount, min_amount))
 
 
 def _month_start(dt: datetime) -> datetime:
@@ -470,12 +533,13 @@ def generate_transactions_raw(
                 minute = np.random.randint(0, 60)
                 tx_dt = registration_date + timedelta(days=int(day_offset), hours=hour, minutes=minute)
                 tx_dt = min(tx_dt, TODAY)
-                amount = float(max(np.random.normal(avg_ticket, avg_ticket * 0.4), 5.0))
+                product_type = str(np.random.choice(product_pool))
+                amount = _sample_transaction_amount(product_type, avg_ticket)
+                tx_type_probs = _TX_TYPE_PROBS_BY_SEGMENT.get(segment, _TX_TYPE_PROBS_BY_SEGMENT["mid_value_regular"])
                 tx_type = np.random.choice(
                     ["purchase", "transfer", "cash_withdrawal", "fee", "refund"],
-                    p=[0.72, 0.18, 0.04, 0.02, 0.04],
+                    p=tx_type_probs,
                 )
-                product_type = str(np.random.choice(product_pool))
                 channel = _sample_channel_for_product_type(product_type)
                 status = np.random.choice(
                     ["completed", "pending", "failed", "reversed"],
@@ -554,12 +618,13 @@ def generate_transactions_raw(
                 tx_dt = month_start_dt + timedelta(days=int(day_offset), hours=hour, minutes=minute)
                 tx_dt = min(tx_dt, TODAY)
 
-                amount = float(max(np.random.normal(avg_ticket, avg_ticket * 0.4), 5.0))
+                product_type = str(np.random.choice(product_pool))
+                amount = _sample_transaction_amount(product_type, avg_ticket)
+                tx_type_probs = _TX_TYPE_PROBS_BY_SEGMENT.get(segment, _TX_TYPE_PROBS_BY_SEGMENT["mid_value_regular"])
                 tx_type = np.random.choice(
                     ["purchase", "transfer", "cash_withdrawal", "fee", "refund"],
-                    p=[0.72, 0.18, 0.04, 0.02, 0.04],
+                    p=tx_type_probs,
                 )
-                product_type = str(np.random.choice(product_pool))
                 channel = _sample_channel_for_product_type(product_type)
                 status = np.random.choice(
                     ["completed", "pending", "failed", "reversed"],
