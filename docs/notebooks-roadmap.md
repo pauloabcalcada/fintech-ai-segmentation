@@ -5,7 +5,7 @@ Faker generates only **raw tables**; all analytical features are created step by
 
 ---
 
-### Notebook 0 — Data generation (raw tables only)
+### Notebook 0 — Data Generation (raw tables only)
 
 - **Goal**: Use `fintech_ai_segmentation.faker_base_generation` to generate:
   - `customers_raw`
@@ -14,8 +14,15 @@ Faker generates only **raw tables**; all analytical features are created step by
   - `customer_products_raw`
 - **Outputs**:
   - In-memory pandas DataFrames for quick inspection.
-  - CSV/Parquet exports for loading into Supabase.
-- **Important constraint**: No RFM, LTV, churn, or cohort metrics are computed here.
+  - CSV exports to `data/raw/` for loading into Supabase.
+- **Important constraint**: No RFM, cohort metrics, or cluster labels are computed here.
+- **Generator highlights**:
+  - 8,000 customers across 4 planted segments; registration dates follow a Gamma(2, 360) acquisition curve (Jan 2022 – Feb 2026).
+  - Per-customer monthly activity drawn from Bernoulli (`p_active_per_month`) + Poisson (`avg_tx`), not uniform scattering — this is what creates realistic inactivity gaps.
+  - Permanent churn drawn from a Geometric survival model per segment (hazards: 1% → 4% → 8% → 18%/month).
+  - Transaction amounts conditioned on both segment (avg ticket) and product type (wallet = small, investment = large deposits, loan = large disbursements).
+  - Product ownership encodes behavioral signals: `at_risk_churner` has higher loan probability and lower investment probability.
+  - `validate_base_tables_consistency()` runs automatically after generation to ensure every transaction references a valid, active product for that customer.
 
 ---
 
@@ -25,83 +32,71 @@ Faker generates only **raw tables**; all analytical features are created step by
   - `customers_raw`
 - **Focus**:
   - Distributions by age, state, acquisition channel, registration date.
+  - Acquisition channel quality — which channels skew toward which segments.
   - Basic quality checks (duplicates, missing values, outliers).
 - **Outputs**:
-  - Cleaned view of `customers_raw` (e.g., standardized states/emails).
   - Business narratives: who the customers are and how they were acquired.
+  - Channel economics: acquisition cost (CAC) by channel and segment mix.
 
 ---
 
-### Notebook 2 — `notebooks/2.EDA_cohort_analysis.ipynb` (transactions + cohorts)
+### Notebook 2 — Cohort Analysis (transactions + cohorts)
 
-The roadmap originally listed **transaction behavior** and **cohort retention** as separate next steps; both are implemented in this **single** notebook (three parts: data loading & joins → monthly aggregates & calendar-time EDA → cohort analysis).
+Both **transaction behavior** and **cohort retention** are implemented in this single notebook (three parts: data loading & joins → monthly aggregates & calendar-time EDA → cohort analysis).
 
-#### Transactions EDA & monthly aggregates (how do they behave?)
+#### Part 1 — Transactions EDA & monthly aggregates
 
 - **Inputs**:
   - `transactions_raw` joined with `customers_raw`.
 - **Focus**:
   - Transaction volume and value over time (per month, per segment, per channel).
-  - Build per-customer, per-month aggregates:
-    - `monthly_transactions_count`
-    - `monthly_spent`
-    - basic recency indicators.
+  - Per-customer, per-month aggregates: `monthly_transactions_count`, `monthly_spent`, recency indicators.
+  - Seasonality patterns in TPV (Nov/Dec peaks, Jan/Feb lulls).
 - **Outputs**:
-  - Intermediate aggregate tables to be reused by RFM and unit economics notebooks.
+  - Per-customer monthly aggregate table, reused by Notebook 3.
 
-#### Cohort analysis (when did they arrive, how do cohorts retain?)
+#### Part 2 — Cohort Analysis
 
 - **Inputs**:
   - Registration dates from `customers_raw`.
-  - Activity indicators from transaction monthly aggregates built above.
+  - Activity indicators from the monthly aggregates above.
 - **Focus**:
-  - Define cohorts by `cohort_month`.
-  - Compute retention curves over tenure (e.g., active vs inactive by month).
+  - Define cohorts by `cohort_month` (registration month).
+  - Compute M0, M1, M3, M6 retention curves (strict-streak and ever-active KPIs).
+  - Channel quality ranking by M6 first-month-active rate.
 - **Outputs**:
-  - Cohort metrics table (e.g., `cohort_month`, `tenure_month`, `retention_rate`).
-  - Features such as `cohort_retention_rate` that can later be joined back to customers.
+  - Cohort metrics table: `cohort_month`, `tenure_month`, `retention_rate`.
+  - `cohort_retention_rate` feature joinable back to individual customers.
 
 ---
 
-### Notebook 3 — RFM scoring & clustering (behavioral segments)
+### Notebook 3 — RFM Scoring & Clustering (behavioral segments)
 
 - **Inputs**:
-  - Per-customer aggregates from the transaction & cohort notebook (`notebooks/2.EDA_cohort_analysis.ipynb`).
+  - Per-customer aggregates from Notebook 2.
+  - `customers_raw` for demographic enrichment.
 - **Focus**:
   - Compute RFM metrics:
-    - `recency_days`, `frequency_transactions`, `monetary_value`.
-  - Map them to discrete scores (1–5) to obtain `recency_score`, `frequency_score`, `monetary_score`, and `rfm_score`.
-  - Run K-Means (or similar) to produce `predicted_segment`.
+    - `recency_days` — days since last transaction (observation window: Apr 2024 – Feb 2026)
+    - `frequency_transactions` — total transactions in the window
+    - `monetary_value` — total spend in the window
+  - Map to discrete scores (1–5): `recency_score`, `frequency_score`, `monetary_score`, `rfm_score`.
+  - Run K-Means (k=4) to produce `predicted_segment`.
+  - **Cluster validation**: compare `predicted_segment` to `true_segment` — did the model recover the planted segments?
+  - Behavioral cross-slices: product composition, monetary type shares, and cohort health by cluster.
 - **Outputs**:
-  - Per-customer RFM table that can be joined back to `customers_raw`.
+  - Per-customer RFM table with `predicted_segment` ready for the AI agent.
+  - Validation report: confusion matrix and ARI score vs. ground truth.
 
 ---
 
-### Notebook 4 — Unit economics (LTV, CAC, payback)
+### What Comes Next (Phase 1 Completion)
 
-- **Inputs**:
-  - Acquisition data from `customers_raw`.
-  - Revenue-related aggregates from transactions.
-  - RFM / segments from Notebook 3.
-- **Focus**:
-  - Compute:
-    - `avg_monthly_revenue`
-    - `ltv`
-    - `ltv_cac_ratio`
-    - `payback_period_months`
-- **Outputs**:
-  - Per-customer unit-economics table, suitable for joining into a unified analytics view.
+After Notebook 3, the analytical pipeline is complete. The next deliverables are:
 
----
+1. **LangGraph AI Agent** — receives per-customer RFM profile, segment, cohort health, and product ownership; outputs a personalized recommendation.
+2. **FastAPI backend** — serves customer data and triggers the agent.
+3. **Next.js dashboard** — the commercial manager's interface (3 pages: `/dashboard`, `/customers`, `/customers/[id]`).
+4. **Supabase write-back** — derived features (RFM scores, `predicted_segment`) persisted alongside raw tables.
 
-### Notebook 5 — Churn modeling (Logistic Regression)
-
-- **Inputs**:
-  - All previously engineered features (cohorts, RFM, unit economics, engagement).
-- **Focus**:
-  - Define a churn label from raw behavior (e.g., no transactions / logins for X months).
-  - Train a Logistic Regression model to predict churn.
-  - Generate `churn_probability` per customer.
-- **Outputs**:
-  - Final ML features and predictions that can be written back to Supabase and surfaced in the dashboard and AI agent.
-
+See `docs/fintech-ai-segmentation-summary.md` for the full roadmap including Phase 2 (Text-to-SQL) and Phase 3 (unit economics, churn modeling).

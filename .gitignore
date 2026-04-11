@@ -29,9 +29,12 @@ build/
 
 # Documentation
 docs/project-journey.md
+docs/plausibility-audit-report.md
+docs/data-generation-summary.md
 
 # Claude
 CLAUDE.md
+
 
 
 # Data

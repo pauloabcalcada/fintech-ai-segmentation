@@ -330,17 +330,26 @@ _CHURN_HAZARD: Dict[str, float] = {
     "at_risk_churner":   0.180,
 }
 
+_PRODUCT_CANCELLATION_RATE_BY_SEGMENT: Dict[str, float] = {
+    "high_value_active": 0.05,
+    "mid_value_regular": 0.12,
+    "low_value_dormant": 0.25,
+    "at_risk_churner":   0.40,
+}
+
 # Channel order: in_app, card_present, online, atm — sums must be 1.0 per product.
 _TX_CHANNELS: Tuple[str, ...] = ("in_app", "card_present", "online", "atm")
 _CHANNEL_PROBS_BY_PRODUCT_TYPE: Dict[str, Tuple[float, float, float, float]] = {
-    # Wallet: app + ATM cash-like usage.
+    # Wallet: app + ATM cash-like usage (via debit card).
     "wallet": (0.55, 0.08, 0.32, 0.05),
     # Card product: physical + e-commerce.
     "credit_card": (0.12, 0.38, 0.45, 0.05),
-    # Investment / insurance / loan: mostly digital.
-    "investment": (0.48, 0.02, 0.48, 0.02),
-    "insurance": (0.52, 0.02, 0.44, 0.02),
-    "loan": (0.45, 0.02, 0.51, 0.02),
+    # Investment: digital only (no physical card, no ATM access).
+    "investment": (0.50, 0.00, 0.50, 0.00),
+    # Insurance: digital only (no physical card, no ATM access).
+    "insurance": (0.54, 0.00, 0.46, 0.00),
+    # Loan: digital only (disbursements via in-app/online, not ATM/card-present).
+    "loan": (0.50, 0.00, 0.50, 0.00),
 }
 
 # Product-type-specific amount distribution parameters.
@@ -355,14 +364,25 @@ _PRODUCT_AMOUNT_PARAMS: Dict[str, Dict[str, float]] = {
     "loan":        {"mean_scale": 8.00, "std_scale": 2.00, "min": 200.0},    # large, periodic
 }
 
-# Segment-specific transaction type distributions.
-# Order: [purchase, transfer, cash_withdrawal, fee, refund]
-# Updated 2026-04-10: at_risk_churner shows dissatisfaction signals (more refunds, withdrawals)
-_TX_TYPE_PROBS_BY_SEGMENT: Dict[str, Tuple[float, float, float, float, float]] = {
-    "high_value_active": (0.68, 0.22, 0.04, 0.02, 0.04),  # more transfers (active engagement)
-    "mid_value_regular": (0.72, 0.18, 0.04, 0.02, 0.04),  # baseline
-    "low_value_dormant": (0.80, 0.10, 0.06, 0.02, 0.02),  # mostly purchases, fewer transfers
-    "at_risk_churner":   (0.60, 0.12, 0.10, 0.04, 0.14),  # more withdrawals, more refunds (dissatisfied)
+# Relative weights for sampling which product a customer transacts on.
+# Daily-use products dominate; investment/insurance/loan are infrequent.
+_PRODUCT_SELECTION_WEIGHT: Dict[str, float] = {
+    "wallet":      3.0,
+    "credit_card": 3.0,
+    "investment":  0.5,
+    "insurance":   0.3,
+    "loan":        0.2,
+}
+
+# Transaction-type order: [purchase, transfer, cash_withdrawal, fee, refund]
+# Keyed by product_type so that transaction types are realistic per instrument.
+_TX_TYPES: Tuple[str, ...] = ("purchase", "transfer", "cash_withdrawal", "fee", "refund")
+_TX_TYPE_PROBS_BY_PRODUCT_TYPE: Dict[str, Tuple[float, float, float, float, float]] = {
+    "wallet":      (0.55, 0.30, 0.08, 0.04, 0.03),  # spending, P2P, ATM cash
+    "credit_card": (0.70, 0.00, 0.05, 0.15, 0.10),  # purchases, cash advance, fee, refund
+    "investment":  (0.00, 0.75, 0.00, 0.25, 0.00),  # deposits/withdrawals, management fees
+    "insurance":   (0.00, 0.10, 0.00, 0.75, 0.15),  # premium fees, claim refunds
+    "loan":        (0.00, 0.70, 0.00, 0.30, 0.00),  # disbursements/repayments, fees
 }
 
 
@@ -406,6 +426,14 @@ def _sample_channel_for_product_type(product_type: str) -> str:
         _CHANNEL_PROBS_BY_PRODUCT_TYPE["wallet"],
     )
     return str(np.random.choice(_TX_CHANNELS, p=list(probs)))
+
+
+def _sample_tx_type_for_product(product_type: str) -> str:
+    probs = _TX_TYPE_PROBS_BY_PRODUCT_TYPE.get(
+        product_type,
+        _TX_TYPE_PROBS_BY_PRODUCT_TYPE["wallet"],
+    )
+    return str(np.random.choice(_TX_TYPES, p=list(probs)))
 
 
 def _sample_transaction_amount(product_type: str, segment_avg_ticket: float) -> float:
@@ -499,6 +527,10 @@ def generate_transactions_raw(
         registration_date: datetime = customer["registration_date"]
         customer_id = str(customer["customer_id"])
         product_pool = _product_types_for_transactions(customer_id, active_by_customer)
+        _raw_weights = np.array(
+            [_PRODUCT_SELECTION_WEIGHT.get(pt, 1.0) for pt in product_pool], dtype=float
+        )
+        product_pool_weights = _raw_weights / _raw_weights.sum()
 
         avg_tx_per_active_month, avg_ticket, p_active_base = _segment_transaction_profile(segment)
 
@@ -533,13 +565,9 @@ def generate_transactions_raw(
                 minute = np.random.randint(0, 60)
                 tx_dt = registration_date + timedelta(days=int(day_offset), hours=hour, minutes=minute)
                 tx_dt = min(tx_dt, TODAY)
-                product_type = str(np.random.choice(product_pool))
+                product_type = str(np.random.choice(product_pool, p=product_pool_weights))
                 amount = _sample_transaction_amount(product_type, avg_ticket)
-                tx_type_probs = _TX_TYPE_PROBS_BY_SEGMENT.get(segment, _TX_TYPE_PROBS_BY_SEGMENT["mid_value_regular"])
-                tx_type = np.random.choice(
-                    ["purchase", "transfer", "cash_withdrawal", "fee", "refund"],
-                    p=tx_type_probs,
-                )
+                tx_type = _sample_tx_type_for_product(product_type)
                 channel = _sample_channel_for_product_type(product_type)
                 status = np.random.choice(
                     ["completed", "pending", "failed", "reversed"],
@@ -618,13 +646,9 @@ def generate_transactions_raw(
                 tx_dt = month_start_dt + timedelta(days=int(day_offset), hours=hour, minutes=minute)
                 tx_dt = min(tx_dt, TODAY)
 
-                product_type = str(np.random.choice(product_pool))
+                product_type = str(np.random.choice(product_pool, p=product_pool_weights))
                 amount = _sample_transaction_amount(product_type, avg_ticket)
-                tx_type_probs = _TX_TYPE_PROBS_BY_SEGMENT.get(segment, _TX_TYPE_PROBS_BY_SEGMENT["mid_value_regular"])
-                tx_type = np.random.choice(
-                    ["purchase", "transfer", "cash_withdrawal", "fee", "refund"],
-                    p=tx_type_probs,
-                )
+                tx_type = _sample_tx_type_for_product(product_type)
                 channel = _sample_channel_for_product_type(product_type)
                 status = np.random.choice(
                     ["completed", "pending", "failed", "reversed"],
@@ -686,6 +710,7 @@ def generate_customer_products_raw(
         elif segment == "low_value_dormant":
             probs = {"wallet": 0.90, "credit_card": 0.60, "investment": 0.15, "insurance": 0.20, "loan": 0.20}
         else:  # at_risk_churner
+            # High loan rate = financial stress signal; investment low = no savings buffer.
             probs = {"wallet": 0.85, "credit_card": 0.50, "investment": 0.10, "insurance": 0.15, "loan": 0.25}
 
         for product_type, prob in probs.items():
@@ -696,8 +721,9 @@ def generate_customer_products_raw(
                 start_offset = np.random.randint(0, days_since_reg)
                 start_date = registration_date + timedelta(days=int(start_offset))
 
-                # Some products may have been cancelled.
-                is_active = bool(np.random.rand() > 0.15)
+                # Some products may have been cancelled (rate varies by segment).
+                cancel_rate = _PRODUCT_CANCELLATION_RATE_BY_SEGMENT.get(segment, 0.15)
+                is_active = bool(np.random.rand() > cancel_rate)
 
                 rows.append(
                     CustomerProductRaw(
