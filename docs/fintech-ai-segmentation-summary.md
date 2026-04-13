@@ -21,22 +21,34 @@ Every Monday morning, the commercial manager spends 3+ hours manually analyzing 
 
 ## The Real-World Analytical Path
 
-The analysis follows a logical, sequential narrative — each step building on the previous one:
+The analysis follows a discovery-first narrative — each step builds on the previous one **without using segment labels**. Segment ground truth is validated separately after clustering.
 
 ```
 STEP 1: Who do we have?
-        → EDA — demographics, acquisition channels, basic distributions
+        → EDA demographic (notebook 1)
+        → Discovery-first: no segment labels used
+        → Demographics, acquisition channels, CAC by channel
+        → Product ownership as first behavioral signal
 
-STEP 2: How did they arrive and when?
-        → Cohort Analysis
-        → Groups customers by registration month
-        → Gives temporal context to all subsequent analysis
+STEP 2: How do they behave over time?
+        → Cohort + behavioral analysis (notebook 2)
+        → Discovery-first: no segment labels used
+        → Cohort retention (M3/M6), channel quality ranking
+        → Behavioral heterogeneity, recency risk tiers,
+          activation quality, product adoption curves,
+          cohort revenue curves, churn proxies
 
-STEP 3: How do they behave?
+STEP V: Synthetic data validation (fake dataset only)
+        → EDA_Validation_Fake_Dataset.ipynb
+        → The ONLY notebook that references true_segment
+        → Confirms generator planted the right patterns
+          before clustering is attempted
+
+STEP 3: What do we know about each customer?
         → RFM Scoring (Recency, Frequency, Monetary)
         → K-Means Clustering (4 behavioral segments)
-        → Enriched by cohort context
-        → Cluster validation: did K-Means recover the planted segments?
+        → Validates predicted_segment against true_segment
+          (recovered from step V validation)
 
 STEP 4: What should we do about it?
         → LangGraph AI Agent
@@ -53,28 +65,40 @@ The [notebook roadmap](notebooks-roadmap.md) describes the full pipeline.
 | File | Scope |
 |---|---|
 | `notebooks/0.Data_Generation.ipynb` | Raw tables only (`customers_raw`, `transactions_raw`, etc.) |
-| `notebooks/1.EDA_demographic_analysis.ipynb` | Base EDA — demographics, acquisition, quality checks |
-| `notebooks/2.EDA_cohort_analysis.ipynb` | Joins, calendar-time transaction EDA, cohort KPIs |
-| `notebooks/3.EDA_RFM_Clustering.ipynb` | RFM scoring, K-Means clustering, segment validation |
+| `notebooks/1.EDA_demographic_analysis.ipynb` | STEP 1 — Demographics, acquisition, CAC, product ownership. No `true_segment`. |
+| `notebooks/2.EDA_cohort_analysis.ipynb` | STEP 2 — Cohort retention, channel quality, 8 behavioral discovery analyses. No `true_segment`. |
+| `notebooks/EDA_Validation_Fake_Dataset.ipynb` | STEP V — Ground-truth validation. **Only notebook that uses `true_segment`.** |
+| `notebooks/3.EDA_RFM_Clustering.ipynb` | STEP 3 — RFM scoring, K-Means clustering, segment validation |
 
 ---
 
 ## Business Questions To Answer
 
-### Foundation (EDA + Cohort)
+### Discovery (EDA + Cohort — no segment labels)
 1. How is our customer base distributed by age, state, and acquisition channel?
-2. Which acquisition month produces the most retained customers?
-3. At what month do most customers disengage?
-4. Are recent cohorts healthier than older ones?
-5. Which acquisition channel brings the highest quality customers?
+2. Which acquisition channel brings customers with the broadest product portfolios?
+3. Which acquisition month produces the most retained customers?
+4. At what month do most customers disengage? (tenure retention curve)
+5. Which acquisition channel brings the highest quality customers? (M6 retention + CAC payback)
+6. Is the customer base behaviorally homogeneous or are there natural fault lines? (activity rate distribution, Pareto revenue)
+7. Does early activation (M0 vs M1–M3 vs never) predict M6 retention?
+8. What does the recency distribution look like — where are the natural churn risk breaks?
+9. Does broader product ownership correlate with longer tenure?
+
+### Synthetic Data Validation (EDA_Validation_Fake_Dataset.ipynb only)
+10. Do segment counts match the planted 20/30/30/20 design?
+11. Do age distributions by segment match generator parameters?
+12. Does MAU by segment confirm expected lifecycle patterns (high_value stable, at_risk declining)?
+13. Do M0–M6 retention curves separate cleanly by planted segment?
+14. Does channel × segment composition explain the channel quality differences observed in STEP 2?
 
 ### Behavioral Intelligence (RFM + Clustering)
-6. Who are our most valuable customers right now?
-7. What behavioral patterns define each customer segment?
-8. What is the RFM profile of each segment?
-9. Do high-engagement customers own more products?
-10. How does product composition (wallet, credit card, investment, insurance, loan) vary across segments?
-11. Did K-Means successfully recover the 4 segments planted in the dataset?
+15. Who are our most valuable customers right now?
+16. What behavioral patterns define each customer segment?
+17. What is the RFM profile of each segment?
+18. Do high-engagement customers own more products?
+19. How does product composition (wallet, credit card, investment, insurance, loan) vary across segments?
+20. Did K-Means successfully recover the 4 segments planted in the dataset?
 
 ### AI Intelligence (LangGraph Agent)
 12. Given this customer's full profile, what product should we offer?
@@ -316,8 +340,9 @@ return structured response
 ### Phase 1 — MVP (Build First, Ship Fast)
 ```
 ✅ Faker dataset generation (4 planted segments)
-✅ EDA (demographics + acquisition channels)
-✅ Cohort Analysis
+✅ EDA demographic (notebook 1) — discovery-first, no segment labels
+✅ EDA cohort + behavioral discovery (notebook 2) — 8 discovery analyses
+✅ Synthetic data validation (EDA_Validation_Fake_Dataset.ipynb)
 ✅ RFM Scoring + K-Means Clustering (4 segments)
 ⬜ LangGraph AI Agent
 ⬜ FastAPI (4 endpoints)

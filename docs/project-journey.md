@@ -1,3 +1,8 @@
+### 2026-04-13 — Turning cohort EDA into decision-ready signals
+
+Today we upgraded Notebook 2 from a visual EDA pass into a more decision-ready business analysis flow. We tightened multiple sections so they remain stable across reruns (timezone-safe date handling, self-contained reference dates, and robust joins), then improved chart readability and ordering so channel quality and lifecycle risk are easier to interpret. This matters because the notebook is now more reliable as an operating document, not just an exploration scratchpad.
+
+A key learning came from the churn-proxy section: a flat failure-rate chart looked “correct” but was not informative, because status probabilities are mostly fixed in the synthetic generator. We replaced that with a stronger metric—90+ day silence by tenure at last activity—so the analysis highlights where retention risk actually concentrates across the lifecycle. The practical takeaway is clear: early-tenure interventions (activation, pre-90-day save journeys, and channel quality guardrails) are where the largest retention ROI sits.
 ## Fintech AI Segmentation – Project Journey
 
 This file is a concise, storytelling log of how we are building the Fintech AI Segmentation project. It is written as if explaining the project to a curious data/ML practitioner or hiring manager and can be reused directly for LinkedIn posts or portfolio write-ups.
