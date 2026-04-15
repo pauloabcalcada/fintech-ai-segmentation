@@ -15,6 +15,7 @@ from fintech_ai_segmentation.rfm_features import (
     build_customer_feature_matrix,
     build_preprocessing_pipeline,
     build_product_flag_features,
+    build_product_monetary_shares,
     build_trajectory_features,
     drop_correlated_splits,
 )
@@ -493,3 +494,55 @@ def test_build_product_flag_features_selective_ownership() -> None:
     assert c1["has_wallet"] == 1
     assert c1["has_loan"] == 0
     assert c1["product_cancellation_rate"] == 0.0
+
+
+# ---------------------------------------------------------------------------
+# Product monetary shares feature tests
+# ---------------------------------------------------------------------------
+
+
+def test_build_product_monetary_shares_basic() -> None:
+    """Test basic product monetary share calculation."""
+    from datetime import datetime
+
+    tx = pd.DataFrame(
+        {
+            "customer_id": ["c1", "c1", "c1", "c2"],
+            "transaction_datetime": [datetime(2025, 1, 1)] * 4,
+            "amount": [100.0, 500.0, 200.0, 300.0],
+            "product_type": ["wallet", "investment", "credit_card", "wallet"],
+            "status": ["completed"] * 4,
+            "transaction_type": ["purchase", "transfer", "purchase", "purchase"],
+        }
+    )
+    result = build_product_monetary_shares(tx)
+    c1 = result[result["customer_id"] == "c1"].iloc[0]
+    # wallet=100, investment=500, credit_card=200 → total=800
+    assert abs(c1["wallet_monetary_share"] - 100 / 800) < 0.01
+    assert abs(c1["investment_monetary_share"] - 500 / 800) < 0.01
+    assert abs(c1["credit_card_monetary_share"] - 200 / 800) < 0.01
+    assert abs(c1["loan_monetary_share"] - 0.0) < 0.01
+    assert abs(c1["insurance_monetary_share"] - 0.0) < 0.01
+
+
+def test_build_product_monetary_shares_filters_refunds_and_zero_amounts() -> None:
+    """Refunds and zero-amount transactions are filtered out; only positive amounts count."""
+    from datetime import datetime
+
+    tx = pd.DataFrame(
+        {
+            "customer_id": ["c1", "c1", "c1", "c2"],
+            "transaction_datetime": [datetime(2025, 1, 1)] * 4,
+            "amount": [100.0, -50.0, 0.0, 200.0],  # one positive, one refund, one zero, one positive
+            "product_type": ["wallet", "wallet", "wallet", "wallet"],
+            "status": ["completed"] * 4,
+            "transaction_type": ["purchase", "refund", "purchase", "purchase"],
+        }
+    )
+    result = build_product_monetary_shares(tx)
+    # c1: only 100.0 (wallet) is counted (refund and zero excluded)
+    c1 = result[result["customer_id"] == "c1"].iloc[0]
+    assert abs(c1["wallet_monetary_share"] - 1.0) < 0.01
+    # c2: 200.0 (wallet)
+    c2 = result[result["customer_id"] == "c2"].iloc[0]
+    assert abs(c2["wallet_monetary_share"] - 1.0) < 0.01

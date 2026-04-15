@@ -851,6 +851,72 @@ def build_product_flag_features(
     return result.reset_index()
 
 
+def build_product_monetary_shares(df_tx: pd.DataFrame) -> pd.DataFrame:
+    """Return per-product monetary composition shares for each customer.
+
+    Columns returned (one row per customer_id):
+    - wallet_monetary_share, credit_card_monetary_share, investment_monetary_share,
+      insurance_monetary_share, loan_monetary_share (each float in [0.0, 1.0])
+
+    Logic:
+    - Filter out refund transactions (transaction_type != "refund")
+    - Filter to rows where amount > 0
+    - Group by customer_id
+    - For each product type in ["wallet", "credit_card", "investment", "insurance", "loan"],
+      compute: sum(amount where product_type == X) / sum(all amount)
+    - If total == 0, all shares = 0.0 (no divide-by-zero)
+    - If df_tx is empty, return empty DataFrame with correct columns
+
+    Parameters
+    ----------
+    df_tx :
+        Transaction DataFrame with columns ``customer_id``, ``amount``,
+        ``product_type``, ``transaction_type``.
+
+    Returns
+    -------
+    pd.DataFrame
+        One row per unique customer_id with columns:
+        ``["customer_id", "wallet_monetary_share", "credit_card_monetary_share",
+        "investment_monetary_share", "insurance_monetary_share", "loan_monetary_share"]``
+        If ``df_tx`` is empty, returns an empty DataFrame with the correct column structure.
+    """
+    PRODUCT_TYPES = ["wallet", "credit_card", "investment", "insurance", "loan"]
+    SHARE_COLS = [f"{pt}_monetary_share" for pt in PRODUCT_TYPES]
+
+    if df_tx.empty:
+        return pd.DataFrame(columns=["customer_id"] + SHARE_COLS)
+
+    df = df_tx.copy()
+
+    # Filter: exclude refunds and non-positive amounts
+    df = df.loc[(df["transaction_type"] != "refund") & (df["amount"] > 0)]
+
+    if df.empty:
+        return pd.DataFrame(columns=["customer_id"] + SHARE_COLS)
+
+    # Compute total monetary per customer
+    total_per_customer = (
+        df.groupby("customer_id", sort=False)["amount"].sum().rename("total_amount")
+    )
+
+    # For each product type, compute the sum
+    result_data = {"customer_id": total_per_customer.index.tolist()}
+
+    for pt in PRODUCT_TYPES:
+        pt_sum = (
+            df.loc[df["product_type"] == pt]
+            .groupby("customer_id", sort=False)["amount"]
+            .sum()
+        )
+        # Fill missing customers with 0, then divide by total
+        pt_sum = pt_sum.reindex(total_per_customer.index, fill_value=0.0)
+        share_col = f"{pt}_monetary_share"
+        result_data[share_col] = (pt_sum / total_per_customer).fillna(0.0).values
+
+    return pd.DataFrame(result_data)
+
+
 def build_preprocessing_pipeline(feature_columns: Sequence[str]) -> Pipeline:
     """Build the sklearn preprocessing Pipeline ready for k-means input.
 
@@ -926,6 +992,7 @@ __all__ = [
     "build_trajectory_features",
     "build_customer_feature_matrix",
     "build_product_flag_features",
+    "build_product_monetary_shares",
     "drop_correlated_splits",
     "build_preprocessing_pipeline",
 ]
