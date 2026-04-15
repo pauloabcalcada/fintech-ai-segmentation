@@ -118,6 +118,17 @@ MONETARY_SHARE_COLS = [
     "monetary_cash_withdrawal_share",
 ]
 
+# Product types present in the SynaptiqPay catalog.  Used by
+# ``build_product_flag_features`` (ownership flags) and
+# ``build_product_monetary_shares`` (monetary composition).
+PRODUCT_TYPES: list[str] = [
+    "wallet",
+    "credit_card",
+    "investment",
+    "insurance",
+    "loan",
+]
+
 
 def _as_timestamp(x: pd.Timestamp | str) -> pd.Timestamp:
     """Normalise input to a timezone-naive pandas Timestamp.
@@ -795,8 +806,6 @@ def build_product_flag_features(
         If ``df_customer_products`` is empty, returns an empty DataFrame with
         the correct column structure.
     """
-    PRODUCT_TYPES = ["wallet", "credit_card", "investment", "insurance", "loan"]
-
     if df_customer_products.empty:
         return pd.DataFrame(
             columns=["customer_id"]
@@ -881,7 +890,6 @@ def build_product_monetary_shares(df_tx: pd.DataFrame) -> pd.DataFrame:
         "investment_monetary_share", "insurance_monetary_share", "loan_monetary_share"]``
         If ``df_tx`` is empty, returns an empty DataFrame with the correct column structure.
     """
-    PRODUCT_TYPES = ["wallet", "credit_card", "investment", "insurance", "loan"]
     SHARE_COLS = [f"{pt}_monetary_share" for pt in PRODUCT_TYPES]
 
     if df_tx.empty:
@@ -987,6 +995,7 @@ __all__ = [
     "SQRT_COLS",
     "PASSTHROUGH_COLS",
     "MONETARY_SHARE_COLS",
+    "PRODUCT_TYPES",
     "add_monetary_type_shares",
     "build_behavioral_features",
     "build_trajectory_features",
