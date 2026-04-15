@@ -795,17 +795,13 @@ def build_product_flag_features(
         If ``df_customer_products`` is empty, returns an empty DataFrame with
         the correct column structure.
     """
+    PRODUCT_TYPES = ["wallet", "credit_card", "investment", "insurance", "loan"]
+
     if df_customer_products.empty:
         return pd.DataFrame(
-            columns=[
-                "customer_id",
-                "has_wallet",
-                "has_credit_card",
-                "has_investment",
-                "has_insurance",
-                "has_loan",
-                "product_cancellation_rate",
-            ]
+            columns=["customer_id"]
+            + [f"has_{pt}" for pt in PRODUCT_TYPES]
+            + ["product_cancellation_rate"]
         )
 
     # Merge to get product_type for each customer-product relationship
@@ -813,37 +809,45 @@ def build_product_flag_features(
         products_raw[["product_id", "product_type"]], on="product_id", how="left"
     )
 
-    # Group by customer_id
-    grouped = merged.groupby("customer_id", sort=False)
+    # Drop rows where product_id has no match in catalog (data integrity guard).
+    # This prevents NaN product_type values from propagating into the flag logic.
+    merged = merged.dropna(subset=["product_type"])
 
-    # Build product flags: 1 if customer owns at least one of that type, else 0
-    product_types = ["wallet", "credit_card", "investment", "insurance", "loan"]
-    flags = {}
-    for ptype in product_types:
-        flags[f"has_{ptype}"] = (
-            grouped["product_type"]
-            .apply(lambda x: 1 if ptype in x.values else 0)
-            .rename(f"has_{ptype}")
+    if merged.empty:
+        return pd.DataFrame(
+            columns=["customer_id"]
+            + [f"has_{pt}" for pt in PRODUCT_TYPES]
+            + ["product_cancellation_rate"]
         )
 
-    # Calculate product cancellation rate: (total - active) / total
-    def _cancellation_rate(group: pd.DataFrame) -> float:
-        total = len(group)
-        if total == 0:
-            return 0.0
-        active_count = group["is_active"].sum()
-        return float((total - active_count) / total)
-
-    cancellation_rate = grouped.apply(_cancellation_rate).rename(
-        "product_cancellation_rate"
+    # Compute product cancellation rate before filtering to active-only.
+    # Cancel rate = (total rows - active count) / total rows per customer.
+    cancel_rate = (
+        merged.groupby("customer_id")["is_active"]
+        .apply(lambda grp: float((~grp.astype(bool)).sum() / len(grp)))
+        .rename("product_cancellation_rate")
     )
 
-    # Combine all columns
-    result = pd.concat(
-        [flags[f"has_{ptype}"] for ptype in product_types] + [cancellation_rate],
-        axis=1,
-    )
-    result.index.name = "customer_id"
+    # Vectorized binary flags via pd.get_dummies + groupby.max().
+    # get_dummies creates columns named after the product type values;
+    # groupby.max() takes the max (1 if any row has that product type).
+    dummies = pd.get_dummies(merged["product_type"].astype(str)).astype(int)
+    dummies["customer_id"] = merged["customer_id"].values
+    flags_df = dummies.groupby("customer_id", sort=False).max()
+
+    # Ensure all product type columns exist (in case a type is missing from data).
+    for pt in PRODUCT_TYPES:
+        if pt not in flags_df.columns:
+            flags_df[pt] = 0
+
+    # Rename columns to has_<product_type> format
+    rename_dict = {pt: f"has_{pt}" for pt in PRODUCT_TYPES}
+    flags_df = flags_df.rename(columns=rename_dict)
+
+    # Keep only the flag columns we care about and join with cancellation rate
+    flag_cols = [f"has_{pt}" for pt in PRODUCT_TYPES]
+    result = flags_df[flag_cols].join(cancel_rate)
+    result["product_cancellation_rate"] = result["product_cancellation_rate"].fillna(0.0)
     return result.reset_index()
 
 

@@ -471,3 +471,25 @@ def test_build_product_flag_features_no_products() -> None:
     )
     result = build_product_flag_features(cp, products)
     assert result.empty
+
+
+def test_build_product_flag_features_selective_ownership() -> None:
+    """Customer owning only wallet must get has_loan=0 (guards against closure bug)."""
+    products = pd.DataFrame(
+        [
+            ("p1", "wallet"),
+            ("p2", "loan"),
+        ],
+        columns=["product_id", "product_type"],
+    )
+    cp = pd.DataFrame(
+        [
+            ("c1", "p1", "2024-01-01", True),  # only wallet, no loan
+        ],
+        columns=["customer_id", "product_id", "start_date", "is_active"],
+    )
+    result = build_product_flag_features(cp, products)
+    c1 = result[result["customer_id"] == "c1"].iloc[0]
+    assert c1["has_wallet"] == 1
+    assert c1["has_loan"] == 0
+    assert c1["product_cancellation_rate"] == 0.0
