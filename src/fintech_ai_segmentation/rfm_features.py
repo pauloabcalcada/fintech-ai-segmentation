@@ -764,6 +764,89 @@ def drop_correlated_splits(
     return keep_df, dropped, corr_monetary_splits
 
 
+def build_product_flag_features(
+    df_customer_products: pd.DataFrame,
+    products_raw: pd.DataFrame,
+) -> pd.DataFrame:
+    """Return binary ownership flags and cancellation rate per customer.
+
+    Columns returned (one row per customer_id):
+    - has_wallet, has_credit_card, has_investment, has_insurance, has_loan (0/1 int)
+    - product_cancellation_rate: fraction of acquired products that are inactive [0.0-1.0]
+
+    Designed to expose the segment-specific ownership probabilities planted by
+    the generator (e.g., investment: 65% high_value vs 10% at_risk_churner).
+
+    Parameters
+    ----------
+    df_customer_products :
+        DataFrame with columns ``customer_id``, ``product_id``, ``start_date``,
+        ``is_active``. Each row represents a customer's product ownership record.
+    products_raw :
+        DataFrame with columns ``product_id``, ``product_type``. Used to map
+        product types to customer ownership rows.
+
+    Returns
+    -------
+    pd.DataFrame
+        One row per unique customer_id with columns:
+        ``["customer_id", "has_wallet", "has_credit_card", "has_investment",
+        "has_insurance", "has_loan", "product_cancellation_rate"]``
+        If ``df_customer_products`` is empty, returns an empty DataFrame with
+        the correct column structure.
+    """
+    if df_customer_products.empty:
+        return pd.DataFrame(
+            columns=[
+                "customer_id",
+                "has_wallet",
+                "has_credit_card",
+                "has_investment",
+                "has_insurance",
+                "has_loan",
+                "product_cancellation_rate",
+            ]
+        )
+
+    # Merge to get product_type for each customer-product relationship
+    merged = df_customer_products.merge(
+        products_raw[["product_id", "product_type"]], on="product_id", how="left"
+    )
+
+    # Group by customer_id
+    grouped = merged.groupby("customer_id", sort=False)
+
+    # Build product flags: 1 if customer owns at least one of that type, else 0
+    product_types = ["wallet", "credit_card", "investment", "insurance", "loan"]
+    flags = {}
+    for ptype in product_types:
+        flags[f"has_{ptype}"] = (
+            grouped["product_type"]
+            .apply(lambda x: 1 if ptype in x.values else 0)
+            .rename(f"has_{ptype}")
+        )
+
+    # Calculate product cancellation rate: (total - active) / total
+    def _cancellation_rate(group: pd.DataFrame) -> float:
+        total = len(group)
+        if total == 0:
+            return 0.0
+        active_count = group["is_active"].sum()
+        return float((total - active_count) / total)
+
+    cancellation_rate = grouped.apply(_cancellation_rate).rename(
+        "product_cancellation_rate"
+    )
+
+    # Combine all columns
+    result = pd.concat(
+        [flags[f"has_{ptype}"] for ptype in product_types] + [cancellation_rate],
+        axis=1,
+    )
+    result.index.name = "customer_id"
+    return result.reset_index()
+
+
 def build_preprocessing_pipeline(feature_columns: Sequence[str]) -> Pipeline:
     """Build the sklearn preprocessing Pipeline ready for k-means input.
 
@@ -838,6 +921,7 @@ __all__ = [
     "build_behavioral_features",
     "build_trajectory_features",
     "build_customer_feature_matrix",
+    "build_product_flag_features",
     "drop_correlated_splits",
     "build_preprocessing_pipeline",
 ]

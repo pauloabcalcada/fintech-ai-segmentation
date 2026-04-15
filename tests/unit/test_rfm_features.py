@@ -14,6 +14,7 @@ from fintech_ai_segmentation.rfm_features import (
     build_behavioral_features,
     build_customer_feature_matrix,
     build_preprocessing_pipeline,
+    build_product_flag_features,
     build_trajectory_features,
     drop_correlated_splits,
 )
@@ -410,3 +411,63 @@ def test_trajectory_transform_group_membership() -> None:
     assert (
         "tenure_utilization" not in LOG1P_COLS
     ), "tenure_utilization is bounded [0,1] and should be passthrough"
+
+
+# ---------------------------------------------------------------------------
+# Product flag feature tests
+# ---------------------------------------------------------------------------
+
+
+def test_build_product_flag_features_basic() -> None:
+    """Test binary product flags and cancellation rate computation."""
+    products = pd.DataFrame(
+        [
+            ("p1", "wallet"),
+            ("p2", "credit_card"),
+            ("p3", "investment"),
+            ("p4", "insurance"),
+            ("p5", "loan"),
+        ],
+        columns=["product_id", "product_type"],
+    )
+    cp = pd.DataFrame(
+        [
+            ("c1", "p1", "2024-01-01", True),
+            ("c1", "p2", "2024-01-01", True),
+            ("c1", "p3", "2024-01-01", True),
+            ("c2", "p1", "2024-01-01", True),
+            ("c2", "p5", "2024-01-01", False),  # cancelled loan
+        ],
+        columns=["customer_id", "product_id", "start_date", "is_active"],
+    )
+    result = build_product_flag_features(cp, products)
+    assert set(result.columns) == {
+        "customer_id",
+        "has_wallet",
+        "has_credit_card",
+        "has_investment",
+        "has_insurance",
+        "has_loan",
+        "product_cancellation_rate",
+    }
+    c1 = result[result["customer_id"] == "c1"].iloc[0]
+    assert c1["has_investment"] == 1
+    assert c1["has_credit_card"] == 1
+    assert c1["product_cancellation_rate"] == 0.0
+    c2 = result[result["customer_id"] == "c2"].iloc[0]
+    assert c2["has_investment"] == 0
+    assert c2["has_loan"] == 1
+    assert abs(c2["product_cancellation_rate"] - 0.5) < 0.01
+
+
+def test_build_product_flag_features_no_products() -> None:
+    """Test that empty customer_products DataFrame returns empty result."""
+    products = pd.DataFrame(
+        [("p1", "wallet"), ("p2", "credit_card")],
+        columns=["product_id", "product_type"],
+    )
+    cp = pd.DataFrame(
+        columns=["customer_id", "product_id", "start_date", "is_active"]
+    )
+    result = build_product_flag_features(cp, products)
+    assert result.empty
