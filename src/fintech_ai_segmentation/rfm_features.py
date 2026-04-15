@@ -33,6 +33,7 @@ notebook rather than baked in here.
 from __future__ import annotations
 
 from collections.abc import Sequence
+from datetime import timedelta
 
 import numpy as np
 import pandas as pd
@@ -50,12 +51,22 @@ from sklearn.preprocessing import FunctionTransformer, StandardScaler
 # (each channel has a distinct cost cluster) and has a mild right tail; log1p
 # flattens the inter-cluster gaps enough for StandardScaler to spread them
 # more evenly without distorting the channel-quality ordering.
+# activity_trend_ratio is included because values can range well above 1.0 for
+# growing customers (many recent transactions, few early ones), producing a
+# right-skewed distribution that benefits from compression.
 LOG1P_COLS = [
     "recency_days",
     "frequency_total",
     "avg_ticket",
     "avg_days_between_tx",
     "acquisition_cost",
+    "activity_trend_ratio",
+    # Derived-intensity feature: avg transactions per month when active.
+    # Right-skewed (high-value: ~40/month; churner: ~2/month); log1p compresses tail.
+    "tx_per_active_month",
+    # Global activation speed: days from registration to first ever transaction.
+    # Right-skewed (quick activators: 0–30 days; slow/never: 200–400+ days).
+    "days_to_first_tx",
 ]
 
 # refund_rate receives a square-root transform (sqrt) rather than log1p.
@@ -87,6 +98,17 @@ PASSTHROUGH_COLS = [
     "monetary_purchase_share",
     "monetary_transfer_share",
     "monetary_cash_withdrawal_share",
+    "active_months_ratio",
+    "tenure_utilization",
+    # Recency-related features added alongside trajectory features:
+    # last_6m_active_months: count of months with ≥1 tx in final 6 months of window.
+    #   Churners score 0 (already gone); dormant score 1–2; mid ~5; high ~6.
+    #   Integer-valued discrete [0, 6]; passthrough keeps integer spacing.
+    "last_6m_active_months",
+    # early_window_freq_ratio: fraction of total window tx that fell in the FIRST half.
+    #   Churners concentrate activity early (ratio → 1.0); stable customers score ~0.5.
+    #   Bounded [0, 1]; passthrough.
+    "early_window_freq_ratio",
 ]
 
 # Output column names for ``add_monetary_type_shares`` (clustering mix signal).
@@ -106,7 +128,7 @@ def _as_timestamp(x: pd.Timestamp | str) -> pd.Timestamp:
     """
     ts = pd.Timestamp(x)
     if ts.tzinfo is not None:
-        ts = ts.tz_localize(None)
+        ts = ts.tz_convert(None)  # tz_localize(None) raises TypeError on aware Timestamps
     return ts
 
 
@@ -218,8 +240,8 @@ def build_behavioral_features(
             .sum()
         )
 
-    monetary_total = nr.groupby("customer_id", sort=False)["amount"].sum().rename(
-        "monetary_total"
+    monetary_total = (
+        nr.groupby("customer_id", sort=False)["amount"].sum().rename("monetary_total")
     )
     monetary_purchase = _sum_type("purchase").rename("monetary_purchase")
     monetary_transfer = _sum_type("transfer").rename("monetary_transfer")
@@ -231,7 +253,9 @@ def build_behavioral_features(
         .size()
         .rename("refund_count")
     )
-    total_tx = completed.groupby("customer_id", sort=False).size().rename("total_tx_count")
+    total_tx = (
+        completed.groupby("customer_id", sort=False).size().rename("total_tx_count")
+    )
 
     out = pd.concat(
         [
@@ -246,10 +270,14 @@ def build_behavioral_features(
         ],
         axis=1,
     )
-    out["refund_rate"] = out["refund_count"].fillna(0) / out["total_tx_count"].replace(0, np.nan)
+    out["refund_rate"] = out["refund_count"].fillna(0) / out["total_tx_count"].replace(
+        0, np.nan
+    )
     out["refund_rate"] = out["refund_rate"].fillna(0.0)
     out = out.drop(columns=["refund_count", "total_tx_count"])
-    out["avg_ticket"] = out["monetary_total"] / out["frequency_total"].replace(0, np.nan)
+    out["avg_ticket"] = out["monetary_total"] / out["frequency_total"].replace(
+        0, np.nan
+    )
     out["avg_ticket"] = out["avg_ticket"].fillna(0.0)
 
     # Zero-fill split columns for customers who never used that transaction type.
@@ -278,11 +306,188 @@ def build_behavioral_features(
         cp["start_date"] = cp["start_date"].dt.tz_localize(None)
     active = cp["is_active"].astype(bool) & (cp["start_date"] <= as_of)
     products_owned = (
-        cp.loc[active].groupby("customer_id", sort=False).size().rename("products_owned")
+        cp.loc[active]
+        .groupby("customer_id", sort=False)
+        .size()
+        .rename("products_owned")
     )
     out = out.join(products_owned, how="left")
     out["products_owned"] = out["products_owned"].fillna(0).astype("int64")
 
+    return out.reset_index()
+
+
+def build_trajectory_features(
+    df_tx: pd.DataFrame,
+    as_of_date: pd.Timestamp | str,
+    window_start: pd.Timestamp | str,
+) -> pd.DataFrame:
+    """Compute activity trajectory features that capture how engagement changed over time.
+
+    Point-in-time RFM features (recency, frequency, avg_ticket) cannot distinguish
+    customers who were always low-activity (dormant pattern) from those who were
+    briefly active and then completely stopped (churner pattern). These trajectory
+    features expose the temporal *shape* of engagement by splitting the analysis
+    window and measuring continuity.
+
+    Columns produced
+    ----------------
+    activity_trend_ratio : float
+        (recent_half_count + 1) / (early_half_count + 1).  Laplace smoothing
+        avoids division-by-zero for customers with no transactions in one half.
+        Values < 1 indicate declining activity (churner pattern); values ≈ 1
+        indicate stable engagement; values > 1 indicate growing engagement.
+        Receives log1p transform (right-skewed; growing customers can produce
+        ratios well above 1).
+    active_months_ratio : float in [0, 1]
+        Distinct calendar months with ≥1 non-refund transaction divided by the
+        number of months from the customer's first transaction to ``as_of_date``
+        (minimum denominator = 1).  Measures continuity of engagement: a
+        customer active every month scores 1.0; one who transacted once and
+        never again scores close to 0.  Bounded in [0, 1], passthrough.
+    tenure_utilization : float in [0, 1]
+        Distinct active months divided by months since ``registration_date``
+        (derived from ``df_tx`` column if present, otherwise falls back to
+        months since first transaction).  Captures customers who registered long
+        ago but were never truly engaged vs those who hit the ground running.
+        Bounded in [0, 1], passthrough.
+
+    Parameters
+    ----------
+    df_tx :
+        Transaction DataFrame for the analysis window (completed transactions
+        only).  Must have columns: ``customer_id``, ``transaction_datetime``,
+        ``transaction_type``.  If a ``registration_date`` column is present it
+        will be used for ``tenure_utilization``; otherwise the first transaction
+        date is used as the registration proxy.
+    as_of_date :
+        End of the analysis window (inclusive).
+    window_start :
+        Start of the analysis window.  The midpoint for ``activity_trend_ratio``
+        is computed as ``window_start + (as_of_date - window_start) / 2``.
+    """
+    as_of = _as_timestamp(as_of_date)
+    w_start = _as_timestamp(window_start)
+    midpoint = w_start + (as_of - w_start) / 2
+
+    df = df_tx.copy()
+    df["transaction_datetime"] = pd.to_datetime(df["transaction_datetime"])
+    if getattr(df["transaction_datetime"].dt, "tz", None) is not None:
+        df["transaction_datetime"] = df["transaction_datetime"].dt.tz_localize(None)
+
+    nr = df.loc[_non_refund_mask(df)]
+
+    # --- activity_trend_ratio ---
+    early = nr.loc[nr["transaction_datetime"] < midpoint]
+    recent = nr.loc[nr["transaction_datetime"] >= midpoint]
+
+    early_counts = early.groupby("customer_id", sort=False).size().rename("early_count")
+    recent_counts = (
+        recent.groupby("customer_id", sort=False).size().rename("recent_count")
+    )
+    all_customers = nr["customer_id"].unique()
+    trend_df = pd.DataFrame(index=all_customers)
+    trend_df.index.name = "customer_id"
+    trend_df = trend_df.join(early_counts).join(recent_counts)
+    trend_df["early_count"] = trend_df["early_count"].fillna(0)
+    trend_df["recent_count"] = trend_df["recent_count"].fillna(0)
+    trend_df["activity_trend_ratio"] = (trend_df["recent_count"] + 1) / (
+        trend_df["early_count"] + 1
+    )
+
+    # --- active_months_ratio and tenure_utilization ---
+    nr_with_month = nr.copy()
+    nr_with_month["year_month"] = nr_with_month["transaction_datetime"].dt.to_period(
+        "M"
+    )
+
+    active_months = (
+        nr_with_month.groupby("customer_id", sort=False)["year_month"]
+        .nunique()
+        .rename("active_months")
+    )
+
+    first_tx = (
+        nr.groupby("customer_id", sort=False)["transaction_datetime"]
+        .min()
+        .rename("first_tx_date")
+    )
+
+    traj = trend_df[["activity_trend_ratio"]].join(active_months).join(first_tx)
+    traj["active_months"] = traj["active_months"].fillna(0)
+
+    # months from first transaction to as_of_date (denominator for active_months_ratio)
+    traj["months_since_first_tx"] = (
+        (as_of - traj["first_tx_date"]).dt.days / 30.44
+    ).clip(lower=1.0)
+    traj["active_months_ratio"] = (
+        traj["active_months"] / traj["months_since_first_tx"]
+    ).clip(0.0, 1.0)
+
+    # tenure_utilization: use registration_date from df_tx if available,
+    # otherwise fall back to first_tx_date
+    if "registration_date" in df.columns:
+        reg_dates = df.drop_duplicates(subset=["customer_id"])[
+            ["customer_id", "registration_date"]
+        ].set_index("customer_id")["registration_date"]
+        reg_dates = pd.to_datetime(reg_dates)
+        if getattr(reg_dates.dt, "tz", None) is not None:
+            reg_dates = reg_dates.dt.tz_localize(None)
+        traj = traj.join(reg_dates.rename("registration_date"), how="left")
+        traj["registration_date"] = traj["registration_date"].fillna(
+            traj["first_tx_date"]
+        )
+    else:
+        traj["registration_date"] = traj["first_tx_date"]
+
+    traj["months_since_registration"] = (
+        (as_of - traj["registration_date"]).dt.days / 30.44
+    ).clip(lower=1.0)
+    traj["tenure_utilization"] = (
+        traj["active_months"] / traj["months_since_registration"]
+    ).clip(0.0, 1.0)
+
+    # --- last_6m_active_months ---
+    # Count of distinct calendar months with ≥1 non-refund tx in the 6-month
+    # period ending at as_of_date. This is the sharpest single-feature test for
+    # whether a customer is in the final stages of churn: churners score 0 or 1
+    # while high/mid-value customers score 5–6.
+    window_6m_start = as_of - timedelta(days=182)
+    nr_6m = nr.loc[nr["transaction_datetime"] >= window_6m_start].copy()
+    nr_6m["year_month_6m"] = nr_6m["transaction_datetime"].dt.to_period("M")
+    last_6m_active = (
+        nr_6m.groupby("customer_id", sort=False)["year_month_6m"]
+        .nunique()
+        .rename("last_6m_active_months")
+    )
+    traj = traj.join(last_6m_active, how="left")
+    traj["last_6m_active_months"] = (
+        traj["last_6m_active_months"].fillna(0).astype("float64")
+    )
+
+    # --- early_window_freq_ratio ---
+    # Share of total window transactions that occurred in the FIRST half of the
+    # window. Churners front-load their activity (ratio → 1.0); customers with
+    # stable engagement score ~0.5; growing customers score < 0.5.
+    # Uses early_count / (early_count + recent_count); add 1e-9 to avoid 0/0.
+    total_count = trend_df["early_count"] + trend_df["recent_count"]
+    traj["early_window_freq_ratio"] = (
+        (trend_df["early_count"] / (total_count + 1e-9))
+        .clip(0.0, 1.0)
+        .reindex(traj.index)
+    )
+    traj["early_window_freq_ratio"] = traj["early_window_freq_ratio"].fillna(0.5)
+
+    out = traj[
+        [
+            "activity_trend_ratio",
+            "active_months_ratio",
+            "tenure_utilization",
+            "last_6m_active_months",
+            "early_window_freq_ratio",
+        ]
+    ].copy()
+    out.index.name = "customer_id"
     return out.reset_index()
 
 
@@ -291,6 +496,9 @@ def build_customer_feature_matrix(
     df_customer_products: pd.DataFrame,
     df_customers: pd.DataFrame,
     as_of_date: pd.Timestamp | str,
+    *,
+    window_start: pd.Timestamp | str | None = None,
+    df_tx_full: pd.DataFrame | None = None,
 ) -> pd.DataFrame:
     """Combine behavioural features with numeric customer attributes.
 
@@ -325,25 +533,132 @@ def build_customer_feature_matrix(
     ``monetary_purchase_share``, ``monetary_transfer_share``, and
     ``monetary_cash_withdrawal_share`` (composition of spend by transaction type).
 
+    Trajectory features from ``build_trajectory_features`` are also merged in
+    (``activity_trend_ratio``, ``active_months_ratio``, ``tenure_utilization``,
+    ``last_6m_active_months``, ``early_window_freq_ratio``) to capture how
+    engagement evolved over the analysis window.
+
+    Two derived intensity features are computed post-merge:
+
+    tx_per_active_month : float
+        ``frequency_total`` divided by the estimated number of active months
+        (``active_months_ratio × tenure_days / 30.44``).  This directly
+        encodes the per-segment *transaction intensity when active*: high-value
+        ~40/month, mid-value ~18/month, dormant ~4/month, churner ~2/month.
+        Receives log1p transform.
+    days_to_first_tx : float (optional — added when ``df_tx_full`` is provided)
+        Days from ``registration_date`` to a customer's first ever transaction
+        in the *full* (non-windowed) transaction history.  Quick activators
+        score 0–30 days (high-value pattern); slow / never-activated customers
+        score 200+ days (at-risk pattern).  Receives log1p transform.
+        Pass the unwindowed transaction DataFrame as ``df_tx_full`` to enable.
+
+    Parameters
+    ----------
+    window_start :
+        Start of the analysis window used for trajectory feature computation.
+        Defaults to ``as_of_date - 730 days`` (approximately 24 months).
+    df_tx_full :
+        Optional full (non-windowed) transaction DataFrame used to compute
+        ``days_to_first_tx``.  Must have ``customer_id`` and
+        ``transaction_datetime`` columns.  If ``None``, the feature is not
+        added.
+
+    Parameters
+    ----------
+    window_start :
+        Start of the analysis window used for trajectory feature computation.
+        Defaults to ``as_of_date - 730 days`` (approximately 24 months).
+
     Returns one row per ``customer_id`` with all-numeric columns ready for
     ``drop_correlated_splits`` and ``build_preprocessing_pipeline``.
     """
     as_of = _as_timestamp(as_of_date)
-    beh = build_behavioral_features(df_tx, df_customer_products, as_of_date)
-    customer_num = df_customers[
-        ["customer_id", "age", "acquisition_cost", "registration_date"]
-    ].drop_duplicates(subset=["customer_id"]).copy()
+    if window_start is None:
+        w_start: pd.Timestamp = as_of - timedelta(days=730)
+    else:
+        w_start = _as_timestamp(window_start)
 
-    customer_num["registration_date"] = pd.to_datetime(customer_num["registration_date"])
-    if getattr(customer_num["registration_date"].dt, "tz", None) is not None:
-        customer_num["registration_date"] = customer_num["registration_date"].dt.tz_localize(None)
-    customer_num["tenure_days"] = (as_of - customer_num["registration_date"]).dt.days.astype(
-        "float64"
+    beh = build_behavioral_features(df_tx, df_customer_products, as_of_date)
+    customer_num = (
+        df_customers[["customer_id", "age", "acquisition_cost", "registration_date"]]
+        .drop_duplicates(subset=["customer_id"])
+        .copy()
     )
+
+    customer_num["registration_date"] = pd.to_datetime(
+        customer_num["registration_date"]
+    )
+    if getattr(customer_num["registration_date"].dt, "tz", None) is not None:
+        customer_num["registration_date"] = customer_num[
+            "registration_date"
+        ].dt.tz_localize(None)
+    customer_num["tenure_days"] = (
+        as_of - customer_num["registration_date"]
+    ).dt.days.astype("float64")
     customer_num = customer_num.drop(columns=["registration_date"])
 
     merged = customer_num.merge(beh, on="customer_id", how="left")
-    return add_monetary_type_shares(merged)
+    merged = add_monetary_type_shares(merged)
+
+    # Merge trajectory features (activity decay / continuity signals)
+    traj = build_trajectory_features(df_tx, as_of_date, w_start)
+    merged = merged.merge(traj, on="customer_id", how="left")
+    # Customers with no transactions in the window get neutral trajectory values
+    merged["activity_trend_ratio"] = merged["activity_trend_ratio"].fillna(1.0)
+    merged["active_months_ratio"] = merged["active_months_ratio"].fillna(0.0)
+    merged["tenure_utilization"] = merged["tenure_utilization"].fillna(0.0)
+    merged["last_6m_active_months"] = merged["last_6m_active_months"].fillna(0.0)
+    merged["early_window_freq_ratio"] = merged["early_window_freq_ratio"].fillna(0.5)
+
+    # --- tx_per_active_month ---
+    # Avg transactions per calendar month when active.  Encodes per-segment
+    # intensity (high-value: ~40/month; churner: ~2/month).  We approximate
+    # active_months as active_months_ratio × tenure_days / 30.44 days; clip to
+    # at least 1 to avoid division by zero for brand-new customers.
+    _active_months_approx = (
+        merged["active_months_ratio"] * merged["tenure_days"] / 30.44
+    ).clip(lower=1.0)
+    merged["tx_per_active_month"] = (
+        merged["frequency_total"].fillna(0) / _active_months_approx
+    ).clip(lower=0.0)
+
+    # --- days_to_first_tx (optional — requires full transaction history) ---
+    if df_tx_full is not None:
+        _full = df_tx_full.copy()
+        _full["transaction_datetime"] = pd.to_datetime(_full["transaction_datetime"])
+        if getattr(_full["transaction_datetime"].dt, "tz", None) is not None:
+            _full["transaction_datetime"] = _full[
+                "transaction_datetime"
+            ].dt.tz_localize(None)
+        _first_global = (
+            _full.groupby("customer_id", sort=False)["transaction_datetime"]
+            .min()
+            .rename("first_tx_date_global")
+        )
+        _reg = (
+            df_customers[["customer_id", "registration_date"]]
+            .drop_duplicates(subset=["customer_id"])
+            .copy()
+        )
+        _reg["registration_date"] = pd.to_datetime(_reg["registration_date"])
+        if getattr(_reg["registration_date"].dt, "tz", None) is not None:
+            _reg["registration_date"] = _reg["registration_date"].dt.tz_localize(None)
+        _act = _first_global.reset_index().merge(_reg, on="customer_id", how="left")
+        _act["days_to_first_tx"] = (
+            (_act["first_tx_date_global"] - _act["registration_date"])
+            .dt.days.clip(lower=0)
+            .astype("float64")
+        )
+        merged = merged.merge(
+            _act[["customer_id", "days_to_first_tx"]], on="customer_id", how="left"
+        )
+        # Customers never seen in full history get tenure_days as fallback
+        merged["days_to_first_tx"] = merged["days_to_first_tx"].fillna(
+            merged["tenure_days"]
+        )
+
+    return merged
 
 
 def add_monetary_type_shares(df: pd.DataFrame) -> pd.DataFrame:
@@ -388,7 +703,7 @@ def drop_correlated_splits(
     df: pd.DataFrame,
     *,
     threshold: float = 0.9,
-) -> tuple[pd.DataFrame, list[str]]:
+) -> tuple[pd.DataFrame, list[str], pd.DataFrame | None]:
     """Remove monetary split columns that are near-linearly redundant with ``monetary_total``.
 
     K-means computes Euclidean distances. If ``monetary_purchase`` is almost
@@ -430,7 +745,9 @@ def drop_correlated_splits(
     if "monetary_total" not in keep_df.columns:
         return keep_df, dropped, None
 
-    corr_candidates = ["monetary_total"] + [c for c in split_cols if c in keep_df.columns]
+    corr_candidates = ["monetary_total"] + [
+        c for c in split_cols if c in keep_df.columns
+    ]
     corr_monetary_splits: pd.DataFrame | None = None
     if len(corr_candidates) > 1:
         corr_monetary_splits = keep_df[corr_candidates].corr()
@@ -519,6 +836,7 @@ __all__ = [
     "MONETARY_SHARE_COLS",
     "add_monetary_type_shares",
     "build_behavioral_features",
+    "build_trajectory_features",
     "build_customer_feature_matrix",
     "drop_correlated_splits",
     "build_preprocessing_pipeline",

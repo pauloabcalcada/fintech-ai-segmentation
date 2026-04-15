@@ -32,7 +32,6 @@ from .base_tables import (
     TransactionRaw,
 )
 
-
 RANDOM_SEED = 42
 np.random.seed(RANDOM_SEED)
 fake = Faker("pt_BR")
@@ -59,19 +58,19 @@ EMAIL_DOMAINS = ["gmail.com", "outlook.com", "hotmail.com", "yahoo.com.br"]
 
 # Cost-per-acquisition profile per channel (R$).
 CHANNEL_CAC_PROFILES: Dict[str, Dict[str, float]] = {
-    "organic":     {"mean": 25.0,  "std": 10.0},
-    "referral":    {"mean": 55.0,  "std": 15.0},
+    "organic": {"mean": 25.0, "std": 10.0},
+    "referral": {"mean": 55.0, "std": 15.0},
     "partnership": {"mean": 110.0, "std": 25.0},
-    "paid_ads":    {"mean": 230.0, "std": 50.0},
+    "paid_ads": {"mean": 230.0, "std": 50.0},
 }
 
 # P(segment | channel) — channels naturally attract different segment profiles.
 # Order: [high_value_active, mid_value_regular, low_value_dormant, at_risk_churner]
 CHANNEL_SEGMENT_BIAS: Dict[str, List[float]] = {
-    "organic":     [0.15, 0.35, 0.30, 0.20],
-    "referral":    [0.45, 0.35, 0.15, 0.05],
+    "organic": [0.15, 0.35, 0.30, 0.20],
+    "referral": [0.45, 0.35, 0.15, 0.05],
     "partnership": [0.20, 0.40, 0.25, 0.15],
-    "paid_ads":    [0.10, 0.20, 0.30, 0.40],
+    "paid_ads": [0.10, 0.20, 0.30, 0.40],
 }
 
 # Derive P(channel | segment) via Bayes with uniform channel priors.
@@ -80,28 +79,32 @@ CHANNEL_SEGMENT_BIAS: Dict[str, List[float]] = {
 _bias_matrix = np.array([CHANNEL_SEGMENT_BIAS[ch] for ch in ACQUISITION_CHANNELS])
 _channel_probs_by_segment = (_bias_matrix / _bias_matrix.sum(axis=0, keepdims=True)).T
 # Shape: (n_segments, n_channels) — one row per segment, probabilities over channels.
-_SEGMENT_ORDER = ["high_value_active", "mid_value_regular", "low_value_dormant", "at_risk_churner"]
+_SEGMENT_ORDER = [
+    "high_value_active",
+    "mid_value_regular",
+    "low_value_dormant",
+    "at_risk_churner",
+]
 CHANNEL_PROBS_BY_SEGMENT: Dict[str, List[float]] = {
-    seg: _channel_probs_by_segment[i].tolist()
-    for i, seg in enumerate(_SEGMENT_ORDER)
+    seg: _channel_probs_by_segment[i].tolist() for i, seg in enumerate(_SEGMENT_ORDER)
 }
 
 # Monthly transaction-volume multiplier (Brazilian calendar).
 # Captures the 13th-salary bonus (Nov/Dec), Black Friday (Nov),
 # Carnival lull (Feb), and the post-holiday drop (Jan).
 MONTHLY_SEASONALITY_FACTOR: Dict[int, float] = {
-    1:  0.80,   # January  — post-holiday financial hangover
-    2:  0.85,   # February — Carnival (spending shifts, not increases)
-    3:  0.95,
-    4:  0.95,
-    5:  1.05,   # May      — Mother's Day (2nd Sunday)
-    6:  1.05,   # June     — mid-year 13th-salary advance starts
-    7:  0.95,   # July     — winter school holidays
-    8:  0.95,
-    9:  1.00,
-    10: 1.05,   # October  — Children's Day (Oct 12)
-    11: 1.20,   # November — Black Friday + 13th-salary 1st installment
-    12: 1.30,   # December — Christmas + 13th-salary 2nd installment
+    1: 0.80,  # January  — post-holiday financial hangover
+    2: 0.85,  # February — Carnival (spending shifts, not increases)
+    3: 0.95,
+    4: 0.95,
+    5: 1.05,  # May      — Mother's Day (2nd Sunday)
+    6: 1.05,  # June     — mid-year 13th-salary advance starts
+    7: 0.95,  # July     — winter school holidays
+    8: 0.95,
+    9: 1.00,
+    10: 1.05,  # October  — Children's Day (Oct 12)
+    11: 1.20,  # November — Black Friday + 13th-salary 1st installment
+    12: 1.30,  # December — Christmas + 13th-salary 2nd installment
 }
 
 # How strongly each segment's activity responds to seasonal peaks.
@@ -111,7 +114,7 @@ SEASONAL_SENSITIVITY: Dict[str, float] = {
     "high_value_active": 1.00,  # full effect — engaged, discretionary spenders
     "mid_value_regular": 0.70,  # moderate response
     "low_value_dormant": 0.30,  # barely moves regardless of season
-    "at_risk_churner":   0.20,  # disengaged — seasonality won't wake them up
+    "at_risk_churner": 0.20,  # disengaged — seasonality won't wake them up
 }
 
 STATE_PROBS: Dict[str, float] = {
@@ -184,22 +187,26 @@ _TIER_1_STATES = {"SP", "RJ", "MG"}
 # Segment-specific age parameters for mild demographic correlation.
 # Updated 2026-04-10: Younger skew toward high-value (digital native), older toward dormant.
 _AGE_PARAMS_BY_SEGMENT: Dict[str, Dict[str, float]] = {
-    "high_value_active": {"loc": 38, "scale": 9},   # slightly older, more affluent
+    "high_value_active": {"loc": 38, "scale": 9},  # slightly older, more affluent
     "mid_value_regular": {"loc": 33, "scale": 10},  # younger professional
     "low_value_dormant": {"loc": 42, "scale": 12},  # broader range
-    "at_risk_churner":   {"loc": 27, "scale": 8},   # youngest, less committed
+    "at_risk_churner": {"loc": 27, "scale": 8},  # youngest, less committed
 }
 
 
 def _normalize_email_token(value: str) -> str:
-    normalized = unicodedata.normalize("NFKD", value).encode("ascii", "ignore").decode("ascii")
+    normalized = (
+        unicodedata.normalize("NFKD", value).encode("ascii", "ignore").decode("ascii")
+    )
     normalized = normalized.lower()
     normalized = re.sub(r"[^a-z0-9]+", ".", normalized)
     normalized = re.sub(r"\.+", ".", normalized).strip(".")
     return normalized or "cliente"
 
 
-def _generate_unique_identity(used_names: set[str], used_emails: set[str]) -> Tuple[str, str]:
+def _generate_unique_identity(
+    used_names: set[str], used_emails: set[str]
+) -> Tuple[str, str]:
     for _ in range(200):
         full_name = " ".join(fake.name().split())
         if full_name in used_names:
@@ -208,7 +215,9 @@ def _generate_unique_identity(used_names: set[str], used_emails: set[str]) -> Tu
         parts = [part for part in full_name.split(" ") if part]
         first_name = parts[0] if parts else "cliente"
         last_name = parts[-1] if len(parts) > 1 else "cliente"
-        email_local = f"{_normalize_email_token(first_name)}.{_normalize_email_token(last_name)}"
+        email_local = (
+            f"{_normalize_email_token(first_name)}.{_normalize_email_token(last_name)}"
+        )
         email_domain = str(np.random.choice(EMAIL_DOMAINS))
         email = f"{email_local}@{email_domain}"
 
@@ -244,8 +253,12 @@ def generate_customers_raw() -> pd.DataFrame:
 
     for segment_label, segment_size in SEGMENT_DISTRIBUTION.items():
         for _ in range(segment_size):
-            age_params = _AGE_PARAMS_BY_SEGMENT.get(segment_label, {"loc": 35, "scale": 10})
-            age = int(np.random.normal(loc=age_params["loc"], scale=age_params["scale"]))
+            age_params = _AGE_PARAMS_BY_SEGMENT.get(
+                segment_label, {"loc": 35, "scale": 10}
+            )
+            age = int(
+                np.random.normal(loc=age_params["loc"], scale=age_params["scale"])
+            )
             age = int(np.clip(age, 18, 80))
 
             state = _sample_state()
@@ -302,7 +315,11 @@ def _segment_transaction_profile(segment: SegmentLabel) -> Tuple[float, float, f
     if segment == "mid_value_regular":
         return 18.0, 160.0, 0.85
     if segment == "low_value_dormant":
-        return 4.0, 100.0, 0.40  # avg_ticket: 90 → 100 (increased to distance from churner)
+        return (
+            4.0,
+            100.0,
+            0.40,
+        )  # avg_ticket: 90 → 100 (increased to distance from churner)
     # at_risk_churner
     return 2.0, 45.0, 0.15  # avg_tx: 3→2, avg_ticket: 70→45, p_active: 0.25→0.15
 
@@ -327,14 +344,14 @@ _CHURN_HAZARD: Dict[str, float] = {
     "high_value_active": 0.010,
     "mid_value_regular": 0.040,
     "low_value_dormant": 0.080,
-    "at_risk_churner":   0.180,
+    "at_risk_churner": 0.180,
 }
 
 _PRODUCT_CANCELLATION_RATE_BY_SEGMENT: Dict[str, float] = {
     "high_value_active": 0.05,
     "mid_value_regular": 0.12,
     "low_value_dormant": 0.25,
-    "at_risk_churner":   0.40,
+    "at_risk_churner": 0.40,
 }
 
 # Channel order: in_app, card_present, online, atm — sums must be 1.0 per product.
@@ -357,32 +374,62 @@ _CHANNEL_PROBS_BY_PRODUCT_TYPE: Dict[str, Tuple[float, float, float, float]] = {
 # (coefficient of variation on the final amount).
 # Updated 2026-04-10 to add realism to transaction composition.
 _PRODUCT_AMOUNT_PARAMS: Dict[str, Dict[str, float]] = {
-    "wallet":      {"mean_scale": 0.30, "std_scale": 0.25, "min": 5.0},      # R$30–80 typical
-    "credit_card": {"mean_scale": 1.00, "std_scale": 0.40, "min": 15.0},     # segment avg_ticket
-    "investment":  {"mean_scale": 6.00, "std_scale": 2.50, "min": 100.0},    # large deposits
-    "insurance":   {"mean_scale": 0.60, "std_scale": 0.15, "min": 30.0},     # fixed premium-like
-    "loan":        {"mean_scale": 8.00, "std_scale": 2.00, "min": 200.0},    # large, periodic
+    "wallet": {"mean_scale": 0.30, "std_scale": 0.25, "min": 5.0},  # R$30–80 typical
+    "credit_card": {
+        "mean_scale": 1.00,
+        "std_scale": 0.40,
+        "min": 15.0,
+    },  # segment avg_ticket
+    "investment": {
+        "mean_scale": 6.00,
+        "std_scale": 2.50,
+        "min": 100.0,
+    },  # large deposits
+    "insurance": {
+        "mean_scale": 0.60,
+        "std_scale": 0.15,
+        "min": 30.0,
+    },  # fixed premium-like
+    "loan": {"mean_scale": 8.00, "std_scale": 2.00, "min": 200.0},  # large, periodic
 }
 
 # Relative weights for sampling which product a customer transacts on.
 # Daily-use products dominate; investment/insurance/loan are infrequent.
 _PRODUCT_SELECTION_WEIGHT: Dict[str, float] = {
-    "wallet":      3.0,
+    "wallet": 3.0,
     "credit_card": 3.0,
-    "investment":  0.5,
-    "insurance":   0.3,
-    "loan":        0.2,
+    "investment": 0.5,
+    "insurance": 0.3,
+    "loan": 0.2,
 }
 
 # Transaction-type order: [purchase, transfer, cash_withdrawal, fee, refund]
 # Keyed by product_type so that transaction types are realistic per instrument.
-_TX_TYPES: Tuple[str, ...] = ("purchase", "transfer", "cash_withdrawal", "fee", "refund")
+_TX_TYPES: Tuple[str, ...] = (
+    "purchase",
+    "transfer",
+    "cash_withdrawal",
+    "fee",
+    "refund",
+)
 _TX_TYPE_PROBS_BY_PRODUCT_TYPE: Dict[str, Tuple[float, float, float, float, float]] = {
-    "wallet":      (0.55, 0.30, 0.08, 0.04, 0.03),  # spending, P2P, ATM cash
-    "credit_card": (0.70, 0.00, 0.05, 0.15, 0.10),  # purchases, cash advance, fee, refund
-    "investment":  (0.00, 0.75, 0.00, 0.25, 0.00),  # deposits/withdrawals, management fees
-    "insurance":   (0.00, 0.10, 0.00, 0.75, 0.15),  # premium fees, claim refunds
-    "loan":        (0.00, 0.70, 0.00, 0.30, 0.00),  # disbursements/repayments, fees
+    "wallet": (0.55, 0.30, 0.08, 0.04, 0.03),  # spending, P2P, ATM cash
+    "credit_card": (
+        0.70,
+        0.00,
+        0.05,
+        0.15,
+        0.10,
+    ),  # purchases, cash advance, fee, refund
+    "investment": (
+        0.00,
+        0.75,
+        0.00,
+        0.25,
+        0.00,
+    ),  # deposits/withdrawals, management fees
+    "insurance": (0.00, 0.10, 0.00, 0.75, 0.15),  # premium fees, claim refunds
+    "loan": (0.00, 0.70, 0.00, 0.30, 0.00),  # disbursements/repayments, fees
 }
 
 
@@ -532,7 +579,9 @@ def generate_transactions_raw(
         )
         product_pool_weights = _raw_weights / _raw_weights.sum()
 
-        avg_tx_per_active_month, avg_ticket, p_active_base = _segment_transaction_profile(segment)
+        avg_tx_per_active_month, avg_ticket, p_active_base = (
+            _segment_transaction_profile(segment)
+        )
 
         # ── M0: partial month [registration_date, end of registration month) ──
         reg_month_start = _month_start(registration_date)
@@ -551,21 +600,44 @@ def generate_transactions_raw(
         _m0_seasonal = 1.0 + (_m0_base_factor - 1.0) * _m0_sensitivity
 
         if segment == "at_risk_churner":
-            p_active_m0 = min(p_active_base * day_fraction_m0 * (1.0 + (_m0_base_factor - 1.0) * _m0_sensitivity * 0.5), p_active_base)
+            p_active_m0 = min(
+                p_active_base
+                * day_fraction_m0
+                * (1.0 + (_m0_base_factor - 1.0) * _m0_sensitivity * 0.5),
+                p_active_base,
+            )
         elif segment == "low_value_dormant":
-            p_active_m0 = min(p_active_base * day_fraction_m0 * (1.0 + (_m0_base_factor - 1.0) * _m0_sensitivity * 0.5), p_active_base)
+            p_active_m0 = min(
+                p_active_base
+                * day_fraction_m0
+                * (1.0 + (_m0_base_factor - 1.0) * _m0_sensitivity * 0.5),
+                p_active_base,
+            )
         else:
-            p_active_m0 = min(p_active_base * day_fraction_m0 * (1.0 + (_m0_base_factor - 1.0) * _m0_sensitivity * 0.5), 0.99)
+            p_active_m0 = min(
+                p_active_base
+                * day_fraction_m0
+                * (1.0 + (_m0_base_factor - 1.0) * _m0_sensitivity * 0.5),
+                0.99,
+            )
 
         if next_month_start <= last_complete_month and np.random.rand() <= p_active_m0:
-            n_tx_m0 = int(np.random.poisson(max(avg_tx_per_active_month * day_fraction_m0 * _m0_seasonal, 0.5)))
+            n_tx_m0 = int(
+                np.random.poisson(
+                    max(avg_tx_per_active_month * day_fraction_m0 * _m0_seasonal, 0.5)
+                )
+            )
             for _ in range(n_tx_m0):
                 day_offset = np.random.randint(0, max(days_remaining_m0, 1))
                 hour = np.random.randint(0, 24)
                 minute = np.random.randint(0, 60)
-                tx_dt = registration_date + timedelta(days=int(day_offset), hours=hour, minutes=minute)
+                tx_dt = registration_date + timedelta(
+                    days=int(day_offset), hours=hour, minutes=minute
+                )
                 tx_dt = min(tx_dt, TODAY)
-                product_type = str(np.random.choice(product_pool, p=product_pool_weights))
+                product_type = str(
+                    np.random.choice(product_pool, p=product_pool_weights)
+                )
                 amount = _sample_transaction_amount(product_type, avg_ticket)
                 tx_type = _sample_tx_type_for_product(product_type)
                 channel = _sample_channel_for_product_type(product_type)
@@ -621,10 +693,14 @@ def generate_transactions_raw(
             # Decay p_active for churn-prone segments, then apply seasonal nudge.
             if segment == "at_risk_churner":
                 decay = np.exp(-0.25 * month_idx)
-                p_active = min((p_active_base * decay + 0.05) * _seasonal_p, p_active_base)
+                p_active = min(
+                    (p_active_base * decay + 0.05) * _seasonal_p, p_active_base
+                )
             elif segment == "low_value_dormant":
                 decay = np.exp(-0.05 * month_idx)
-                p_active = min((p_active_base * decay + 0.10) * _seasonal_p, p_active_base)
+                p_active = min(
+                    (p_active_base * decay + 0.10) * _seasonal_p, p_active_base
+                )
             else:
                 recency_boost = 0.02 * (month_idx / max(tenure_len - 1, 1))
                 p_active = min((p_active_base + recency_boost) * _seasonal_p, 0.99)
@@ -643,10 +719,14 @@ def generate_transactions_raw(
                 day_offset = np.random.randint(0, days_in_month)
                 hour = np.random.randint(0, 24)
                 minute = np.random.randint(0, 60)
-                tx_dt = month_start_dt + timedelta(days=int(day_offset), hours=hour, minutes=minute)
+                tx_dt = month_start_dt + timedelta(
+                    days=int(day_offset), hours=hour, minutes=minute
+                )
                 tx_dt = min(tx_dt, TODAY)
 
-                product_type = str(np.random.choice(product_pool, p=product_pool_weights))
+                product_type = str(
+                    np.random.choice(product_pool, p=product_pool_weights)
+                )
                 amount = _sample_transaction_amount(product_type, avg_ticket)
                 tx_type = _sample_tx_type_for_product(product_type)
                 channel = _sample_channel_for_product_type(product_type)
@@ -704,14 +784,38 @@ def generate_customer_products_raw(
 
         # Segment-based probabilities of owning each product type.
         if segment == "high_value_active":
-            probs = {"wallet": 0.98, "credit_card": 0.92, "investment": 0.65, "insurance": 0.45, "loan": 0.35}
+            probs = {
+                "wallet": 0.98,
+                "credit_card": 0.92,
+                "investment": 0.65,
+                "insurance": 0.45,
+                "loan": 0.35,
+            }
         elif segment == "mid_value_regular":
-            probs = {"wallet": 0.95, "credit_card": 0.85, "investment": 0.35, "insurance": 0.30, "loan": 0.30}
+            probs = {
+                "wallet": 0.95,
+                "credit_card": 0.85,
+                "investment": 0.35,
+                "insurance": 0.30,
+                "loan": 0.30,
+            }
         elif segment == "low_value_dormant":
-            probs = {"wallet": 0.90, "credit_card": 0.60, "investment": 0.15, "insurance": 0.20, "loan": 0.20}
+            probs = {
+                "wallet": 0.90,
+                "credit_card": 0.60,
+                "investment": 0.15,
+                "insurance": 0.20,
+                "loan": 0.20,
+            }
         else:  # at_risk_churner
             # High loan rate = financial stress signal; investment low = no savings buffer.
-            probs = {"wallet": 0.85, "credit_card": 0.50, "investment": 0.10, "insurance": 0.15, "loan": 0.25}
+            probs = {
+                "wallet": 0.85,
+                "credit_card": 0.50,
+                "investment": 0.10,
+                "insurance": 0.15,
+                "loan": 0.25,
+            }
 
         for product_type, prob in probs.items():
             if np.random.rand() < prob:
@@ -753,9 +857,9 @@ def validate_base_tables_consistency(
     catalog = set(products_raw["product_type"].astype(str).unique())
     if not transactions_raw.empty:
         tx_types = set(transactions_raw["product_type"].astype(str).unique())
-        assert tx_types.issubset(catalog), (
-            f"transactions_raw has product_type values not in catalog: {tx_types - catalog}"
-        )
+        assert tx_types.issubset(
+            catalog
+        ), f"transactions_raw has product_type values not in catalog: {tx_types - catalog}"
 
     active_by_customer = _active_product_types_by_customer(
         customer_products_raw,
@@ -768,9 +872,9 @@ def validate_base_tables_consistency(
         if not allowed:
             allowed = {"wallet"}
         bad_mask = ~sub["product_type"].astype(str).isin(allowed)
-        assert not bool(bad_mask.any()), (
-            f"customer {cid}: transaction product_type not in allowed set {allowed}"
-        )
+        assert not bool(
+            bad_mask.any()
+        ), f"customer {cid}: transaction product_type not in allowed set {allowed}"
 
 
 def generate_all_base_tables() -> Dict[str, pd.DataFrame]:

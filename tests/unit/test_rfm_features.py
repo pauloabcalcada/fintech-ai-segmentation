@@ -14,6 +14,7 @@ from fintech_ai_segmentation.rfm_features import (
     build_behavioral_features,
     build_customer_feature_matrix,
     build_preprocessing_pipeline,
+    build_trajectory_features,
     drop_correlated_splits,
 )
 
@@ -67,7 +68,9 @@ def test_cadence_imputation_window_span(as_of: pd.Timestamp) -> None:
             "transaction_type": ["purchase"],
         }
     )
-    df_cp = pd.DataFrame(columns=["customer_id", "product_id", "start_date", "is_active"])
+    df_cp = pd.DataFrame(
+        columns=["customer_id", "product_id", "start_date", "is_active"]
+    )
     out = build_behavioral_features(df_tx, df_cp, as_of)
     expected = float((as_of - pd.Timestamp("2025-01-01")).days)
     assert out["avg_days_between_tx"].iloc[0] == pytest.approx(expected)
@@ -162,14 +165,39 @@ def test_full_matrix_merge_has_only_numeric_demographics(as_of: pd.Timestamp) ->
     assert "channel_organic" not in m.columns
 
 
+def test_drop_correlated_splits_no_monetary_total() -> None:
+    """When monetary_total is absent the function returns (df_unchanged, [], None)."""
+    df = pd.DataFrame(
+        {
+            "customer_id": ["a", "b"],
+            "monetary_purchase": [10.0, 20.0],
+            "monetary_transfer": [5.0, 3.0],
+        }
+    )
+    cleaned, dropped, corr = drop_correlated_splits(df, threshold=0.9)
+    assert dropped == [], "No columns should be dropped when monetary_total is absent"
+    assert corr is None, "corr_monetary_splits should be None when monetary_total is absent"
+    assert list(cleaned.columns) == list(df.columns), "DataFrame should be unchanged"
+
+
 def test_transform_group_membership() -> None:
     """Transform groups should reflect the selected feature strategy."""
-    assert "acquisition_cost" in LOG1P_COLS, "acquisition_cost should receive log1p (multi-modal right tail)"
-    assert "avg_ticket" in LOG1P_COLS, "avg_ticket should receive log1p (right-skewed spend intensity)"
-    assert "monetary_total" not in LOG1P_COLS, "monetary_total should not be log-transformed for clustering"
-    assert "refund_rate" in SQRT_COLS, "refund_rate should receive sqrt (bounded rate, spike at 0)"
+    assert (
+        "acquisition_cost" in LOG1P_COLS
+    ), "acquisition_cost should receive log1p (multi-modal right tail)"
+    assert (
+        "avg_ticket" in LOG1P_COLS
+    ), "avg_ticket should receive log1p (right-skewed spend intensity)"
+    assert (
+        "monetary_total" not in LOG1P_COLS
+    ), "monetary_total should not be log-transformed for clustering"
+    assert (
+        "refund_rate" in SQRT_COLS
+    ), "refund_rate should receive sqrt (bounded rate, spike at 0)"
     assert "refund_rate" not in LOG1P_COLS, "refund_rate must not also be in LOG1P_COLS"
-    assert "acquisition_cost" not in SQRT_COLS, "acquisition_cost must not also be in SQRT_COLS"
+    assert (
+        "acquisition_cost" not in SQRT_COLS
+    ), "acquisition_cost must not also be in SQRT_COLS"
 
 
 def test_preprocessing_pipeline_shape_and_finiteness(as_of: pd.Timestamp) -> None:
@@ -201,8 +229,8 @@ def test_preprocessing_pipeline_sqrt_applied_to_refund_rate() -> None:
     """
     df = pd.DataFrame(
         {
-            "recency_days": [1.0, 4.0, 9.0],   # log1p col
-            "refund_rate":  [1.0, 4.0, 9.0],   # sqrt col — same raw values
+            "recency_days": [1.0, 4.0, 9.0],  # log1p col
+            "refund_rate": [1.0, 4.0, 9.0],  # sqrt col — same raw values
         }
     )
     pipe = build_preprocessing_pipeline(df.columns.tolist())
@@ -210,7 +238,175 @@ def test_preprocessing_pipeline_sqrt_applied_to_refund_rate() -> None:
     # log1p([1,4,9]) = [0.693, 1.609, 2.303]; sqrt([1,4,9]) = [1, 2, 3]
     # After StandardScaler both are centered, but std-normalised values differ.
     col_recency = X[:, 0]
-    col_refund  = X[:, 1]
-    assert not np.allclose(col_recency, col_refund), (
-        "recency_days (log1p) and refund_rate (sqrt) should produce different scaled values"
+    col_refund = X[:, 1]
+    assert not np.allclose(
+        col_recency, col_refund
+    ), "recency_days (log1p) and refund_rate (sqrt) should produce different scaled values"
+
+
+# ---------------------------------------------------------------------------
+# Trajectory feature tests
+# ---------------------------------------------------------------------------
+
+
+def _tx_df(
+    customer_id: str, dates: list[str], tx_type: str = "purchase"
+) -> pd.DataFrame:
+    """Helper: build a minimal transaction DataFrame for one customer."""
+    return pd.DataFrame(
+        {
+            "customer_id": customer_id,
+            "transaction_datetime": pd.to_datetime(dates),
+            "transaction_type": tx_type,
+        }
     )
+
+
+@pytest.fixture
+def window_start() -> pd.Timestamp:
+    return pd.Timestamp("2024-03-01")
+
+
+def test_activity_trend_ratio_decay_vs_growth(
+    as_of: pd.Timestamp, window_start: pd.Timestamp
+) -> None:
+    """Churner (all activity in first half) gets ratio < 1; grower gets ratio > 1."""
+    # Customer A: all transactions in first half (2024-03 to 2024-08) — decay pattern
+    df_decay = _tx_df(
+        "decay",
+        ["2024-04-01", "2024-05-15", "2024-06-20", "2024-07-10"],
+    )
+    # Customer B: all transactions in second half (2025-03 to 2026-02) — growth pattern
+    df_growth = _tx_df(
+        "growth",
+        ["2025-04-01", "2025-07-15", "2025-11-01", "2026-01-20"],
+    )
+    df_tx = pd.concat([df_decay, df_growth], ignore_index=True)
+
+    out = build_trajectory_features(df_tx, as_of, window_start).set_index("customer_id")
+
+    assert (
+        out.loc["decay", "activity_trend_ratio"] < 1.0
+    ), "Customer with only early activity should have trend ratio < 1"
+    assert (
+        out.loc["growth", "activity_trend_ratio"] > 1.0
+    ), "Customer with only recent activity should have trend ratio > 1"
+
+
+def test_active_months_ratio_calculation(
+    as_of: pd.Timestamp, window_start: pd.Timestamp
+) -> None:
+    """Customer active in 6 out of ~24 possible months from first-tx to as_of."""
+    # First transaction: 2024-03-15 → first month = 2024-03
+    # as_of = 2026-02-28 → ~24 months span
+    # Transactions in exactly 6 distinct months
+    dates = [
+        "2024-03-15",
+        "2024-06-01",
+        "2024-09-10",
+        "2024-12-05",
+        "2025-03-20",
+        "2025-09-01",
+    ]
+    df_tx = _tx_df("c1", dates)
+    out = build_trajectory_features(df_tx, as_of, window_start).set_index("customer_id")
+
+    ratio = out.loc["c1", "active_months_ratio"]
+    # 6 active months / ~24 months ≈ 0.25  (within 10% tolerance)
+    assert (
+        0.15 <= ratio <= 0.40
+    ), f"active_months_ratio={ratio:.3f} out of expected range"
+
+
+def test_tenure_utilization_calculation(
+    as_of: pd.Timestamp, window_start: pd.Timestamp
+) -> None:
+    """Customer with 6 active months out of 24-month tenure → utilization ~0.25."""
+    dates = [
+        "2024-03-15",
+        "2024-06-01",
+        "2024-09-10",
+        "2024-12-05",
+        "2025-03-20",
+        "2025-09-01",
+    ]
+    # Provide registration_date so tenure_utilization uses it as anchor
+    df_tx = _tx_df("c1", dates)
+    # tenure_utilization falls back to first_tx_date when no registration_date column
+    out = build_trajectory_features(df_tx, as_of, window_start).set_index("customer_id")
+
+    util = out.loc["c1", "tenure_utilization"]
+    assert 0.15 <= util <= 0.40, f"tenure_utilization={util:.3f} out of expected range"
+
+
+def test_trajectory_features_single_tx_customer(
+    as_of: pd.Timestamp, window_start: pd.Timestamp
+) -> None:
+    """Customer with a single transaction gets sensible, finite trajectory values."""
+    df_tx = _tx_df("solo", ["2025-06-01"])
+    out = build_trajectory_features(df_tx, as_of, window_start).set_index("customer_id")
+
+    row = out.loc["solo"]
+    # With Laplace smoothing, ratio = (0+1)/(0+1) = 1.0 or (1+1)/(0+1) = 2.0
+    assert np.isfinite(row["activity_trend_ratio"]), "trend ratio must be finite"
+    assert (
+        0.0 <= row["active_months_ratio"] <= 1.0
+    ), "active_months_ratio must be in [0,1]"
+    assert (
+        0.0 <= row["tenure_utilization"] <= 1.0
+    ), "tenure_utilization must be in [0,1]"
+
+
+def test_build_customer_feature_matrix_includes_trajectory(as_of: pd.Timestamp) -> None:
+    """Updated build_customer_feature_matrix output includes all 3 trajectory columns."""
+    cid = "c_traj"
+    df_tx = pd.DataFrame(
+        {
+            "customer_id": [cid, cid, cid],
+            "transaction_datetime": pd.to_datetime(
+                ["2024-04-01", "2025-01-15", "2025-10-20"]
+            ),
+            "amount": [100.0, 80.0, 60.0],
+            "transaction_type": ["purchase", "purchase", "transfer"],
+        }
+    )
+    df_cp = pd.DataFrame(
+        {
+            "customer_id": [cid],
+            "product_id": ["p1"],
+            "start_date": pd.to_datetime(["2024-01-01"]),
+            "is_active": [True],
+        }
+    )
+    df_c = pd.DataFrame(
+        {
+            "customer_id": [cid],
+            "age": [32.0],
+            "acquisition_cost": [120.0],
+            "registration_date": pd.to_datetime(["2024-01-01"]),
+            "true_segment": ["mid_value_regular"],
+        }
+    )
+
+    matrix = build_customer_feature_matrix(df_tx, df_cp, df_c, as_of)
+
+    for col in ("activity_trend_ratio", "active_months_ratio", "tenure_utilization"):
+        assert col in matrix.columns, f"Expected column '{col}' in feature matrix"
+    # All trajectory values for a real customer must be finite and non-negative
+    row = matrix.set_index("customer_id").loc[cid]
+    assert row["activity_trend_ratio"] >= 0
+    assert 0.0 <= row["active_months_ratio"] <= 1.0
+    assert 0.0 <= row["tenure_utilization"] <= 1.0
+
+
+def test_trajectory_transform_group_membership() -> None:
+    """Trajectory features must be in the correct transform groups."""
+    assert (
+        "activity_trend_ratio" in LOG1P_COLS
+    ), "activity_trend_ratio should receive log1p (right-skewed ratio)"
+    assert (
+        "active_months_ratio" not in LOG1P_COLS
+    ), "active_months_ratio is bounded [0,1] and should be passthrough"
+    assert (
+        "tenure_utilization" not in LOG1P_COLS
+    ), "tenure_utilization is bounded [0,1] and should be passthrough"

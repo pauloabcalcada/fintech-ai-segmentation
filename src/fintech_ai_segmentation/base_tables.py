@@ -14,7 +14,6 @@ from dataclasses import dataclass
 from datetime import datetime
 from typing import Literal
 
-
 SegmentLabel = Literal[
     "high_value_active",
     "mid_value_regular",
@@ -30,14 +29,14 @@ class CustomerRaw:
 
     """
 
-    customer_id: str          # UUID
+    customer_id: str  # UUID
     name: str
     email: str
     age: int
-    state: str                # Brazilian state code (e.g. 'SP')
+    state: str  # Brazilian state code (e.g. 'SP')
     registration_date: datetime
     acquisition_channel: Literal["paid_ads", "organic", "referral", "partnership"]
-    acquisition_cost: float   # CAC (R$)
+    acquisition_cost: float  # CAC (R$)
 
     # Ground-truth behavioral segment used only for evaluation.
     # Downstream clustering models should try to recover this.
@@ -52,11 +51,13 @@ class TransactionRaw:
     aggregated into customer-level features (RFM, balances, revenue, etc.).
     """
 
-    transaction_id: str       # UUID
-    customer_id: str          # FK -> customers_raw.customer_id
+    transaction_id: str  # UUID
+    customer_id: str  # FK -> customers_raw.customer_id
     transaction_datetime: datetime
-    amount: float             # positive for debit/spend, negative for refunds, etc.
-    transaction_type: Literal["purchase", "transfer", "cash_withdrawal", "fee", "refund"]
+    amount: float  # positive for debit/spend, negative for refunds, etc.
+    transaction_type: Literal[
+        "purchase", "transfer", "cash_withdrawal", "fee", "refund"
+    ]
     product_type: Literal["wallet", "credit_card", "investment", "insurance", "loan"]
     channel: Literal["in_app", "card_present", "online", "atm"]
     status: Literal["completed", "pending", "failed", "reversed"]
@@ -66,8 +67,8 @@ class TransactionRaw:
 class ProductRaw:
     """Product catalog for SynaptiqPay."""
 
-    product_id: str          # UUID
-    product_name: str        # e.g. "Digital Wallet", "Credit Card"
+    product_id: str  # UUID
+    product_name: str  # e.g. "Digital Wallet", "Credit Card"
     product_type: Literal["wallet", "credit_card", "investment", "insurance", "loan"]
 
 
@@ -75,8 +76,8 @@ class ProductRaw:
 class CustomerProductRaw:
     """Bridge table: which customer owns which products and since when."""
 
-    customer_id: str         # FK -> customers_raw.customer_id
-    product_id: str          # FK -> products_raw.product_id
+    customer_id: str  # FK -> customers_raw.customer_id
+    product_id: str  # FK -> products_raw.product_id
     start_date: datetime
     is_active: bool
 
@@ -88,4 +89,3 @@ __all__ = [
     "ProductRaw",
     "CustomerProductRaw",
 ]
-
