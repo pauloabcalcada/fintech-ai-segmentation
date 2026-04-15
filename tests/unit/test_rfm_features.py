@@ -525,7 +525,7 @@ def test_build_product_monetary_shares_basic() -> None:
     assert abs(c1["insurance_monetary_share"] - 0.0) < 0.01
 
 
-def test_build_product_monetary_shares_filters_refunds_and_zero_amounts() -> None:
+def test_build_product_monetary_shares_zero_monetary() -> None:
     """Refunds and zero-amount transactions are filtered out; only positive amounts count."""
     from datetime import datetime
 
