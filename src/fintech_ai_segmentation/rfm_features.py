@@ -109,6 +109,26 @@ PASSTHROUGH_COLS = [
     #   Churners concentrate activity early (ratio → 1.0); stable customers score ~0.5.
     #   Bounded [0, 1]; passthrough.
     "early_window_freq_ratio",
+    # Product ownership flags (binary 0/1) from build_product_flag_features.
+    # Segment-specific ownership probabilities: investment 65% high_value vs 10% churner.
+    "has_wallet",
+    "has_credit_card",
+    "has_investment",
+    "has_insurance",
+    "has_loan",
+    # Product cancellation rate (bounded [0,1]): fraction of acquired products that are inactive.
+    "product_cancellation_rate",
+    # Per-product monetary shares (bounded [0,1]) from build_product_monetary_shares.
+    # Investment deposits are 6× avg ticket; loan disbursements are 8×.
+    "wallet_monetary_share",
+    "credit_card_monetary_share",
+    "investment_monetary_share",
+    "insurance_monetary_share",
+    "loan_monetary_share",
+    # Transaction status rates (bounded [0,1]) from build_tx_status_features.
+    # Elevated reversed/failed rates are financial-friction signals for at_risk_churner.
+    "reversed_rate",
+    "failed_rate",
 ]
 
 # Output column names for ``add_monetary_type_shares`` (clustering mix signal).
@@ -925,6 +945,45 @@ def build_product_monetary_shares(df_tx: pd.DataFrame) -> pd.DataFrame:
     return pd.DataFrame(result_data)
 
 
+def build_tx_status_features(df_tx: pd.DataFrame) -> pd.DataFrame:
+    """Return transaction status rates per customer.
+
+    Columns produced
+    ----------------
+    reversed_rate : float in [0, 1]
+        Reversed transactions / total transactions.
+    failed_rate : float in [0, 1]
+        Failed transactions / total transactions.
+
+    These rates serve as financial-friction signals: at_risk_churner customers
+    exhibit elevated reversal rates due to the segment-specific transaction type
+    distributions planted in the generator.  Both features are bounded in [0, 1]
+    and should be registered in ``PASSTHROUGH_COLS`` for the preprocessing pipeline.
+
+    Parameters
+    ----------
+    df_tx :
+        Transaction DataFrame with columns ``customer_id``, ``status``.
+        All statuses are considered (no pre-filtering).
+        Empty input returns an empty DataFrame with the correct column structure.
+    """
+    if df_tx.empty:
+        return pd.DataFrame(columns=["customer_id", "reversed_rate", "failed_rate"])
+
+    records = []
+    for cid, grp in df_tx.groupby("customer_id", sort=False):
+        total = len(grp)
+        reversed_rate = float((grp["status"] == "reversed").sum() / total) if total > 0 else 0.0
+        failed_rate = float((grp["status"] == "failed").sum() / total) if total > 0 else 0.0
+        records.append({
+            "customer_id": cid,
+            "reversed_rate": reversed_rate,
+            "failed_rate": failed_rate,
+        })
+
+    return pd.DataFrame(records)
+
+
 def build_preprocessing_pipeline(feature_columns: Sequence[str]) -> Pipeline:
     """Build the sklearn preprocessing Pipeline ready for k-means input.
 
@@ -1002,6 +1061,7 @@ __all__ = [
     "build_customer_feature_matrix",
     "build_product_flag_features",
     "build_product_monetary_shares",
+    "build_tx_status_features",
     "drop_correlated_splits",
     "build_preprocessing_pipeline",
 ]
