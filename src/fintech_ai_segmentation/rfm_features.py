@@ -109,26 +109,6 @@ PASSTHROUGH_COLS = [
     #   Churners concentrate activity early (ratio → 1.0); stable customers score ~0.5.
     #   Bounded [0, 1]; passthrough.
     "early_window_freq_ratio",
-    # Product ownership flags (binary 0/1) from build_product_flag_features.
-    # Segment-specific ownership probabilities: investment 65% high_value vs 10% churner.
-    "has_wallet",
-    "has_credit_card",
-    "has_investment",
-    "has_insurance",
-    "has_loan",
-    # Product cancellation rate (bounded [0,1]): fraction of acquired products that are inactive.
-    "product_cancellation_rate",
-    # Per-product monetary shares (bounded [0,1]) from build_product_monetary_shares.
-    # Investment deposits are 6× avg ticket; loan disbursements are 8×.
-    "wallet_monetary_share",
-    "credit_card_monetary_share",
-    "investment_monetary_share",
-    "insurance_monetary_share",
-    "loan_monetary_share",
-    # Transaction status rates (bounded [0,1]) from build_tx_status_features.
-    # Elevated reversed/failed rates are financial-friction signals for at_risk_churner.
-    "reversed_rate",
-    "failed_rate",
 ]
 
 # Output column names for ``add_monetary_type_shares`` (clustering mix signal).
@@ -136,17 +116,6 @@ MONETARY_SHARE_COLS = [
     "monetary_purchase_share",
     "monetary_transfer_share",
     "monetary_cash_withdrawal_share",
-]
-
-# Product types present in the SynaptiqPay catalog.  Used by
-# ``build_product_flag_features`` (ownership flags) and
-# ``build_product_monetary_shares`` (monetary composition).
-PRODUCT_TYPES: list[str] = [
-    "wallet",
-    "credit_card",
-    "investment",
-    "insurance",
-    "loan",
 ]
 
 
@@ -795,195 +764,6 @@ def drop_correlated_splits(
     return keep_df, dropped, corr_monetary_splits
 
 
-def build_product_flag_features(
-    df_customer_products: pd.DataFrame,
-    products_raw: pd.DataFrame,
-) -> pd.DataFrame:
-    """Return binary ownership flags and cancellation rate per customer.
-
-    Columns returned (one row per customer_id):
-    - has_wallet, has_credit_card, has_investment, has_insurance, has_loan (0/1 int)
-    - product_cancellation_rate: fraction of acquired products that are inactive [0.0-1.0]
-
-    Designed to expose the segment-specific ownership probabilities planted by
-    the generator (e.g., investment: 65% high_value vs 10% at_risk_churner).
-
-    Parameters
-    ----------
-    df_customer_products :
-        DataFrame with columns ``customer_id``, ``product_id``, ``start_date``,
-        ``is_active``. Each row represents a customer's product ownership record.
-    products_raw :
-        DataFrame with columns ``product_id``, ``product_type``. Used to map
-        product types to customer ownership rows.
-
-    Returns
-    -------
-    pd.DataFrame
-        One row per unique customer_id with columns:
-        ``["customer_id", "has_wallet", "has_credit_card", "has_investment",
-        "has_insurance", "has_loan", "product_cancellation_rate"]``
-        If ``df_customer_products`` is empty, returns an empty DataFrame with
-        the correct column structure.
-    """
-    if df_customer_products.empty:
-        return pd.DataFrame(
-            columns=["customer_id"]
-            + [f"has_{pt}" for pt in PRODUCT_TYPES]
-            + ["product_cancellation_rate"]
-        )
-
-    # Merge to get product_type for each customer-product relationship
-    merged = df_customer_products.merge(
-        products_raw[["product_id", "product_type"]], on="product_id", how="left"
-    )
-
-    # Drop rows where product_id has no match in catalog (data integrity guard).
-    # This prevents NaN product_type values from propagating into the flag logic.
-    merged = merged.dropna(subset=["product_type"])
-
-    if merged.empty:
-        return pd.DataFrame(
-            columns=["customer_id"]
-            + [f"has_{pt}" for pt in PRODUCT_TYPES]
-            + ["product_cancellation_rate"]
-        )
-
-    # Compute product cancellation rate before filtering to active-only.
-    # Cancel rate = (total rows - active count) / total rows per customer.
-    cancel_rate = (
-        merged.groupby("customer_id")["is_active"]
-        .apply(lambda grp: float((~grp.astype(bool)).sum() / len(grp)))
-        .rename("product_cancellation_rate")
-    )
-
-    # Vectorized binary flags via pd.get_dummies + groupby.max().
-    # get_dummies creates columns named after the product type values;
-    # groupby.max() takes the max (1 if any row has that product type).
-    dummies = pd.get_dummies(merged["product_type"].astype(str)).astype(int)
-    dummies["customer_id"] = merged["customer_id"].values
-    flags_df = dummies.groupby("customer_id", sort=False).max()
-
-    # Ensure all product type columns exist (in case a type is missing from data).
-    for pt in PRODUCT_TYPES:
-        if pt not in flags_df.columns:
-            flags_df[pt] = 0
-
-    # Rename columns to has_<product_type> format
-    rename_dict = {pt: f"has_{pt}" for pt in PRODUCT_TYPES}
-    flags_df = flags_df.rename(columns=rename_dict)
-
-    # Keep only the flag columns we care about and join with cancellation rate
-    flag_cols = [f"has_{pt}" for pt in PRODUCT_TYPES]
-    result = flags_df[flag_cols].join(cancel_rate)
-    result["product_cancellation_rate"] = result["product_cancellation_rate"].fillna(0.0)
-    return result.reset_index()
-
-
-def build_product_monetary_shares(df_tx: pd.DataFrame) -> pd.DataFrame:
-    """Return per-product monetary composition shares for each customer.
-
-    Columns returned (one row per customer_id):
-    - wallet_monetary_share, credit_card_monetary_share, investment_monetary_share,
-      insurance_monetary_share, loan_monetary_share (each float in [0.0, 1.0])
-
-    Logic:
-    - Filter out refund transactions (transaction_type != "refund")
-    - Filter to rows where amount > 0
-    - Group by customer_id
-    - For each product type in ["wallet", "credit_card", "investment", "insurance", "loan"],
-      compute: sum(amount where product_type == X) / sum(all amount)
-    - If total == 0, all shares = 0.0 (no divide-by-zero)
-    - If df_tx is empty, return empty DataFrame with correct columns
-
-    Parameters
-    ----------
-    df_tx :
-        Transaction DataFrame with columns ``customer_id``, ``amount``,
-        ``product_type``, ``transaction_type``.
-
-    Returns
-    -------
-    pd.DataFrame
-        One row per unique customer_id with columns:
-        ``["customer_id", "wallet_monetary_share", "credit_card_monetary_share",
-        "investment_monetary_share", "insurance_monetary_share", "loan_monetary_share"]``
-        If ``df_tx`` is empty, returns an empty DataFrame with the correct column structure.
-    """
-    SHARE_COLS = [f"{pt}_monetary_share" for pt in PRODUCT_TYPES]
-
-    if df_tx.empty:
-        return pd.DataFrame(columns=["customer_id"] + SHARE_COLS)
-
-    df = df_tx.copy()
-
-    # Filter: exclude refunds and non-positive amounts
-    df = df.loc[(df["transaction_type"] != "refund") & (df["amount"] > 0)]
-
-    if df.empty:
-        return pd.DataFrame(columns=["customer_id"] + SHARE_COLS)
-
-    # Compute total monetary per customer
-    total_per_customer = (
-        df.groupby("customer_id", sort=False)["amount"].sum().rename("total_amount")
-    )
-
-    # For each product type, compute the sum
-    result_data = {"customer_id": total_per_customer.index.tolist()}
-
-    for pt in PRODUCT_TYPES:
-        pt_sum = (
-            df.loc[df["product_type"] == pt]
-            .groupby("customer_id", sort=False)["amount"]
-            .sum()
-        )
-        # Fill missing customers with 0, then divide by total
-        pt_sum = pt_sum.reindex(total_per_customer.index, fill_value=0.0)
-        share_col = f"{pt}_monetary_share"
-        result_data[share_col] = (pt_sum / total_per_customer).fillna(0.0).values
-
-    return pd.DataFrame(result_data)
-
-
-def build_tx_status_features(df_tx: pd.DataFrame) -> pd.DataFrame:
-    """Return transaction status rates per customer.
-
-    Columns produced
-    ----------------
-    reversed_rate : float in [0, 1]
-        Reversed transactions / total transactions.
-    failed_rate : float in [0, 1]
-        Failed transactions / total transactions.
-
-    These rates serve as financial-friction signals: at_risk_churner customers
-    exhibit elevated reversal rates due to the segment-specific transaction type
-    distributions planted in the generator.  Both features are bounded in [0, 1]
-    and should be registered in ``PASSTHROUGH_COLS`` for the preprocessing pipeline.
-
-    Parameters
-    ----------
-    df_tx :
-        Transaction DataFrame with columns ``customer_id``, ``status``.
-        All statuses are considered (no pre-filtering).
-        Empty input returns an empty DataFrame with the correct column structure.
-    """
-    if df_tx.empty:
-        return pd.DataFrame(columns=["customer_id", "reversed_rate", "failed_rate"])
-
-    records = []
-    for cid, grp in df_tx.groupby("customer_id", sort=False):
-        total = len(grp)
-        reversed_rate = float((grp["status"] == "reversed").sum() / total) if total > 0 else 0.0
-        failed_rate = float((grp["status"] == "failed").sum() / total) if total > 0 else 0.0
-        records.append({
-            "customer_id": cid,
-            "reversed_rate": reversed_rate,
-            "failed_rate": failed_rate,
-        })
-
-    return pd.DataFrame(records)
-
-
 def build_preprocessing_pipeline(feature_columns: Sequence[str]) -> Pipeline:
     """Build the sklearn preprocessing Pipeline ready for k-means input.
 
@@ -1054,14 +834,10 @@ __all__ = [
     "SQRT_COLS",
     "PASSTHROUGH_COLS",
     "MONETARY_SHARE_COLS",
-    "PRODUCT_TYPES",
     "add_monetary_type_shares",
     "build_behavioral_features",
     "build_trajectory_features",
     "build_customer_feature_matrix",
-    "build_product_flag_features",
-    "build_product_monetary_shares",
-    "build_tx_status_features",
     "drop_correlated_splits",
     "build_preprocessing_pipeline",
 ]
