@@ -165,6 +165,38 @@ def test_full_matrix_merge_has_only_numeric_demographics(as_of: pd.Timestamp) ->
     assert "channel_organic" not in m.columns
 
 
+def test_days_to_first_tx_never_goes_negative_from_time_of_day_mismatch(
+    as_of: pd.Timestamp,
+) -> None:
+    cid = "c_time_edge"
+    df_tx_window = pd.DataFrame(
+        {
+            "customer_id": [cid],
+            "transaction_datetime": [pd.Timestamp("2025-01-02 00:01:00")],
+            "amount": [10.0],
+            "transaction_type": ["purchase"],
+        }
+    )
+    df_tx_full = df_tx_window.copy()
+    df_cp = pd.DataFrame(
+        {"customer_id": [], "product_id": [], "start_date": [], "is_active": []}
+    )
+    df_c = pd.DataFrame(
+        {
+            "customer_id": [cid],
+            "acquisition_channel": ["organic"],
+            "state": ["MG"],
+            "age": [28.0],
+            "acquisition_cost": [150.0],
+            "registration_date": [pd.Timestamp("2025-01-02 23:59:00")],
+            "true_segment": ["mid_value_regular"],
+        }
+    )
+
+    m = build_customer_feature_matrix(df_tx_window, df_cp, df_c, as_of, df_tx_full=df_tx_full)
+    assert m["days_to_first_tx"].iloc[0] == pytest.approx(0.0)
+
+
 def test_drop_correlated_splits_no_monetary_total() -> None:
     """When monetary_total is absent the function returns (df_unchanged, [], None)."""
     df = pd.DataFrame(

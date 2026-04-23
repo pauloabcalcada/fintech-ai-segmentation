@@ -532,7 +532,6 @@ def build_customer_feature_matrix(
     After the merge, ``add_monetary_type_shares`` appends
     ``monetary_purchase_share``, ``monetary_transfer_share``, and
     ``monetary_cash_withdrawal_share`` (composition of spend by transaction type).
-
     Trajectory features from ``build_trajectory_features`` are also merged in
     (``activity_trend_ratio``, ``active_months_ratio``, ``tenure_utilization``,
     ``last_6m_active_months``, ``early_window_freq_ratio``) to capture how
@@ -645,9 +644,13 @@ def build_customer_feature_matrix(
         if getattr(_reg["registration_date"].dt, "tz", None) is not None:
             _reg["registration_date"] = _reg["registration_date"].dt.tz_localize(None)
         _act = _first_global.reset_index().merge(_reg, on="customer_id", how="left")
+        # Use total_seconds instead of .dt.days so small negative timedeltas
+        # caused by hh:mm:ss mismatches do not floor to -1 day.
         _act["days_to_first_tx"] = (
             (_act["first_tx_date_global"] - _act["registration_date"])
-            .dt.days.clip(lower=0)
+            .dt.total_seconds()
+            .div(86400)
+            .clip(lower=0)
             .astype("float64")
         )
         merged = merged.merge(
@@ -657,6 +660,8 @@ def build_customer_feature_matrix(
         merged["days_to_first_tx"] = merged["days_to_first_tx"].fillna(
             merged["tenure_days"]
         )
+        # Hard safety guard: this feature must never be negative.
+        merged.loc[merged["days_to_first_tx"] < 0, "days_to_first_tx"] = 0.0
 
     return merged
 
