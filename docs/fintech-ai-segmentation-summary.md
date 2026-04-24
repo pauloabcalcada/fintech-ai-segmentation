@@ -38,22 +38,23 @@ STEP 2: How do they behave over time?
           activation quality, product adoption curves,
           cohort revenue curves, churn proxies
 
-STEP V: Synthetic data validation (fake dataset only)
-        → EDA_Validation_Fake_Dataset.ipynb
-        → The ONLY notebook that references true_segment
-        → Confirms generator planted the right patterns
-          before clustering is attempted
-
 STEP 3: What do we know about each customer?
         → RFM Scoring (Recency, Frequency, Monetary)
         → K-Means Clustering (4 behavioral segments)
-        → Validates predicted_segment against true_segment
-          (recovered from step V validation)
+        → Uploading clustering in a new customer profile table
 
 STEP 4: What should we do about it?
         → LangGraph AI Agent
         → Receives segment, RFM profile, cohort health, product ownership
         → Generates personalized recommendation per customer
+
+
+
+STEP V: Synthetic data validation (fake dataset only)
+        → EDA_Validation_Fake_Dataset.ipynb
+        → The ONLY notebook that references true_segment
+        → Confirms generator planted the right patterns
+          before clustering is attempted
 ```
 
 ---
