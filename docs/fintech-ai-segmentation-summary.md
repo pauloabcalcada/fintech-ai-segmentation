@@ -21,7 +21,7 @@ Every Monday morning, the commercial manager spends 3+ hours manually analyzing 
 
 ## The Real-World Analytical Path
 
-The analysis follows a discovery-first narrative — each step builds on the previous one **without using segment labels**. Segment ground truth is validated separately after clustering.
+The analysis follows a discovery-first narrative — each step builds on the previous one.
 
 ```
 STEP 1: Who do we have?
@@ -40,21 +40,21 @@ STEP 2: How do they behave over time?
 
 STEP 3: What do we know about each customer?
         → RFM Scoring (Recency, Frequency, Monetary)
-        → K-Means Clustering (4 behavioral segments)
-        → Uploading clustering in a new customer profile table
+        → K-Means Clustering (k=3 operational segments)
+        → Uploading clustering in a new customer_analysis mart table
 
 STEP 4: What should we do about it?
         → LangGraph AI Agent
         → Receives segment, RFM profile, cohort health, product ownership
         → Generates personalized recommendation per customer
 
-
-
 STEP V: Synthetic data validation (fake dataset only)
         → EDA_Validation_Fake_Dataset.ipynb
-        → The ONLY notebook that references true_segment
+        → Primary ground-truth validation notebook
         → Confirms generator planted the right patterns
           before clustering is attempted
+        → Note: Notebook 3 also loads true_segment for mart
+          context but does not use it as a clustering input
 ```
 
 ---
@@ -68,8 +68,8 @@ The [notebook roadmap](notebooks-roadmap.md) describes the full pipeline.
 | `notebooks/0.Data_Generation.ipynb` | Raw tables only (`customers_raw`, `transactions_raw`, etc.) |
 | `notebooks/1.EDA_demographic_analysis.ipynb` | STEP 1 — Demographics, acquisition, CAC, product ownership. No `true_segment`. |
 | `notebooks/2.EDA_cohort_analysis.ipynb` | STEP 2 — Cohort retention, channel quality, 8 behavioral discovery analyses. No `true_segment`. |
-| `notebooks/EDA_Validation_Fake_Dataset.ipynb` | STEP V — Ground-truth validation. **Only notebook that uses `true_segment`.** |
-| `notebooks/3.EDA_RFM_Clustering.ipynb` | STEP 3 — RFM scoring, K-Means clustering, segment validation |
+| `notebooks/EDA_Validation_Fake_Dataset.ipynb` | STEP V — Ground-truth validation. Primary notebook for `true_segment` analysis. |
+| `notebooks/3.EDA_RFM_Clustering.ipynb` | STEP 3 — RFM scoring, K-Means (k=3), cluster profiling, `customer_analysis` mart upload to Supabase |
 
 ---
 
@@ -94,12 +94,12 @@ The [notebook roadmap](notebooks-roadmap.md) describes the full pipeline.
 14. Does channel × segment composition explain the channel quality differences observed in STEP 2?
 
 ### Behavioral Intelligence (RFM + Clustering)
-15. Who are our most valuable customers right now?
-16. What behavioral patterns define each customer segment?
-17. What is the RFM profile of each segment?
-18. Do high-engagement customers own more products?
-19. How does product composition (wallet, credit card, investment, insurance, loan) vary across segments?
-20. Did K-Means successfully recover the 4 segments planted in the dataset?
+*(Notebook 3, Q6–Q10 in notebook flow)*
+1. Who are our most valuable customers right now?
+2. What behavioral patterns define each customer segment?
+3. What is the RFM profile of each segment?
+4. Do high-engagement customers own more products?
+5. How does credit and investment utilization vary across segments?
 
 ### AI Intelligence (LangGraph Agent)
 12. Given this customer's full profile, what product should we offer?
@@ -158,10 +158,13 @@ The [notebook roadmap](notebooks-roadmap.md) describes the full pipeline.
 From Notebook 2 (Cohort Analysis):
 - `tenure_months`, `cohort_month`, `cohort_retention_rate`
 
-From Notebook 3 (RFM + Clustering):
-- `recency_days`, `frequency_transactions`, `monetary_value`
+From Notebook 3 (RFM + Clustering → `customer_analysis` mart):
+- `recency_days`, `frequency_total`, `monetary_total`, `avg_ticket`
 - `recency_score`, `frequency_score`, `monetary_score`, `rfm_score` (1–5 scale)
-- `predicted_segment` — K-Means output (4 clusters)
+- `active_months_ratio`, `activity_trend_ratio`, `tx_per_active_month`
+- `has_wallet`, `has_credit_card`, `has_investment`, `has_insurance`, `has_loan`
+- `lifecycle_stage` — active / new_no_tx / churned
+- `cluster_km` (int, k=3), `cluster_name` — K-Means segment label
 
 ---
 
@@ -221,7 +224,7 @@ Brazilian calendar effects are modeled with segment-specific sensitivity:
 | Environment | Poetry | Dependency management |
 | Data generation | Faker (pt_BR) | Realistic fake customer dataset with Brazilian locale |
 | Data manipulation | Pandas | EDA, RFM scoring, cohort analysis |
-| Machine learning | Scikit-learn | K-Means clustering (4 segments) |
+| Machine learning | Scikit-learn | K-Means clustering (k=3 operational segments) |
 | AI Agent | LangGraph + Pydantic | Personalized recommendations |
 | LLM | Anthropic Claude API (claude-sonnet-4-20250514) | Language model |
 | Backend | FastAPI | REST API connecting data to frontend |
@@ -344,7 +347,7 @@ return structured response
 ✅ EDA demographic (notebook 1) — discovery-first, no segment labels
 ✅ EDA cohort + behavioral discovery (notebook 2) — 8 discovery analyses
 ✅ Synthetic data validation (EDA_Validation_Fake_Dataset.ipynb)
-✅ RFM Scoring + K-Means Clustering (4 segments)
+✅ RFM Scoring + K-Means Clustering (k=3 operational segments)
 ⬜ LangGraph AI Agent
 ⬜ FastAPI (4 endpoints)
 ⬜ Next.js dashboard (3 pages)
@@ -391,14 +394,14 @@ Returns table + auto-generated Recharts visualization
 User: "Show me at-risk customers from São Paulo with RFM below 2"
 SQL:  SELECT * FROM customers
       WHERE state = 'SP'
-      AND predicted_segment = 'at_risk_churner'
+      AND cluster_name = 'at_risk_churner'
       AND rfm_score < 2
 Chart: Sortable table + bar chart of RFM score distribution
 
 User: "Which acquisition channel brings the most high-value customers?"
 SQL:  SELECT acquisition_channel, COUNT(*) as count
       FROM customers
-      WHERE predicted_segment = 'high_value_active'
+      WHERE cluster_name = 'high_value_active'
       GROUP BY acquisition_channel ORDER BY count DESC
 Chart: Horizontal bar chart ranked by count
 
@@ -440,4 +443,4 @@ Chart: Line chart showing acquisition trend over time
 
 ## Project Narrative (For README + Interviews)
 
-> SynaptiqPay's commercial manager was spending 3+ hours every Monday morning analyzing spreadsheets to understand their 8,000 customers. This project replaces that workflow entirely. Through cohort analysis, we understood when and how customers arrive and at what point they disengage. Through RFM scoring and K-Means clustering, we discovered 4 distinct behavioral segments — and validated that the model successfully recovered the ground truth planted in the data. Through an AI agent powered by LangGraph and Claude, we deliver a personalized, behaviorally-grounded recommendation for every single customer — automatically, in seconds. And through a Text-to-SQL chatbot, the manager can ask any question about the customer base in plain language and get an instant answer with an automatically generated chart — no analyst, no SQL, no waiting.
+> SynaptiqPay's commercial manager was spending 3+ hours every Monday morning analyzing spreadsheets to understand their 8,000 customers. This project replaces that workflow entirely. Through cohort analysis, we understood when and how customers arrive and at what point they disengage. Through RFM scoring and K-Means clustering, we identified 3 operational behavioral segments from the transacting population — profiling their value, activity patterns, and product utilization. Through an AI agent powered by LangGraph and Claude, we deliver a personalized, behaviorally-grounded recommendation for every single customer — automatically, in seconds. And through a Text-to-SQL chatbot, the manager can ask any question about the customer base in plain language and get an instant answer with an automatically generated chart — no analyst, no SQL, no waiting.
