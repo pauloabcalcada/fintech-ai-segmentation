@@ -1,0 +1,484 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>SynaptiqPay | Customer Insights Dashboard</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@400;500;600;700&amp;family=JetBrains+Mono:wght@500&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "surface-dim": "#16111b",
+                        "on-tertiary-fixed-variant": "#6a3b00",
+                        "surface-bright": "#3d3742",
+                        "tertiary-fixed-dim": "#ffb873",
+                        "on-secondary-fixed-variant": "#004f53",
+                        "inverse-on-surface": "#342e39",
+                        "primary-container": "#8a2be2",
+                        "surface": "#16111b",
+                        "primary-fixed-dim": "#dcb8ff",
+                        "inverse-primary": "#8422dc",
+                        "on-secondary-container": "#006c71",
+                        "outline": "#988ca0",
+                        "on-tertiary": "#4b2800",
+                        "surface-container-lowest": "#110c16",
+                        "on-primary": "#480081",
+                        "inverse-surface": "#eadfee",
+                        "outline-variant": "#4c4354",
+                        "on-error-container": "#ffdad6",
+                        "on-background": "#eadfee",
+                        "error": "#ffb4ab",
+                        "on-secondary-fixed": "#002021",
+                        "secondary-fixed": "#63f7ff",
+                        "on-tertiary-container": "#ffdaba",
+                        "secondary": "#e6feff",
+                        "on-secondary": "#003739",
+                        "tertiary": "#ffb873",
+                        "tertiary-container": "#935400",
+                        "secondary-container": "#00f4fe",
+                        "surface-variant": "#39323d",
+                        "on-primary-fixed": "#2c0051",
+                        "surface-container-highest": "#39323d",
+                        "surface-container-high": "#2e2832",
+                        "error-container": "#93000a",
+                        "on-error": "#690005",
+                        "background": "#16111b",
+                        "surface-container": "#231d28",
+                        "primary-fixed": "#efdbff",
+                        "primary": "#dcb8ff",
+                        "tertiary-fixed": "#ffdcbf",
+                        "secondary-fixed-dim": "#00dce5",
+                        "on-surface-variant": "#cfc2d7",
+                        "on-primary-container": "#eed9ff",
+                        "surface-container-low": "#1f1924",
+                        "on-primary-fixed-variant": "#6700b5",
+                        "on-surface": "#eadfee",
+                        "surface-tint": "#dcb8ff",
+                        "on-tertiary-fixed": "#2d1600"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.125rem",
+                        "lg": "0.25rem",
+                        "xl": "0.5rem",
+                        "full": "0.75rem"
+                    },
+                    "spacing": {
+                        "margin-mobile": "16px",
+                        "unit": "4px",
+                        "margin-desktop": "40px",
+                        "container-max": "1440px",
+                        "gutter": "24px"
+                    },
+                    "fontFamily": {
+                        "caption": ["Hanken Grotesk"],
+                        "body-md": ["Hanken Grotesk"],
+                        "body-lg": ["Hanken Grotesk"],
+                        "display-lg-mobile": ["Hanken Grotesk"],
+                        "headline-md": ["Hanken Grotesk"],
+                        "display-lg": ["Hanken Grotesk"],
+                        "data-label": ["JetBrains Mono"]
+                    },
+                    "fontSize": {
+                        "caption": ["12px", {"lineHeight": "16px", "fontWeight": "500"}],
+                        "body-md": ["16px", {"lineHeight": "24px", "fontWeight": "400"}],
+                        "body-lg": ["18px", {"lineHeight": "28px", "fontWeight": "400"}],
+                        "display-lg-mobile": ["32px", {"lineHeight": "40px", "letterSpacing": "-0.02em", "fontWeight": "700"}],
+                        "headline-md": ["24px", {"lineHeight": "32px", "fontWeight": "600"}],
+                        "display-lg": ["48px", {"lineHeight": "56px", "letterSpacing": "-0.02em", "fontWeight": "700"}],
+                        "data-label": ["14px", {"lineHeight": "20px", "letterSpacing": "0.05em", "fontWeight": "500"}]
+                    }
+                },
+            },
+        }
+    </script>
+<style>
+        .glass-card {
+            background: rgba(17, 34, 64, 0.6);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+        .ai-glow {
+            box-shadow: 0 0 20px rgba(138, 43, 226, 0.15);
+            border: 1px solid transparent;
+            background-clip: padding-box, border-box;
+            background-origin: padding-box, border-box;
+            background-image: linear-gradient(to right, #112240, #112240), linear-gradient(to right, #8a2be2, #00f4fe);
+        }
+        .custom-scrollbar::-webkit-scrollbar { width: 4px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: #4c4354; border-radius: 10px; }
+    </style>
+</head>
+<body class="bg-background text-on-background font-body-md">
+<!-- Side Navigation Bar (As defined in JSON) -->
+<aside class="h-screen w-64 fixed left-0 top-0 border-r border-outline-variant dark:border-outline-variant bg-surface flex flex-col py-margin-desktop z-50">
+<div class="px-6 mb-10">
+<h1 class="font-display-lg text-display-lg-mobile font-bold text-primary dark:text-primary">SynaptiqPay</h1>
+<p class="text-on-surface-variant font-caption text-caption">AI Analytics Suite</p>
+</div>
+<nav class="flex-1 px-4 space-y-2">
+<a class="flex items-center gap-3 px-4 py-3 text-on-surface-variant dark:text-on-surface-variant hover:bg-surface-variant dark:hover:bg-surface-variant transition-colors group" href="#">
+<span class="material-symbols-outlined">dashboard</span>
+<span class="font-body-md">Dashboard</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 text-primary dark:text-primary font-bold border-l-4 border-primary hover:bg-surface-variant dark:hover:bg-surface-variant transition-colors" href="#">
+<span class="material-symbols-outlined">group</span>
+<span class="font-body-md">Customers</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 text-on-surface-variant dark:text-on-surface-variant hover:bg-surface-variant dark:hover:bg-surface-variant transition-colors group" href="#">
+<span class="material-symbols-outlined">analytics</span>
+<span class="font-body-md">Analytics</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 text-on-surface-variant dark:text-on-surface-variant hover:bg-surface-variant dark:hover:bg-surface-variant transition-colors group" href="#">
+<span class="material-symbols-outlined">description</span>
+<span class="font-body-md">Reports</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 text-on-surface-variant dark:text-on-surface-variant hover:bg-surface-variant dark:hover:bg-surface-variant transition-colors group" href="#">
+<span class="material-symbols-outlined">settings</span>
+<span class="font-body-md">Settings</span>
+</a>
+</nav>
+<div class="px-4 mt-auto">
+<button class="w-full bg-primary-container text-on-primary-container py-3 rounded-lg font-bold flex items-center justify-center gap-2 hover:opacity-90 transition-all Active:scale-95">
+<span class="material-symbols-outlined text-sm">auto_awesome</span>
+                Generate Insight
+            </button>
+</div>
+</aside>
+<!-- Main Content Canvas -->
+<main class="ml-64 min-h-screen">
+<!-- Top App Bar -->
+<header class="fixed top-0 right-0 left-64 h-16 bg-surface/80 dark:bg-surface/80 backdrop-blur-md border-b border-outline-variant dark:border-outline-variant flex items-center justify-between px-gutter z-40">
+<div class="flex items-center gap-8">
+<span class="font-display-lg text-headline-md font-bold text-primary dark:text-primary uppercase tracking-tighter">SynaptiqPay AI</span>
+<nav class="flex gap-6">
+<a class="text-on-surface-variant dark:text-on-surface-variant hover:text-primary transition-all text-body-md" href="#">Overview</a>
+<a class="text-primary dark:text-primary border-b-2 border-primary pb-1 font-bold text-body-md" href="#">Segmentation</a>
+<a class="text-on-surface-variant dark:text-on-surface-variant hover:text-primary transition-all text-body-md" href="#">Retention</a>
+</nav>
+</div>
+<div class="flex items-center gap-4">
+<div class="relative flex items-center">
+<span class="material-symbols-outlined absolute left-3 text-on-surface-variant">search</span>
+<input class="bg-surface-container-low border border-outline-variant rounded-full py-1.5 pl-10 pr-4 text-sm focus:outline-none focus:ring-1 focus:ring-primary w-64" placeholder="Search clusters..." type="text"/>
+</div>
+<span class="material-symbols-outlined text-on-surface-variant cursor-pointer hover:text-primary">notifications</span>
+<span class="material-symbols-outlined text-on-surface-variant cursor-pointer hover:text-primary">account_circle</span>
+</div>
+</header>
+<!-- Page Content -->
+<div class="pt-24 px-gutter pb-20 max-w-container-max mx-auto">
+<!-- Global Filters -->
+<section class="flex flex-wrap items-end gap-6 mb-12">
+<div class="flex flex-col gap-2">
+<label class="font-data-label text-caption text-outline">State (Region)</label>
+<select class="bg-surface-container-high border-outline-variant text-on-surface rounded-lg py-2 px-4 focus:ring-primary">
+<option>São Paulo (SP)</option>
+<option>Rio de Janeiro (RJ)</option>
+<option>Minas Gerais (MG)</option>
+<option>Rio Grande do Sul (RS)</option>
+</select>
+</div>
+<div class="flex flex-col gap-2">
+<label class="font-data-label text-caption text-outline">Age Band</label>
+<div class="flex bg-surface-container-high rounded-lg p-1 border border-outline-variant">
+<button class="px-4 py-1.5 text-caption font-bold bg-surface-variant text-primary rounded">All</button>
+<button class="px-4 py-1.5 text-caption hover:bg-surface-variant transition-colors">18-24</button>
+<button class="px-4 py-1.5 text-caption hover:bg-surface-variant transition-colors">25-34</button>
+<button class="px-4 py-1.5 text-caption hover:bg-surface-variant transition-colors">35-50+</button>
+</div>
+</div>
+<div class="flex flex-col gap-2">
+<label class="font-data-label text-caption text-outline">Period</label>
+<select class="bg-surface-container-high border-outline-variant text-on-surface rounded-lg py-2 px-4 focus:ring-primary">
+<option>Last 6 Months (Cohort)</option>
+<option>Year to Date</option>
+<option>All Time</option>
+</select>
+</div>
+<button class="ml-auto flex items-center gap-2 text-primary font-bold hover:underline">
+<span class="material-symbols-outlined text-sm">filter_list</span>
+                    Advanced Filters
+                </button>
+</section>
+<!-- KPI Row -->
+<section class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-20">
+<div class="glass-card p-6 rounded-xl flex flex-col">
+<div class="flex justify-between items-start mb-4">
+<span class="text-outline font-data-label">TOTAL CUSTOMERS</span>
+<span class="bg-primary/20 text-primary px-2 py-0.5 rounded text-caption font-bold">+12%</span>
+</div>
+<div class="font-display-lg text-on-surface mb-2">8,000</div>
+<div class="h-10 w-full mt-auto">
+<img alt="" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDnjInUuDgHwKhYufjM1QAzoyr_JWDk6RG4gSRd4HKWDOifNM31a6PKXsRlOLwcJsmnHuTsgiRO0Rch_pmSZeowrNGNqZDLUb8K1jnWyjuZOEpz9iuWTDqSLuMBV00a4r7VBrhXrsNffiKxb7LIfr-bBrkcMMoSjElzdYOAhiDMaX_9w7FfKlTVVp0LAMKu3TGXbNyJyskihy9M_1Jl3OyShLeTU7AkXI74RfMkcN3IZyxEOMjA5pA3rOnoaetIzX77kvem8EXcntA" style="display:none"/>
+<div class="w-full h-full bg-gradient-to-r from-primary/10 via-primary/40 to-primary/10 rounded-full blur-[1px] opacity-40"></div>
+</div>
+</div>
+<div class="glass-card p-6 rounded-xl flex flex-col">
+<div class="flex justify-between items-start mb-4">
+<span class="text-outline font-data-label">AVG PRODUCT PENETRATION</span>
+<span class="bg-secondary/20 text-secondary-container px-2 py-0.5 rounded text-caption font-bold">Stable</span>
+</div>
+<div class="font-display-lg text-on-surface mb-2">3.4<span class="text-headline-md text-outline ml-2">items</span></div>
+<div class="h-10 w-full mt-auto flex items-end gap-1">
+<div class="flex-1 bg-secondary-container/20 h-4 rounded-sm"></div>
+<div class="flex-1 bg-secondary-container/40 h-6 rounded-sm"></div>
+<div class="flex-1 bg-secondary-container/30 h-8 rounded-sm"></div>
+<div class="flex-1 bg-secondary-container/60 h-10 rounded-sm"></div>
+<div class="flex-1 bg-secondary-container/80 h-7 rounded-sm"></div>
+</div>
+</div>
+<div class="glass-card p-6 rounded-xl flex flex-col border-r-4 border-r-primary">
+<div class="flex justify-between items-start mb-4">
+<span class="text-outline font-data-label">AVG TICKET SIZE</span>
+<span class="bg-error-container/20 text-error px-2 py-0.5 rounded text-caption font-bold">-2.1%</span>
+</div>
+<div class="font-display-lg text-on-surface mb-2 font-data-label">R$ 1.250<span class="text-headline-md text-outline">,00</span></div>
+<div class="mt-auto flex items-center gap-2 text-caption text-outline">
+<span class="material-symbols-outlined text-sm">info</span>
+                        Adjusted for inflation (BRL)
+                    </div>
+</div>
+</section>
+<!-- Cluster Analysis Section -->
+<section class="mb-20">
+<div class="flex items-center gap-3 mb-8">
+<span class="material-symbols-outlined text-primary" style="font-variation-settings: 'FILL' 1;">insights</span>
+<h2 class="font-headline-md">Predictive Cluster Performance</h2>
+</div>
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+<!-- Cluster 1 -->
+<div class="ai-glow p-8 rounded-xl relative overflow-hidden group">
+<div class="absolute top-0 right-0 w-32 h-32 bg-primary/5 rounded-full -mr-16 -mt-16 blur-3xl"></div>
+<h3 class="font-headline-md text-primary mb-6">High-Value</h3>
+<div class="space-y-6">
+<div class="flex justify-between border-b border-outline-variant/30 pb-2">
+<span class="text-outline font-data-label uppercase">Recency</span>
+<span class="text-on-surface font-bold">0.98</span>
+</div>
+<div class="flex justify-between border-b border-outline-variant/30 pb-2">
+<span class="text-outline font-data-label uppercase">Frequency</span>
+<span class="text-on-surface font-bold">14.2 / mo</span>
+</div>
+<div class="flex justify-between border-b border-outline-variant/30 pb-2">
+<span class="text-outline font-data-label uppercase">Monetary</span>
+<span class="text-on-surface font-bold">Top 2%</span>
+</div>
+<div class="mt-8">
+<label class="text-caption text-outline block mb-2 font-data-label">M6 ACTIVE RATE</label>
+<div class="flex items-center gap-4">
+<div class="flex-1 bg-surface-container-highest h-3 rounded-full overflow-hidden">
+<div class="bg-gradient-to-r from-primary to-secondary-container h-full w-[94%]"></div>
+</div>
+<span class="font-data-label text-primary">94.2%</span>
+</div>
+</div>
+</div>
+</div>
+<!-- Cluster 2 -->
+<div class="glass-card p-8 rounded-xl border border-outline-variant/20">
+<h3 class="font-headline-md text-on-surface mb-6">Lapsed Legacy Engaged</h3>
+<div class="space-y-6">
+<div class="flex justify-between border-b border-outline-variant/30 pb-2">
+<span class="text-outline font-data-label uppercase">Recency</span>
+<span class="text-error font-bold">0.42</span>
+</div>
+<div class="flex justify-between border-b border-outline-variant/30 pb-2">
+<span class="text-outline font-data-label uppercase">Frequency</span>
+<span class="text-on-surface font-bold">2.1 / mo</span>
+</div>
+<div class="flex justify-between border-b border-outline-variant/30 pb-2">
+<span class="text-outline font-data-label uppercase">Monetary</span>
+<span class="text-on-surface font-bold">High LTV</span>
+</div>
+<div class="mt-8">
+<label class="text-caption text-outline block mb-2 font-data-label">M6 ACTIVE RATE</label>
+<div class="flex items-center gap-4">
+<div class="flex-1 bg-surface-container-highest h-3 rounded-full overflow-hidden">
+<div class="bg-secondary-container h-full w-[58%]"></div>
+</div>
+<span class="font-data-label text-secondary-container">58.0%</span>
+</div>
+</div>
+</div>
+</div>
+<!-- Cluster 3 -->
+<div class="glass-card p-8 rounded-xl border border-outline-variant/20 opacity-80">
+<h3 class="font-headline-md text-outline mb-6">Low-Economics Dormant</h3>
+<div class="space-y-6">
+<div class="flex justify-between border-b border-outline-variant/30 pb-2">
+<span class="text-outline font-data-label uppercase">Recency</span>
+<span class="text-on-surface font-bold">0.15</span>
+</div>
+<div class="flex justify-between border-b border-outline-variant/30 pb-2">
+<span class="text-outline font-data-label uppercase">Frequency</span>
+<span class="text-on-surface font-bold">0.2 / mo</span>
+</div>
+<div class="flex justify-between border-b border-outline-variant/30 pb-2">
+<span class="text-outline font-data-label uppercase">Monetary</span>
+<span class="text-on-surface font-bold">Low</span>
+</div>
+<div class="mt-8">
+<label class="text-caption text-outline block mb-2 font-data-label">M6 ACTIVE RATE</label>
+<div class="flex items-center gap-4">
+<div class="flex-1 bg-surface-container-highest h-3 rounded-full overflow-hidden">
+<div class="bg-outline h-full w-[12%]"></div>
+</div>
+<span class="font-data-label text-outline">12.4%</span>
+</div>
+</div>
+</div>
+</div>
+</div>
+</section>
+<!-- Main Chart Area -->
+<section class="grid grid-cols-1 xl:grid-cols-5 gap-8">
+<!-- Cohort Analysis -->
+<div class="xl:col-span-3 glass-card rounded-xl p-8">
+<div class="flex justify-between items-center mb-10">
+<div>
+<h3 class="font-headline-md text-on-surface">Cohort Retention Analysis</h3>
+<p class="text-caption text-outline">M6 Active Rate over time by onboarding month</p>
+</div>
+<span class="material-symbols-outlined text-outline cursor-pointer">download</span>
+</div>
+<div class="space-y-4">
+<div class="grid grid-cols-7 gap-1">
+<div class="h-6"></div>
+<div class="text-caption text-center font-data-label text-outline">M1</div>
+<div class="text-caption text-center font-data-label text-outline">M2</div>
+<div class="text-caption text-center font-data-label text-outline">M3</div>
+<div class="text-caption text-center font-data-label text-outline">M4</div>
+<div class="text-caption text-center font-data-label text-outline">M5</div>
+<div class="text-caption text-center font-data-label text-outline">M6</div>
+<div class="text-caption py-3 pr-2 text-right text-outline">JUL 24</div>
+<div class="bg-primary/90 text-on-primary text-center py-3 text-caption">100%</div>
+<div class="bg-primary/80 text-on-primary text-center py-3 text-caption">92%</div>
+<div class="bg-primary/70 text-on-primary text-center py-3 text-caption">88%</div>
+<div class="bg-primary/60 text-on-primary text-center py-3 text-caption">84%</div>
+<div class="bg-primary/50 text-on-primary text-center py-3 text-caption">81%</div>
+<div class="bg-primary/40 text-on-primary text-center py-3 text-caption">79%</div>
+<div class="text-caption py-3 pr-2 text-right text-outline">AUG 24</div>
+<div class="bg-primary/90 text-on-primary text-center py-3 text-caption">100%</div>
+<div class="bg-primary/80 text-on-primary text-center py-3 text-caption">94%</div>
+<div class="bg-primary/70 text-on-primary text-center py-3 text-caption">89%</div>
+<div class="bg-primary/65 text-on-primary text-center py-3 text-caption">86%</div>
+<div class="bg-primary/55 text-on-primary text-center py-3 text-caption">83%</div>
+<div class="bg-surface-container border border-outline-variant/20"></div>
+<div class="text-caption py-3 pr-2 text-right text-outline">SEP 24</div>
+<div class="bg-primary/90 text-on-primary text-center py-3 text-caption">100%</div>
+<div class="bg-primary/80 text-on-primary text-center py-3 text-caption">96%</div>
+<div class="bg-primary/75 text-on-primary text-center py-3 text-caption">92%</div>
+<div class="bg-primary/70 text-on-primary text-center py-3 text-caption">90%</div>
+<div class="bg-surface-container border border-outline-variant/20"></div>
+<div class="bg-surface-container border border-outline-variant/20"></div>
+<div class="text-caption py-3 pr-2 text-right text-outline">OCT 24</div>
+<div class="bg-primary/90 text-on-primary text-center py-3 text-caption">100%</div>
+<div class="bg-primary/85 text-on-primary text-center py-3 text-caption">95%</div>
+<div class="bg-primary/80 text-on-primary text-center py-3 text-caption">93%</div>
+<div class="bg-surface-container border border-outline-variant/20"></div>
+<div class="bg-surface-container border border-outline-variant/20"></div>
+<div class="bg-surface-container border border-outline-variant/20"></div>
+</div>
+</div>
+</div>
+<!-- Product Gap Chart -->
+<div class="xl:col-span-2 glass-card rounded-xl p-8 border-l border-primary/30">
+<h3 class="font-headline-md text-on-surface mb-2">Product Gap Matrix</h3>
+<p class="text-caption text-outline mb-8">Visualization of Gap vs Penetration potential</p>
+<div class="relative h-64 border-l border-b border-outline-variant/40 mt-4 flex items-center justify-center">
+<!-- Simulated Data Points -->
+<div class="absolute bottom-1/4 left-1/4 w-4 h-4 bg-primary rounded-full blur-[2px] cursor-pointer hover:scale-125 transition-transform" title="Credit Card"></div>
+<div class="absolute bottom-2/3 left-1/3 w-6 h-6 bg-secondary-container rounded-full blur-[2px] cursor-pointer hover:scale-125 transition-transform" title="Personal Loan"></div>
+<div class="absolute bottom-1/2 left-3/4 w-3 h-3 bg-tertiary-fixed-dim rounded-full blur-[1px] cursor-pointer hover:scale-125 transition-transform" title="Investment"></div>
+<div class="absolute bottom-3/4 left-1/2 w-5 h-5 bg-primary-fixed-dim rounded-full blur-[1px] cursor-pointer hover:scale-125 transition-transform" title="Insurance"></div>
+<!-- Axes Labels -->
+<div class="absolute -left-12 top-1/2 -rotate-90 text-[10px] text-outline font-data-label tracking-widest">PRODUCT GAP</div>
+<div class="absolute bottom--8 left-1/2 -translate-x-1/2 text-[10px] text-outline font-data-label tracking-widest">PENETRATION RATE</div>
+</div>
+<div class="mt-12 space-y-3">
+<div class="flex items-center justify-between text-caption border-b border-outline-variant/20 pb-2">
+<span class="flex items-center gap-2"><div class="w-2 h-2 rounded-full bg-secondary-container"></div> Personal Loan</span>
+<span class="font-data-label text-secondary-container">CRITICAL GAP</span>
+</div>
+<div class="flex items-center justify-between text-caption border-b border-outline-variant/20 pb-2">
+<span class="flex items-center gap-2"><div class="w-2 h-2 rounded-full bg-primary"></div> Credit Card</span>
+<span class="font-data-label text-primary">Saturated</span>
+</div>
+<div class="flex items-center justify-between text-caption">
+<span class="flex items-center gap-2"><div class="w-2 h-2 rounded-full bg-tertiary-fixed-dim"></div> Investment</span>
+<span class="font-data-label text-tertiary-fixed-dim">Niche Growth</span>
+</div>
+</div>
+</div>
+</section>
+<!-- Bottom Section: Customer List / Insights Table -->
+<section class="mt-20 glass-card rounded-xl overflow-hidden">
+<div class="p-6 flex justify-between items-center border-b border-outline-variant">
+<h3 class="font-headline-md">High-Volatility Customer List</h3>
+<button class="bg-surface-variant text-on-surface px-4 py-2 rounded font-bold text-caption transition-colors hover:bg-outline-variant">View All Insights</button>
+</div>
+<div class="overflow-x-auto">
+<table class="w-full text-left border-collapse">
+<thead>
+<tr class="bg-surface-container-highest/50">
+<th class="px-6 py-4 font-data-label text-caption text-outline uppercase">Customer Name</th>
+<th class="px-6 py-4 font-data-label text-caption text-outline uppercase">Segment</th>
+<th class="px-6 py-4 font-data-label text-caption text-outline uppercase text-right">Avg Ticket</th>
+<th class="px-6 py-4 font-data-label text-caption text-outline uppercase text-right">M6 Rate</th>
+<th class="px-6 py-4 font-data-label text-caption text-outline uppercase">Risk Signal</th>
+</tr>
+</thead>
+<tbody class="custom-scrollbar">
+<tr class="border-b border-outline-variant/20 hover:bg-surface-variant transition-colors group">
+<td class="px-6 py-4 font-bold text-body-md group-hover:text-primary transition-colors">Ana Silva Rodrigues</td>
+<td class="px-6 py-4"><span class="bg-primary/20 text-primary-fixed px-2 py-1 rounded text-caption">High-Value</span></td>
+<td class="px-6 py-4 font-data-label text-right">R$ 4.250</td>
+<td class="px-6 py-4 font-data-label text-right text-primary">98%</td>
+<td class="px-6 py-4"><span class="flex items-center gap-2 text-caption text-secondary-fixed-dim"><span class="material-symbols-outlined text-sm">bolt</span> Upsell Opp</span></td>
+</tr>
+<tr class="border-b border-outline-variant/20 hover:bg-surface-variant transition-colors group">
+<td class="px-6 py-4 font-bold text-body-md group-hover:text-primary transition-colors">Carlos Mendes Oliveira</td>
+<td class="px-6 py-4"><span class="bg-secondary-container/20 text-secondary-container px-2 py-1 rounded text-caption">Lapsed Legacy</span></td>
+<td class="px-6 py-4 font-data-label text-right">R$ 1.890</td>
+<td class="px-6 py-4 font-data-label text-right text-error">42%</td>
+<td class="px-6 py-4"><span class="flex items-center gap-2 text-caption text-error"><span class="material-symbols-outlined text-sm">warning</span> Churn Risk</span></td>
+</tr>
+<tr class="border-b border-outline-variant/20 hover:bg-surface-variant transition-colors group">
+<td class="px-6 py-4 font-bold text-body-md group-hover:text-primary transition-colors">Beatriz Santos</td>
+<td class="px-6 py-4"><span class="bg-primary/20 text-primary-fixed px-2 py-1 rounded text-caption">High-Value</span></td>
+<td class="px-6 py-4 font-data-label text-right">R$ 3.100</td>
+<td class="px-6 py-4 font-data-label text-right text-primary">92%</td>
+<td class="px-6 py-4"><span class="flex items-center gap-2 text-caption text-secondary-fixed-dim"><span class="material-symbols-outlined text-sm">trending_up</span> Stable Growth</span></td>
+</tr>
+</tbody>
+</table>
+</div>
+</section>
+</div>
+</main>
+<!-- Contextual AI Banner -->
+<div class="fixed bottom-8 right-8 z-50">
+<div class="ai-glow glass-card p-6 rounded-2xl w-80 shadow-2xl">
+<div class="flex items-center gap-3 mb-4">
+<div class="bg-primary p-2 rounded-lg">
+<span class="material-symbols-outlined text-on-primary">auto_awesome</span>
+</div>
+<div>
+<h4 class="font-bold text-primary">Synaptiq Insight</h4>
+<p class="text-[10px] text-outline uppercase tracking-widest">Real-time alert</p>
+</div>
+</div>
+<p class="text-caption leading-relaxed mb-4">
+                We've detected a <span class="text-secondary-container font-bold">12% drop</span> in penetration for 'Lapsed Legacy' clusters in São Paulo. AI recommends an interest rate adjustment for the Credit Card product.
+            </p>
+<button class="w-full bg-primary text-on-primary py-2 rounded-lg text-caption font-bold hover:bg-primary-container transition-all">Execute Strategy</button>
+</div>
+</div>
+</body></html>

@@ -228,7 +228,7 @@ Brazilian calendar effects are modeled with segment-specific sensitivity:
 | AI Agent | LangGraph + Pydantic | Personalized recommendations |
 | LLM | Anthropic Claude API (claude-sonnet-4-20250514) | Language model |
 | Backend | FastAPI | REST API connecting data to frontend |
-| Frontend | Next.js + Tailwind CSS + shadcn/ui + Recharts | Business dashboard |
+| Frontend | React + Vite + Tailwind CSS + shadcn/ui + Recharts | Business dashboard |
 | Database | Supabase (PostgreSQL) | Data persistence |
 | ORM | SQLAlchemy | Database interaction |
 | Containerization | Docker + Docker Compose | Local + VPS deployment |
@@ -258,7 +258,7 @@ LangGraph Agent
   → receives customer segment, RFM profile, cohort health, product ownership
   → generates personalized recommendation
         ↓
-Next.js Dashboard (deployed on Vercel)
+React + Vite Dashboard (deployed on Vercel)
   → business manager interacts via browser
         ↓
 Docker Compose
@@ -335,7 +335,7 @@ return structured response
 |---|---|
 | `/dashboard` | KPI cards (total customers, at-risk count, avg RFM score, segment breakdown) + segment distribution chart + cohort retention heatmap |
 | `/customers` | Filterable, sortable customer table with segment badge + RFM indicator |
-| `/customers/[id]` | Full customer profile + RFM scores + cohort context + product ownership + AI recommendation |
+| `/customers/:id` | Full customer profile + RFM scores + cohort context + product ownership + AI recommendation |
 
 ---
 
@@ -350,7 +350,7 @@ return structured response
 ✅ RFM Scoring + K-Means Clustering (k=3 operational segments)
 ⬜ LangGraph AI Agent
 ⬜ FastAPI (4 endpoints)
-⬜ Next.js dashboard (3 pages)
+⬜ React + Vite dashboard (3 pages)
 ⬜ Supabase persistence (write-back of derived features)
 ⬜ Docker
 ⬜ Deployed on Vercel + Render/Fly.io
@@ -434,7 +434,7 @@ Chart: Line chart showing acquisition trend over time
 
 | Service | Platform | Cost |
 |---|---|---|
-| Frontend (Next.js) | Vercel | Free |
+| Frontend (React + Vite) | Vercel | Free |
 | Backend (FastAPI + LangGraph) | Render or Fly.io | Free tier |
 | Database | Supabase | Free tier |
 | Documentation (Phase 4) | GitHub Pages | Free |
@@ -444,3 +444,4 @@ Chart: Line chart showing acquisition trend over time
 ## Project Narrative (For README + Interviews)
 
 > SynaptiqPay's commercial manager was spending 3+ hours every Monday morning analyzing spreadsheets to understand their 8,000 customers. This project replaces that workflow entirely. Through cohort analysis, we understood when and how customers arrive and at what point they disengage. Through RFM scoring and K-Means clustering, we identified 3 operational behavioral segments from the transacting population — profiling their value, activity patterns, and product utilization. Through an AI agent powered by LangGraph and Claude, we deliver a personalized, behaviorally-grounded recommendation for every single customer — automatically, in seconds. And through a Text-to-SQL chatbot, the manager can ask any question about the customer base in plain language and get an instant answer with an automatically generated chart — no analyst, no SQL, no waiting.
+

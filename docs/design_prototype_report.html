@@ -1,0 +1,390 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Detailed Customer Report | SynaptiqPay AI</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@400;500;600;700&amp;family=JetBrains+Mono:wght@500&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "surface-dim": "#16111b",
+                    "on-tertiary-fixed-variant": "#6a3b00",
+                    "surface-bright": "#3d3742",
+                    "tertiary-fixed-dim": "#ffb873",
+                    "on-secondary-fixed-variant": "#004f53",
+                    "inverse-on-surface": "#342e39",
+                    "primary-container": "#8a2be2",
+                    "surface": "#16111b",
+                    "primary-fixed-dim": "#dcb8ff",
+                    "inverse-primary": "#8422dc",
+                    "on-secondary-container": "#006c71",
+                    "outline": "#988ca0",
+                    "on-tertiary": "#4b2800",
+                    "surface-container-lowest": "#110c16",
+                    "on-primary": "#480081",
+                    "inverse-surface": "#eadfee",
+                    "outline-variant": "#4c4354",
+                    "on-error-container": "#ffdad6",
+                    "on-background": "#eadfee",
+                    "error": "#ffb4ab",
+                    "on-secondary-fixed": "#002021",
+                    "secondary-fixed": "#63f7ff",
+                    "on-tertiary-container": "#ffdaba",
+                    "secondary": "#e6feff",
+                    "on-secondary": "#003739",
+                    "tertiary": "#ffb873",
+                    "tertiary-container": "#935400",
+                    "secondary-container": "#00f4fe",
+                    "surface-variant": "#39323d",
+                    "on-primary-fixed": "#2c0051",
+                    "surface-container-highest": "#39323d",
+                    "surface-container-high": "#2e2832",
+                    "error-container": "#93000a",
+                    "on-error": "#690005",
+                    "background": "#16111b",
+                    "surface-container": "#231d28",
+                    "primary-fixed": "#efdbff",
+                    "primary": "#dcb8ff",
+                    "tertiary-fixed": "#ffdcbf",
+                    "secondary-fixed-dim": "#00dce5",
+                    "on-surface-variant": "#cfc2d7",
+                    "on-primary-container": "#eed9ff",
+                    "surface-container-low": "#1f1924",
+                    "on-primary-fixed-variant": "#6700b5",
+                    "on-surface": "#eadfee",
+                    "surface-tint": "#dcb8ff",
+                    "on-tertiary-fixed": "#2d1600"
+            },
+            "borderRadius": {
+                    "DEFAULT": "0.125rem",
+                    "lg": "0.25rem",
+                    "xl": "0.5rem",
+                    "full": "0.75rem"
+            },
+            "spacing": {
+                    "margin-mobile": "16px",
+                    "unit": "4px",
+                    "margin-desktop": "40px",
+                    "gutter": "24px"
+            },
+            "fontFamily": {
+                    "caption": ["Hanken Grotesk"],
+                    "body-md": ["Hanken Grotesk"],
+                    "body-lg": ["Hanken Grotesk"],
+                    "display-lg-mobile": ["Hanken Grotesk"],
+                    "headline-md": ["Hanken Grotesk"],
+                    "display-lg": ["Hanken Grotesk"],
+                    "data-label": ["JetBrains Mono"]
+            },
+            "fontSize": {
+                    "caption": ["12px", {"lineHeight": "16px", "fontWeight": "500"}],
+                    "body-md": ["16px", {"lineHeight": "24px", "fontWeight": "400"}],
+                    "body-lg": ["18px", {"lineHeight": "28px", "fontWeight": "400"}],
+                    "display-lg-mobile": ["32px", {"lineHeight": "40px", "letterSpacing": "-0.02em", "fontWeight": "700"}],
+                    "headline-md": ["24px", {"lineHeight": "32px", "fontWeight": "600"}],
+                    "display-lg": ["48px", {"lineHeight": "56px", "letterSpacing": "-0.02em", "fontWeight": "700"}],
+                    "data-label": ["14px", {"lineHeight": "20px", "letterSpacing": "0.05em", "fontWeight": "500"}]
+            }
+          }
+        }
+      }
+    </script>
+<style>
+        .glass-card {
+            background: rgba(17, 34, 64, 0.6);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(30, 41, 59, 0.5);
+        }
+        .ai-glow-border {
+            position: relative;
+        }
+        .ai-glow-border::after {
+            content: '';
+            position: absolute;
+            inset: -1px;
+            background: linear-gradient(45deg, #8a2be2, #00f4fe);
+            z-index: -1;
+            border-radius: inherit;
+            opacity: 0.3;
+        }
+        .zebra-row:nth-child(even) {
+            background-color: rgba(255, 255, 255, 0.02);
+        }
+        .zebra-row:hover {
+            background-color: rgba(0, 244, 254, 0.05);
+            border-left: 2px solid #00f4fe;
+        }
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+            vertical-align: middle;
+        }
+    </style>
+</head>
+<body class="bg-background text-on-surface font-body-md min-h-screen">
+<!-- SideNavBar Shell -->
+<aside class="h-screen w-64 fixed left-0 top-0 border-r border-outline-variant dark:border-outline-variant flex flex-col py-margin-desktop bg-surface z-50">
+<div class="px-6 mb-10">
+<h1 class="font-display-lg text-display-lg-mobile font-bold text-primary">SynaptiqPay</h1>
+<p class="text-caption text-on-surface-variant">AI Analytics Suite</p>
+</div>
+<nav class="flex-1 space-y-1">
+<a class="flex items-center px-6 py-3 text-on-surface-variant hover:bg-surface-variant transition-colors group" href="#">
+<span class="material-symbols-outlined mr-3" data-icon="dashboard">dashboard</span>
+<span class="font-body-md">Dashboard</span>
+</a>
+<a class="flex items-center px-6 py-3 text-on-surface-variant hover:bg-surface-variant transition-colors group" href="#">
+<span class="material-symbols-outlined mr-3" data-icon="group">group</span>
+<span class="font-body-md">Customers</span>
+</a>
+<a class="flex items-center px-6 py-3 text-on-surface-variant hover:bg-surface-variant transition-colors group" href="#">
+<span class="material-symbols-outlined mr-3" data-icon="analytics">analytics</span>
+<span class="font-body-md">Analytics</span>
+</a>
+<a class="flex items-center px-6 py-3 text-primary font-bold border-l-4 border-primary bg-surface-variant group" href="#">
+<span class="material-symbols-outlined mr-3" data-icon="description">description</span>
+<span class="font-body-md">Reports</span>
+</a>
+<a class="flex items-center px-6 py-3 text-on-surface-variant hover:bg-surface-variant transition-colors group" href="#">
+<span class="material-symbols-outlined mr-3" data-icon="settings">settings</span>
+<span class="font-body-md">Settings</span>
+</a>
+</nav>
+<div class="px-6 pt-6">
+<button class="w-full py-3 bg-primary-container text-on-primary-container rounded-lg font-bold flex items-center justify-center gap-2 hover:opacity-90 active:scale-95 transition-all">
+<span class="material-symbols-outlined text-[20px]" data-icon="bolt" data-weight="fill" style="font-variation-settings: 'FILL' 1;">bolt</span>
+                Generate Insight
+            </button>
+</div>
+</aside>
+<!-- Main Content Canvas -->
+<main class="ml-64 min-h-screen">
+<!-- TopAppBar Shell -->
+<header class="fixed top-0 right-0 left-64 h-16 bg-surface/80 backdrop-blur-md border-b border-outline-variant flex items-center justify-between px-gutter z-40">
+<div class="flex items-center gap-8">
+<span class="font-headline-md text-headline-md font-bold text-primary">Detailed Customer Report</span>
+<nav class="hidden md:flex gap-6">
+<a class="text-on-surface-variant hover:text-primary transition-all font-body-md" href="#">Overview</a>
+<a class="text-on-surface-variant hover:text-primary transition-all font-body-md" href="#">Segmentation</a>
+<a class="text-on-surface-variant hover:text-primary transition-all font-body-md" href="#">Retention</a>
+</nav>
+</div>
+<div class="flex items-center gap-4">
+<div class="relative group">
+<span class="absolute inset-y-0 left-3 flex items-center text-outline">
+<span class="material-symbols-outlined text-[20px]" data-icon="search">search</span>
+</span>
+<input class="bg-surface-container border border-outline-variant rounded-full py-1.5 pl-10 pr-4 text-body-md focus:outline-none focus:border-primary-fixed transition-colors w-64" placeholder="Quick search..." type="text"/>
+</div>
+<button class="p-2 text-on-surface-variant hover:text-primary">
+<span class="material-symbols-outlined" data-icon="notifications">notifications</span>
+</button>
+<button class="p-2 text-on-surface-variant hover:text-primary">
+<span class="material-symbols-outlined" data-icon="account_circle">account_circle</span>
+</button>
+</div>
+</header>
+<div class="pt-24 px-gutter pb-margin-desktop max-w-container-max mx-auto">
+<!-- Summary Metrics Section -->
+<section class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-12">
+<div class="glass-card p-6 rounded-xl">
+<p class="text-caption text-on-surface-variant mb-1">Total Active Customers</p>
+<div class="flex items-end justify-between">
+<h3 class="font-display-lg text-[32px] leading-tight text-on-surface">12,482</h3>
+<span class="bg-secondary-container/20 text-secondary-fixed-dim px-2 py-0.5 rounded text-caption font-bold">+4.2%</span>
+</div>
+<div class="h-12 mt-4 bg-gradient-to-t from-secondary-container/10 to-transparent rounded border-b border-secondary-container/30"></div>
+</div>
+<div class="glass-card p-6 rounded-xl">
+<p class="text-caption text-on-surface-variant mb-1">High-Value Segment</p>
+<div class="flex items-end justify-between">
+<h3 class="font-display-lg text-[32px] leading-tight text-on-surface">3,104</h3>
+<span class="bg-secondary-container/20 text-secondary-fixed-dim px-2 py-0.5 rounded text-caption font-bold">+1.8%</span>
+</div>
+<div class="h-12 mt-4 bg-gradient-to-t from-primary-container/10 to-transparent rounded border-b border-primary-container/30"></div>
+</div>
+<div class="glass-card p-6 rounded-xl">
+<p class="text-caption text-on-surface-variant mb-1">Retention Health Score</p>
+<div class="flex items-end justify-between">
+<h3 class="font-display-lg text-[32px] leading-tight text-primary">88.4%</h3>
+<span class="bg-error-container/20 text-error px-2 py-0.5 rounded text-caption font-bold">-0.5%</span>
+</div>
+<div class="h-12 mt-4 bg-gradient-to-t from-tertiary-container/10 to-transparent rounded border-b border-tertiary-container/30"></div>
+</div>
+<div class="glass-card p-6 rounded-xl ai-glow-border">
+<p class="text-caption text-primary mb-1 flex items-center gap-1">
+<span class="material-symbols-outlined text-[14px]" data-icon="auto_awesome">auto_awesome</span>
+                        AI Recommended Actions
+                    </p>
+<div class="flex items-end justify-between">
+<h3 class="font-display-lg text-[32px] leading-tight text-on-surface">842</h3>
+<span class="text-caption text-on-surface-variant">Pending today</span>
+</div>
+<div class="mt-4 flex gap-1">
+<div class="h-1 flex-1 bg-primary-container rounded"></div>
+<div class="h-1 flex-1 bg-primary-container rounded"></div>
+<div class="h-1 flex-1 bg-primary-container/30 rounded"></div>
+</div>
+</div>
+</section>
+<!-- Main Table Section -->
+<section class="glass-card rounded-xl overflow-hidden border border-outline-variant">
+<div class="px-6 py-5 border-b border-outline-variant flex items-center justify-between bg-surface-container-low">
+<div class="flex items-center gap-6">
+<div class="flex gap-2">
+<button class="bg-surface-variant text-on-surface px-4 py-1.5 rounded-lg text-caption font-bold border border-outline-variant">1D</button>
+<button class="hover:bg-surface-variant text-on-surface-variant px-4 py-1.5 rounded-lg text-caption font-bold transition-colors">1W</button>
+<button class="hover:bg-surface-variant text-on-surface-variant px-4 py-1.5 rounded-lg text-caption font-bold transition-colors">1M</button>
+<button class="hover:bg-surface-variant text-on-surface-variant px-4 py-1.5 rounded-lg text-caption font-bold transition-colors">YTD</button>
+</div>
+</div>
+<div class="flex gap-3">
+<button class="flex items-center gap-2 px-4 py-2 text-caption text-on-surface-variant border border-outline-variant rounded hover:bg-surface-variant transition-colors">
+<span class="material-symbols-outlined text-[18px]" data-icon="filter_list">filter_list</span>
+                            Advanced Filters
+                        </button>
+<button class="flex items-center gap-2 px-4 py-2 text-caption text-on-surface-variant border border-outline-variant rounded hover:bg-surface-variant transition-colors">
+<span class="material-symbols-outlined text-[18px]" data-icon="download">download</span>
+                            Export CSV
+                        </button>
+</div>
+</div>
+<div class="overflow-x-auto">
+<table class="w-full text-left border-collapse">
+<thead class="bg-surface-container text-on-surface-variant">
+<tr>
+<th class="px-6 py-4 font-caption text-caption uppercase tracking-wider border-b border-outline-variant">Name</th>
+<th class="px-6 py-4 font-caption text-caption uppercase tracking-wider border-b border-outline-variant">Email</th>
+<th class="px-6 py-4 font-caption text-caption uppercase tracking-wider border-b border-outline-variant">Age</th>
+<th class="px-6 py-4 font-caption text-caption uppercase tracking-wider border-b border-outline-variant">State</th>
+<th class="px-6 py-4 font-caption text-caption uppercase tracking-wider border-b border-outline-variant">Cluster</th>
+<th class="px-6 py-4 font-caption text-caption uppercase tracking-wider border-b border-outline-variant bg-primary-container/10">
+<div class="flex items-center gap-2 text-primary font-bold">
+<span class="material-symbols-outlined text-[16px]" data-icon="smart_toy">smart_toy</span>
+                                        AI Recommended Action
+                                    </div>
+</th>
+</tr>
+</thead>
+<tbody class="text-body-md divide-y divide-outline-variant/30">
+<!-- Row 1 -->
+<tr class="zebra-row transition-all group">
+<td class="px-6 py-4 whitespace-nowrap font-bold text-on-surface">Beatriz Oliveira</td>
+<td class="px-6 py-4 whitespace-nowrap text-on-surface-variant font-data-label">b.oliveira@finmail.br</td>
+<td class="px-6 py-4 whitespace-nowrap font-data-label">34</td>
+<td class="px-6 py-4 whitespace-nowrap text-on-surface-variant">São Paulo</td>
+<td class="px-6 py-4 whitespace-nowrap">
+<span class="bg-secondary-container/10 text-secondary-container px-3 py-1 rounded-full text-caption border border-secondary-container/30">High-Value</span>
+</td>
+<td class="px-6 py-4 whitespace-nowrap bg-primary-container/5">
+<span class="text-primary font-bold flex items-center gap-2">
+<span class="w-1.5 h-1.5 bg-primary rounded-full animate-pulse"></span>
+                                        Upsell Gold Wallet
+                                    </span>
+</td>
+</tr>
+<!-- Row 2 -->
+<tr class="zebra-row transition-all group">
+<td class="px-6 py-4 whitespace-nowrap font-bold text-on-surface">Ricardo Santos</td>
+<td class="px-6 py-4 whitespace-nowrap text-on-surface-variant font-data-label">r.santos@techbox.com</td>
+<td class="px-6 py-4 whitespace-nowrap font-data-label">42</td>
+<td class="px-6 py-4 whitespace-nowrap text-on-surface-variant">Rio de Janeiro</td>
+<td class="px-6 py-4 whitespace-nowrap">
+<span class="bg-error-container/10 text-error px-3 py-1 rounded-full text-caption border border-error/30">Churn Risk</span>
+</td>
+<td class="px-6 py-4 whitespace-nowrap bg-primary-container/5">
+<span class="text-primary font-bold flex items-center gap-2">
+<span class="w-1.5 h-1.5 bg-primary rounded-full animate-pulse"></span>
+                                        Retention Call - High Risk
+                                    </span>
+</td>
+</tr>
+<!-- Row 3 -->
+<tr class="zebra-row transition-all group">
+<td class="px-6 py-4 whitespace-nowrap font-bold text-on-surface">Mariana Costa</td>
+<td class="px-6 py-4 whitespace-nowrap text-on-surface-variant font-data-label">m.costa@pme.org.br</td>
+<td class="px-6 py-4 whitespace-nowrap font-data-label">29</td>
+<td class="px-6 py-4 whitespace-nowrap text-on-surface-variant">Minas Gerais</td>
+<td class="px-6 py-4 whitespace-nowrap">
+<span class="bg-tertiary-container/10 text-tertiary-fixed-dim px-3 py-1 rounded-full text-caption border border-tertiary-container/30">Growth Potential</span>
+</td>
+<td class="px-6 py-4 whitespace-nowrap bg-primary-container/5">
+<span class="text-primary font-bold flex items-center gap-2">
+<span class="w-1.5 h-1.5 bg-primary rounded-full animate-pulse"></span>
+                                        Product Bundle A
+                                    </span>
+</td>
+</tr>
+<!-- Row 4 -->
+<tr class="zebra-row transition-all group">
+<td class="px-6 py-4 whitespace-nowrap font-bold text-on-surface">Lucas Pereira</td>
+<td class="px-6 py-4 whitespace-nowrap text-on-surface-variant font-data-label">lucas.p@invest.net</td>
+<td class="px-6 py-4 whitespace-nowrap font-data-label">51</td>
+<td class="px-6 py-4 whitespace-nowrap text-on-surface-variant">Paraná</td>
+<td class="px-6 py-4 whitespace-nowrap">
+<span class="bg-secondary-container/10 text-secondary-container px-3 py-1 rounded-full text-caption border border-secondary-container/30">High-Value</span>
+</td>
+<td class="px-6 py-4 whitespace-nowrap bg-primary-container/5">
+<span class="text-primary font-bold flex items-center gap-2">
+<span class="w-1.5 h-1.5 bg-primary rounded-full animate-pulse"></span>
+                                        Invite to VIP Program
+                                    </span>
+</td>
+</tr>
+<!-- Row 5 -->
+<tr class="zebra-row transition-all group">
+<td class="px-6 py-4 whitespace-nowrap font-bold text-on-surface">Fernanda Lima</td>
+<td class="px-6 py-4 whitespace-nowrap text-on-surface-variant font-data-label">f.lima@retail.br</td>
+<td class="px-6 py-4 whitespace-nowrap font-data-label">24</td>
+<td class="px-6 py-4 whitespace-nowrap text-on-surface-variant">Bahia</td>
+<td class="px-6 py-4 whitespace-nowrap">
+<span class="bg-surface-variant text-on-surface-variant px-3 py-1 rounded-full text-caption border border-outline-variant">Standard</span>
+</td>
+<td class="px-6 py-4 whitespace-nowrap bg-primary-container/5">
+<span class="text-primary font-bold flex items-center gap-2">
+<span class="w-1.5 h-1.5 bg-primary rounded-full animate-pulse"></span>
+                                        Credit Limit Increase
+                                    </span>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+<!-- Pagination -->
+<div class="px-6 py-4 border-t border-outline-variant flex items-center justify-between bg-surface-container-lowest">
+<span class="text-caption text-on-surface-variant">Showing 1 to 5 of 12,482 entries</span>
+<div class="flex items-center gap-2">
+<button class="p-1 hover:bg-surface-variant rounded disabled:opacity-50">
+<span class="material-symbols-outlined" data-icon="chevron_left">chevron_left</span>
+</button>
+<span class="text-caption font-bold bg-primary text-on-primary w-6 h-6 flex items-center justify-center rounded">1</span>
+<button class="p-1 hover:bg-surface-variant rounded">
+<span class="text-caption px-2">2</span>
+</button>
+<button class="p-1 hover:bg-surface-variant rounded">
+<span class="text-caption px-2">3</span>
+</button>
+<span class="text-caption">...</span>
+<button class="p-1 hover:bg-surface-variant rounded">
+<span class="text-caption px-2">250</span>
+</button>
+<button class="p-1 hover:bg-surface-variant rounded">
+<span class="material-symbols-outlined" data-icon="chevron_right">chevron_right</span>
+</button>
+</div>
+</div>
+</section>
+</div>
+</main>
+<!-- Contextual FAB (Supressed on Details/Reports but kept for demo as per prompt flexibility if needed, here we keep UI lean as per mandate) -->
+<!-- Hero Image Placeholder for visual flair -->
+<div class="hidden">
+<img data-alt="A sophisticated financial dashboard background featuring complex data visualizations and crystalline glass layers. The aesthetic is deep navy and vibrant purple with cyan highlights, representing high-tech Brazilian fintech excellence. Thin luminous borders define the interface elements, giving a feeling of precision and institutional authority while remaining cutting-edge." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDgAfSWrDF72blR5x3EdN_LcrkTgarFNp-T1RctByv-L5gpshjYuAHKbW5xL7E4KDEFR0LOWwPl_gE2doHkRtgdWhIULWI0FB_ZqecICBcuyud4-HL4HLkCpnp0gaySEH3d9GeLiCvI-g5THBh6xKZQ4SnQGmy2hMTp0ONXN8uIBBkVW5Zuy0YGHenLXegJW7Y_F5tHVHX5G4gyp1tG0wSzxGANextSYkCDRgUyfo2sJbUw6xA-tdvOOlTBPbiHRldT-SF5PoeCUN4"/>
+</div>
+</body></html>
