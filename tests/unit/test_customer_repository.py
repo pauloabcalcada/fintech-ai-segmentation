@@ -17,15 +17,17 @@ def _run(coro):  # type: ignore[no-untyped-def]
 
 @pytest.fixture(scope="module")
 def engine():  # type: ignore[no-untyped-def]
-    from fintech_ai_segmentation.app.database import close_db, get_engine, init_db
+    import os
 
-    async def _setup():
-        await init_db()
-        return get_engine()
+    from sqlalchemy.ext.asyncio import create_async_engine
+    from sqlalchemy.pool import NullPool
 
-    eng = _run(_setup())
+    url = os.environ["SUPABASE_DATABASE_URL"].replace(
+        "postgresql://", "postgresql+asyncpg://"
+    )
+    eng = create_async_engine(url, poolclass=NullPool)
     yield eng
-    _run(close_db())
+    _run(eng.dispose())
 
 
 @pytest.fixture(scope="module")
@@ -166,3 +168,124 @@ def test_list_customers_sort_rfm_score_asc(repo) -> None:  # type: ignore[no-unt
 
     scores = _run(_run_inner())
     assert scores == sorted(scores)
+
+
+# ---------------------------------------------------------------------------
+# Cycle 15 — get_customer_profile returns a profile for an existing customer
+# ---------------------------------------------------------------------------
+
+
+def test_get_customer_profile_returns_profile_for_existing_customer(repo) -> None:  # type: ignore[no-untyped-def]
+    async def _run_inner():
+        customers, _ = await repo.list_customers(page_size=1)
+        customer_id = customers[0].customer_id
+        profile = await repo.get_customer_profile(customer_id)
+        return profile, customer_id
+
+    profile, customer_id = _run(_run_inner())
+    assert profile is not None
+    assert profile.customer_id == customer_id
+    assert profile.name
+    assert profile.email
+
+
+# ---------------------------------------------------------------------------
+# Cycle 16 — get_customer_profile returns None for an unknown customer ID
+# ---------------------------------------------------------------------------
+
+
+def test_get_customer_profile_returns_none_for_unknown_id(repo) -> None:  # type: ignore[no-untyped-def]
+    import uuid
+
+    async def _run_inner():
+        return await repo.get_customer_profile(uuid.uuid4())
+
+    result = _run(_run_inner())
+    assert result is None
+
+
+# ---------------------------------------------------------------------------
+# Cycle 17 — cluster_position is one of bottom_20, mid_60, top_20
+# ---------------------------------------------------------------------------
+
+
+def test_get_customer_profile_cluster_position_is_valid_label(repo) -> None:  # type: ignore[no-untyped-def]
+    async def _run_inner():
+        customers, _ = await repo.list_customers(page_size=1)
+        customer_id = customers[0].customer_id
+        return await repo.get_customer_profile(customer_id)
+
+    profile = _run(_run_inner())
+    assert profile is not None
+    assert profile.cluster_position in {"bottom_20", "mid_60", "top_20"}
+
+
+# ---------------------------------------------------------------------------
+# Cycle 18 — cluster_averages and population_averages are non-null when cache loaded
+# ---------------------------------------------------------------------------
+
+
+def test_get_customer_profile_cluster_averages_non_null_with_cache(repo, engine) -> None:  # type: ignore[no-untyped-def]
+    from fintech_ai_segmentation.app.repositories.customer import AggregateCache, CustomerRepository
+
+    async def _run_inner():
+        cache = await AggregateCache.load(engine)
+        repo_with_cache = CustomerRepository(engine, cache)
+        # pick a clustered customer (sort asc so NULLs go last)
+        customers, _ = await repo_with_cache.list_customers(
+            sort="rfm_score", order="asc", page_size=1
+        )
+        return await repo_with_cache.get_customer_profile(customers[0].customer_id)
+
+    profile = _run(_run_inner())
+    assert profile is not None
+    assert profile.cluster_averages is not None
+    assert profile.population_averages is not None
+    assert 0.0 <= profile.cluster_averages.rfm_score <= 5.0
+    assert 0.0 <= profile.population_averages.rfm_score <= 5.0
+
+
+# ---------------------------------------------------------------------------
+# Cycle 19 — cluster_product_profile fractions are between 0 and 1
+# ---------------------------------------------------------------------------
+
+
+def test_get_customer_profile_cluster_product_profile_fractions_valid(repo, engine) -> None:  # type: ignore[no-untyped-def]
+    from fintech_ai_segmentation.app.repositories.customer import AggregateCache, CustomerRepository
+
+    async def _run_inner():
+        cache = await AggregateCache.load(engine)
+        repo_with_cache = CustomerRepository(engine, cache)
+        customers, _ = await repo_with_cache.list_customers(
+            sort="rfm_score", order="asc", page_size=1
+        )
+        return await repo_with_cache.get_customer_profile(customers[0].customer_id)
+
+    profile = _run(_run_inner())
+    assert profile is not None
+    assert profile.cluster_product_profile is not None
+    cpp = profile.cluster_product_profile
+    for pct in (cpp.wallet_pct, cpp.credit_card_pct, cpp.investment_pct, cpp.insurance_pct, cpp.loan_pct):
+        assert 0.0 <= pct <= 1.0
+
+
+# ---------------------------------------------------------------------------
+# Cycle 20 — get_activity_timeline returns entries ordered chronologically
+# ---------------------------------------------------------------------------
+
+
+def test_get_activity_timeline_entries_ordered_chronologically(repo) -> None:  # type: ignore[no-untyped-def]
+    async def _run_inner():
+        # pick a customer known to have transactions (lowest rfm = most activity)
+        customers, _ = await repo.list_customers(sort="rfm_score", order="asc", page_size=1)
+        customer_id = customers[0].customer_id
+        timeline = await repo.get_activity_timeline(customer_id)
+        return timeline
+
+    timeline = _run(_run_inner())
+    assert len(timeline) > 0
+    year_months = [e.year_month for e in timeline]
+    assert year_months == sorted(year_months)
+    for entry in timeline:
+        assert entry.tx_count > 0
+        assert entry.total_amount >= 0.0

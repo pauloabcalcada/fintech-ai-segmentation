@@ -1,12 +1,17 @@
 from __future__ import annotations
 
-from fastapi import APIRouter, Depends, Query
+import uuid
+
+from fastapi import APIRouter, Depends, HTTPException, Query
 
 from fintech_ai_segmentation.app.repositories.customer import (
     CustomerRepository,
     get_customer_repository,
 )
-from fintech_ai_segmentation.app.schemas.customer import CustomerListResponse
+from fintech_ai_segmentation.app.schemas.customer import (
+    CustomerListResponse,
+    CustomerProfileResponse,
+)
 
 router = APIRouter()
 
@@ -34,3 +39,15 @@ async def list_customers(
         page_size=page_size,
     )
     return CustomerListResponse(data=customers, total=total, page=page, page_size=page_size)
+
+
+@router.get("/customers/{customer_id}", response_model=CustomerProfileResponse)
+async def get_customer(
+    customer_id: uuid.UUID,
+    repository: CustomerRepository = Depends(get_customer_repository),
+) -> CustomerProfileResponse:
+    profile = await repository.get_customer_profile(customer_id)
+    if profile is None:
+        raise HTTPException(status_code=404, detail="Customer not found")
+    timeline = await repository.get_activity_timeline(customer_id)
+    return CustomerProfileResponse(data=profile, activity_timeline=timeline)
