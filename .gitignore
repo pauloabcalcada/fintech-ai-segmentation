@@ -32,13 +32,19 @@ docs/project-journey.md
 docs/plausibility-audit-report.md
 docs/data-generation-summary.md
 
-# Claude
+# Claude and Cursor
 CLAUDE.md
 .claude/
 .agents
+.cursor/
 
 
 # Data
 data/
 skills-lock.json
 .scratch/ai-recommendation-system/PRD.md
+
+# Frontend
+frontend/node_modules/
+frontend/dist/
+frontend/.env
