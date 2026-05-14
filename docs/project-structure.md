@@ -19,3 +19,92 @@ This project follows a standard analytics + ML + app architecture aligned with t
 - `infra/deployment` — deployment manifests and scripts for Render/Fly.io/Vercel and related infra.
 
 This structure keeps experimentation (`notebooks`) clearly separated from production code (`src`), and cleanly isolates infrastructure, tests, and data lifecycle.
+
+---
+
+## Reference Pattern: Production AI App Structure
+
+The pattern below (from a reference production AI app) captures the layered folder conventions that this project follows and should extend toward as the AI agent and serving layers mature.
+
+```
+production-ai-app/
+├── app/
+│   ├── main.py                        # FastAPI entry, config, schemas, containerized
+│   ├── config.py
+│   ├── models.py
+│   ├── Dockerfile
+│   ├── components/
+│   │   ├── hybrid_retriever.py        # Custom retrieval: hybrid search + reranking
+│   │   └── reranker.py
+│   ├── services/
+│   │   ├── rag_pipeline.py            # Core business logic: pipeline, cache,
+│   │   ├── semantic_cache.py          #   memory, rewriting, routing
+│   │   ├── conversation.py
+│   │   ├── query_rewriter.py
+│   │   └── query_router.py
+│   ├── prompts/
+│   │   ├── templates.py               # Versioned, type-specific, hot-swappable
+│   │   └── registry.py
+│   ├── agents/
+│   │   ├── document_grader.py         # Intelligence layer: self-correcting
+│   │   ├── query_decomposer.py        #   retrieval, LLM-driven source selection
+│   │   ├── adaptive_router.py
+│   │   └── tools/
+│   │       ├── vector_search.py       # Pluggable tool definitions
+│   │       ├── web_search.py
+│   │       └── code_search.py
+│   └── security/
+│       ├── input_guard.py             # Three guard layers: input, content, output
+│       ├── content_filter.py
+│       └── output_filter.py
+├── evaluation/
+│   ├── golden_dataset.json            # Golden test set, offline + online pipelines,
+│   ├── offline_eval.py                #   tracked history
+│   ├── online_monitor.py
+│   └── eval_results/
+├── observability/
+│   ├── tracer.py                      # Per-stage tracing, feedback capture,
+│   ├── feedback.py                    #   cost breakdown
+│   └── cost_tracker.py
+├── data/
+│   ├── raw/                           # Raw → processed → index config
+│   ├── processed/
+│   └── index_config/
+├── scripts/
+│   ├── seed.py                        # Seed, migrate, healthcheck
+│   ├── migrate.py
+│   └── healthcheck.py
+├── frontend/
+│   ├── app.py                         # UI, containerized separately
+│   ├── static/
+│   ├── requirements.txt
+│   └── Dockerfile
+├── tests/
+│   ├── test_retrieval.py              # Retrieval, cache, routing tests. CI-ready.
+│   ├── test_cache.py
+│   └── test_routing.py
+├── docs/
+│   ├── architecture.md                # Architecture, API ref, deployment guide
+│   ├── api-reference.md
+│   └── deployment.md
+├── .claude/
+│   └── rules/
+│       ├── code-style.md              # AI coding agent context, rules, project memory
+│       └── testing.md
+├── CLAUDE.md
+├── AGENTS.md
+├── docker-compose.yml
+├── pyproject.toml
+└── README.md
+```
+
+### Key conventions from this pattern
+
+- **`app/services/`** — Core business logic lives here (pipelines, caches, routing). Keep it separate from entry points (`main.py`) and data models (`models.py`).
+- **`app/agents/`** — Intelligence layer (LLM-driven nodes, graders, decomposers). Tools live under `agents/tools/` as pluggable definitions.
+- **`app/prompts/`** — Prompt templates are versioned and registered centrally, not scattered across nodes.
+- **`app/security/`** — Guard layers (input → content → output) are explicit modules, not inline conditionals.
+- **`evaluation/`** — Golden datasets and offline/online eval pipelines are first-class citizens, not afterthoughts.
+- **`observability/`** — Tracing, feedback capture, and cost tracking are isolated from business logic.
+- **`scripts/`** — Operational scripts (seed, migrate, healthcheck) live outside `src/` and `app/`.
+- **`.claude/rules/`** — Agent coding context and project-specific rules live here for AI-assisted development.
