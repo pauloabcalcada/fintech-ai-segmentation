@@ -59,8 +59,19 @@ def _strategy_node(system_prompt: str, strategy_name: str, llm_client: OpenRoute
     return node
 
 
+def _extract_json(text: str) -> str:
+    """Strip markdown code fences if present, then return the JSON substring."""
+    text = text.strip()
+    if text.startswith("```"):
+        text = text.split("```", 2)[1]
+        if text.startswith("json"):
+            text = text[4:]
+        text = text.rsplit("```", 1)[0]
+    return text.strip()
+
+
 def _validate_output(state: AgentState) -> dict:
-    raw = state["llm_response"] or ""
+    raw = _extract_json(state["llm_response"] or "")
     data = json.loads(raw)
     recommendation = RecommendationOutput(**data, strategy_used=state["strategy"])
     return {"recommendation": recommendation}

@@ -46,11 +46,11 @@ def test_mistral_7b_free_sends_correct_model_string() -> None:
     assert kwargs["model"] == "deepseek/deepseek-v4-flash:free"
 
 
-def test_smart_auto_sends_no_model_field() -> None:
+def test_smart_auto_sends_openrouter_auto_model() -> None:
     client, mock_create = _make_client()
     client.complete("smart-auto", MESSAGES)
     _, kwargs = mock_create.call_args
-    assert "model" not in kwargs
+    assert kwargs["model"] == "openrouter/auto"
 
 
 def test_complete_returns_string_from_response() -> None:

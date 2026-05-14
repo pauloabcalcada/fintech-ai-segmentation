@@ -15,6 +15,14 @@ from fintech_ai_segmentation.app.settings import get_settings
 _aggregate_cache: AggregateCache | None = None
 
 
+def _configure_langsmith(settings) -> None:
+    import os
+    if settings.LANGCHAIN_API_KEY:
+        os.environ.setdefault("LANGCHAIN_TRACING_V2", "true")
+        os.environ.setdefault("LANGCHAIN_API_KEY", settings.LANGCHAIN_API_KEY)
+        os.environ.setdefault("LANGCHAIN_PROJECT", settings.LANGCHAIN_PROJECT or "synaptiqpay-recommendations")
+
+
 def get_aggregate_cache() -> AggregateCache | None:
     return _aggregate_cache
 
@@ -30,6 +38,7 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
 
 def create_app() -> FastAPI:
     settings = get_settings()
+    _configure_langsmith(settings)
     application = FastAPI(version=settings.VERSION, lifespan=lifespan)
     application.add_middleware(
         CORSMiddleware,
