@@ -1,0 +1,27 @@
+# Dev overrides — auto-loaded by `docker compose up` in development
+services:
+  backend:
+    volumes:
+      - ./src:/app/src
+    command:
+      [
+        "uvicorn",
+        "fintech_ai_segmentation.app.main:app",
+        "--host", "0.0.0.0",
+        "--port", "8000",
+        "--reload",
+      ]
+    ports:
+      - "8000:8000"
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile.dev
+    ports:
+      - "5173:5173"
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+    environment:
+      - VITE_API_URL=http://localhost:8000
