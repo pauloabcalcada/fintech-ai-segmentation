@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from openai import OpenAI
+from langsmith import traceable
 
 from fintech_ai_segmentation.app.settings import get_settings
 
@@ -26,6 +27,7 @@ class OpenRouterLLMClient:
             },
         )
 
+    @traceable(run_type="llm", name="openrouter_chat")
     def complete(self, model_id: str, messages: list[dict]) -> str:
         if model_id not in _MODEL_MAP:
             raise ValueError(f"Unknown model_id '{model_id}'. Valid options: {list(_MODEL_MAP)}")
