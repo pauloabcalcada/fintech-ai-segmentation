@@ -11,6 +11,7 @@ from fintech_ai_segmentation.app.repositories.customer import (
     _build_search_pattern,
     get_customer_repository,
 )
+from fintech_ai_segmentation.app.repositories.recommendation import get_recommendation_log_store
 from fintech_ai_segmentation.app.schemas.customer import (
     ActivityTimelineEntry,
     ClusterProductProfile,
@@ -124,13 +125,27 @@ class StubRepo:
         return self._timeline
 
 
+class StubLogStore:
+    def __init__(self, cached: dict | None = None):
+        self._cached = cached
+
+    async def get_cached_recommendation(self, customer_id: uuid.UUID) -> dict | None:
+        return self._cached
+
+    async def record(self, *args, **kwargs) -> None:
+        pass
+
+
 def _override(
     rows: list[CustomerSummary] | None = None,
     total: int | None = None,
     profile: CustomerProfile | None = _STUB_PROFILE,
     timeline: list[ActivityTimelineEntry] | None = None,
+    cached_recommendation: dict | None = None,
 ):
     repo = StubRepo(rows, total, profile, timeline)
+    log_store = StubLogStore(cached_recommendation)
+    app.dependency_overrides[get_recommendation_log_store] = lambda: log_store
     return lambda: repo
 
 
@@ -288,5 +303,39 @@ def test_get_customer_returns_profile_and_timeline_for_known_id() -> None:
         assert body["data"]["cluster_position"] == "top_20"
         assert len(body["activity_timeline"]) == 2
         assert body["activity_timeline"][0]["year_month"] == "2024-01"
+    finally:
+        app.dependency_overrides.clear()
+
+
+# ---------------------------------------------------------------------------
+# Cycle 9 — GET /customers/{id} includes cached_recommendation when present
+# ---------------------------------------------------------------------------
+
+
+def test_get_customer_includes_cached_recommendation_when_present() -> None:
+    customer_id = "00000000-0000-0000-0000-000000000001"
+    cached = {
+        "generated_at": "2026-05-14T10:00:00+00:00",
+        "model_used": "gemini-flash-free",
+        "recommendation": {"risk_level": "critical", "recommended_action": "call now"},
+    }
+    app.dependency_overrides[get_customer_repository] = _override(cached_recommendation=cached)
+    try:
+        response = client.get(f"/customers/{customer_id}")
+        assert response.status_code == 200
+        body = response.json()
+        assert body["data"]["cached_recommendation"] == cached
+    finally:
+        app.dependency_overrides.clear()
+
+
+def test_get_customer_cached_recommendation_is_null_when_none() -> None:
+    customer_id = "00000000-0000-0000-0000-000000000001"
+    app.dependency_overrides[get_customer_repository] = _override(cached_recommendation=None)
+    try:
+        response = client.get(f"/customers/{customer_id}")
+        assert response.status_code == 200
+        body = response.json()
+        assert body["data"]["cached_recommendation"] is None
     finally:
         app.dependency_overrides.clear()
