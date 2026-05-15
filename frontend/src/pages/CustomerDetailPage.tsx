@@ -15,6 +15,7 @@ import {
 } from "recharts";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ClusterBadge } from "@/components/ClusterBadge";
+import { AiRecommendationPanel } from "@/components/AiRecommendationPanel";
 import {
   fetchCustomerProfile,
   NotFoundError,
@@ -393,20 +394,11 @@ export function CustomerDetailPage() {
         <ProductOwnershipChart profile={profile} />
       )}
 
-      {/* Recommendation panel placeholder */}
-      <div className="rounded-lg border border-dashed border-border bg-card/50 p-8 flex flex-col items-center justify-center gap-3 text-center">
-        <p className="text-sm font-medium text-foreground">AI Recommendation</p>
-        <p className="text-sm text-muted-foreground max-w-sm">
-          Select a model and click Analyze to generate an AI recommendation for
-          this customer.
-        </p>
-        <button
-          disabled
-          className="mt-1 px-4 py-2 rounded-md bg-primary/20 text-primary text-sm cursor-not-allowed opacity-60"
-        >
-          Analyze (coming soon)
-        </button>
-      </div>
+      {/* AI Recommendation panel */}
+      <AiRecommendationPanel
+        customerId={id!}
+        initialRecommendation={profile.cached_recommendation}
+      />
     </div>
   );
 }
