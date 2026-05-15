@@ -73,7 +73,7 @@ class CustomerProfile(BaseModel):
     cluster_averages: RFMAverages | None
     population_averages: RFMAverages | None
     cluster_product_profile: ClusterProductProfile | None
-    cached_recommendation: None = None
+    cached_recommendation: dict | None = None
 
 
 class CustomerProfileResponse(BaseModel):
