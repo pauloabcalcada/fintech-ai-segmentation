@@ -21,6 +21,7 @@ class OpenRouterLLMClient:
         self._openai = OpenAI(
             api_key=key,
             base_url=_BASE_URL,
+            timeout=60.0,
             default_headers={
                 "HTTP-Referer": "https://github.com/pauloabcalcada/fintech-ai-segmentation",
                 "X-Title": "Fintech AI Segmentation",

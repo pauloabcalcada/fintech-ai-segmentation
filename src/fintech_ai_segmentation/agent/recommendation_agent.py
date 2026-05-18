@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import asyncio
 import json
 import uuid
 from typing import TypedDict
@@ -41,7 +42,7 @@ def _route(state: AgentState) -> str:
 
 
 def _strategy_node(system_prompt: str, strategy_name: str, llm_client: OpenRouterLLMClient):
-    def node(state: AgentState) -> dict:
+    async def node(state: AgentState) -> dict:
         profile = state["profile"]
         timeline = state["timeline"]
         cluster_avg_rfm = (
@@ -54,7 +55,7 @@ def _strategy_node(system_prompt: str, strategy_name: str, llm_client: OpenRoute
             {"role": "system", "content": system_prompt},
             {"role": "user", "content": user_message},
         ]
-        response = llm_client.complete(state["model_id"], messages)
+        response = await asyncio.to_thread(llm_client.complete, state["model_id"], messages)
         return {"strategy": strategy_name, "llm_response": response}
     return node
 
