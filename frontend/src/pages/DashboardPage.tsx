@@ -221,7 +221,7 @@ function AcqCostChart({ data }: { data: DashboardSummaryResponse["acquisition_co
             contentStyle={{ backgroundColor: "#18181b", border: "1px solid #27272a", borderRadius: 6 }}
             labelStyle={{ color: "#e4e4e7" }}
             itemStyle={{ color: "#a1a1aa" }}
-            formatter={(v: number) => [`R$ ${v.toLocaleString()}`, "Avg cost"]}
+            formatter={(v) => [`R$ ${((v as number) ?? 0).toLocaleString()}`, "Avg cost"]}
           />
           <Bar dataKey="cost" radius={[0, 4, 4, 0]}>
             {formatted.map((entry, i) => (
@@ -251,7 +251,7 @@ function ProductsOwnedChart({ data }: { data: DashboardSummaryResponse["populati
             contentStyle={{ backgroundColor: "#18181b", border: "1px solid #27272a", borderRadius: 6 }}
             labelStyle={{ color: "#e4e4e7" }}
             itemStyle={{ color: "#a1a1aa" }}
-            formatter={(v: number) => [v.toLocaleString(), "customers"]}
+            formatter={(v) => [((v as number) ?? 0).toLocaleString(), "customers"]}
             labelFormatter={(l) => `${l} product(s)`}
           />
           <Bar dataKey="customer_count" fill="#60a5fa" radius={[4, 4, 0, 0]} />
@@ -283,7 +283,7 @@ function TenureChart({ data }: { data: DashboardSummaryResponse["product_ownersh
             contentStyle={{ backgroundColor: "#18181b", border: "1px solid #27272a", borderRadius: 6 }}
             labelStyle={{ color: "#e4e4e7" }}
             itemStyle={{ color: "#a1a1aa" }}
-            formatter={(v: number) => [v.toFixed(2), "avg products"]}
+            formatter={(v) => [((v as number) ?? 0).toFixed(2), "avg products"]}
           />
           <Line
             type="monotone"
@@ -322,7 +322,7 @@ function CommonProductsChart({ data }: { data: DashboardSummaryResponse["most_co
             contentStyle={{ backgroundColor: "#18181b", border: "1px solid #27272a", borderRadius: 6 }}
             labelStyle={{ color: "#e4e4e7" }}
             itemStyle={{ color: "#a1a1aa" }}
-            formatter={(v: number) => [v.toLocaleString(), "active owners"]}
+            formatter={(v) => [((v as number) ?? 0).toLocaleString(), "active owners"]}
           />
           <Bar dataKey="ownership_count" radius={[4, 4, 0, 0]}>
             {formatted.map((entry, i) => (
@@ -485,9 +485,9 @@ function M6RetentionChart({ data }: { data: ChannelM6RetentionEntry[] }) {
             contentStyle={{ backgroundColor: "#18181b", border: "1px solid #27272a", borderRadius: 6 }}
             labelStyle={{ color: "#e4e4e7" }}
             itemStyle={{ color: "#a1a1aa" }}
-            formatter={(v: number, name: string) => [
-              `${(v * 100).toFixed(1)}%`,
-              name.replace("_", " "),
+            formatter={(v, name) => [
+              `${(((v as number) ?? 0) * 100).toFixed(1)}%`,
+              (name as string).replace("_", " "),
             ]}
           />
           <Legend

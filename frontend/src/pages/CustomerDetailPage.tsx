@@ -218,7 +218,7 @@ function ProductOwnershipChart({ profile }: { profile: CustomerProfile }) {
             width={80}
           />
           <Tooltip
-            formatter={(v: number) => `${v}%`}
+            formatter={(v) => `${(v as number) ?? 0}%`}
             contentStyle={{
               background: "hsl(var(--card))",
               border: "1px solid hsl(var(--border))",

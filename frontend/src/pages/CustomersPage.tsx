@@ -133,7 +133,7 @@ export function CustomersPage() {
           onChange={(e) => setSearch(e.target.value)}
           className="w-64 bg-card border-border"
         />
-        <Select value={cluster} onValueChange={setCluster}>
+        <Select value={cluster} onValueChange={(v) => setCluster(v ?? "all")}>
           <SelectTrigger className="w-44 bg-card border-border">
             <SelectValue />
           </SelectTrigger>
@@ -145,7 +145,7 @@ export function CustomersPage() {
             ))}
           </SelectContent>
         </Select>
-        <Select value={channel} onValueChange={setChannel}>
+        <Select value={channel} onValueChange={(v) => setChannel(v ?? "all")}>
           <SelectTrigger className="w-40 bg-card border-border">
             <SelectValue />
           </SelectTrigger>
