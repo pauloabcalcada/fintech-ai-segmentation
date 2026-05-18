@@ -70,9 +70,20 @@ def _extract_json(text: str) -> str:
     return text.strip()
 
 
+_VALID_RISK_LEVELS = {"low", "medium", "high", "critical"}
+
+
 def _validate_output(state: AgentState) -> dict:
     raw = _extract_json(state["llm_response"] or "")
     data = json.loads(raw)
+
+    if data.get("risk_level") not in _VALID_RISK_LEVELS:
+        data["risk_level"] = "medium"
+
+    data.setdefault("suggested_product", "none")
+    data.setdefault("message_tone", "professional")
+    data.setdefault("reasoning", data.get("recommended_action", "No reasoning provided."))
+
     recommendation = RecommendationOutput(**data, strategy_used=state["strategy"])
     return {"recommendation": recommendation}
 
