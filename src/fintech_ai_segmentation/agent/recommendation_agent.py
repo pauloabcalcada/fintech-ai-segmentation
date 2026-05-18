@@ -70,11 +70,27 @@ def _extract_json(text: str) -> str:
     return text.strip()
 
 
+def _repair_json(text: str) -> str:
+    """Attempt to fix truncated JSON by closing unclosed strings/objects."""
+    try:
+        json.loads(text)
+        return text
+    except json.JSONDecodeError:
+        pass
+    for suffix in ('\n}', '}', '"}', '"}\n'):
+        try:
+            json.loads(text + suffix)
+            return text + suffix
+        except json.JSONDecodeError:
+            pass
+    return text
+
+
 _VALID_RISK_LEVELS = {"low", "medium", "high", "critical"}
 
 
 def _validate_output(state: AgentState) -> dict:
-    raw = _extract_json(state["llm_response"] or "")
+    raw = _repair_json(_extract_json(state["llm_response"] or ""))
     data = json.loads(raw)
 
     if data.get("risk_level") not in _VALID_RISK_LEVELS:
