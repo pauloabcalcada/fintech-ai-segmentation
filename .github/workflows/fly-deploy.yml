@@ -1,6 +1,7 @@
 name: Deploy Backend to Fly.io
 
 on:
+  workflow_dispatch:
   push:
     branches: [main]
     paths:
@@ -9,6 +10,7 @@ on:
       - "pyproject.toml"
       - "poetry.lock"
       - "fly.toml"
+      - ".github/workflows/fly-deploy.yml"
 
 jobs:
   deploy:
