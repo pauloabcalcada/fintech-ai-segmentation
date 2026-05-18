@@ -111,7 +111,7 @@ class AggregateCache:
         self.cluster_product_profiles = cluster_product_profiles
 
     @classmethod
-    async def load(cls, engine: AsyncEngine) -> "AggregateCache":
+    async def load(cls, engine: AsyncEngine) -> "AggregateCache | None":
         cluster_sql = text("""
             SELECT
                 cluster_name,
@@ -146,6 +146,9 @@ class AggregateCache:
             cluster_rows = (await conn.execute(cluster_sql)).mappings().all()
             pop_row = (await conn.execute(population_sql)).mappings().one()
             product_rows = (await conn.execute(product_sql)).mappings().all()
+
+        if pop_row["rfm_score"] is None:
+            return None
 
         cluster_averages = {
             row["cluster_name"]: RFMAverages(**{k: float(row[k]) for k in ("recency_score", "frequency_score", "monetary_score", "rfm_score")})
