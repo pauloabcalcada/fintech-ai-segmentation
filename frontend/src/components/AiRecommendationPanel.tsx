@@ -1,21 +1,14 @@
-import { useState, useRef, useEffect } from "react";
+import { useState } from "react";
 import {
   analyzeCustomer,
   formatProvenance,
   MODEL_OPTIONS,
-  AuthError,
   RateLimitError,
   ProviderRateLimitError,
   type AnalyzeResponse,
   type CachedRecommendation,
   type RecommendationResult,
 } from "@/lib/api";
-
-// ---------------------------------------------------------------------------
-// Constants
-// ---------------------------------------------------------------------------
-
-const SESSION_KEY = "demo_password";
 
 // ---------------------------------------------------------------------------
 // Risk level badge
@@ -80,66 +73,10 @@ function RecommendationCard({
 }
 
 // ---------------------------------------------------------------------------
-// Password gate dialog
-// ---------------------------------------------------------------------------
-
-function PasswordGate({
-  onConfirm,
-  onCancel,
-}: {
-  onConfirm: (password: string) => void;
-  onCancel: () => void;
-}) {
-  const [value, setValue] = useState("");
-  const inputRef = useRef<HTMLInputElement>(null);
-
-  useEffect(() => {
-    inputRef.current?.focus();
-  }, []);
-
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60">
-      <div className="bg-card border border-border rounded-lg p-6 w-full max-w-sm flex flex-col gap-4 shadow-xl">
-        <div>
-          <p className="text-sm font-semibold">Demo Password Required</p>
-          <p className="text-xs text-muted-foreground mt-1">
-            Enter the demo password to run AI analysis.
-          </p>
-        </div>
-        <input
-          ref={inputRef}
-          type="password"
-          value={value}
-          onChange={(e) => setValue(e.target.value)}
-          onKeyDown={(e) => e.key === "Enter" && value && onConfirm(value)}
-          placeholder="Password"
-          className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
-        />
-        <div className="flex gap-2 justify-end">
-          <button
-            onClick={onCancel}
-            className="px-3 py-1.5 text-sm rounded-md border border-border text-muted-foreground hover:text-foreground transition-colors"
-          >
-            Cancel
-          </button>
-          <button
-            disabled={!value}
-            onClick={() => onConfirm(value)}
-            className="px-3 py-1.5 text-sm rounded-md bg-primary text-primary-foreground disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            Confirm
-          </button>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-// ---------------------------------------------------------------------------
 // Main panel
 // ---------------------------------------------------------------------------
 
-type Status = "idle" | "awaiting_password" | "loading" | "success" | "rate_limited" | "provider_rate_limited" | "error";
+type Status = "idle" | "loading" | "success" | "rate_limited" | "provider_rate_limited" | "error";
 
 export function AiRecommendationPanel({
   customerId,
@@ -162,18 +99,14 @@ export function AiRecommendationPanel({
   );
   const [retryAfter, setRetryAfter] = useState<string | null>(null);
 
-  async function fireRequest(password: string) {
+  async function fireRequest() {
     setStatus("loading");
     try {
-      const response = await analyzeCustomer(customerId, model, password);
-      sessionStorage.setItem(SESSION_KEY, password);
+      const response = await analyzeCustomer(customerId, model);
       setResult(response);
       setStatus("success");
     } catch (err) {
-      if (err instanceof AuthError) {
-        sessionStorage.removeItem(SESSION_KEY);
-        setStatus("awaiting_password");
-      } else if (err instanceof RateLimitError) {
+      if (err instanceof RateLimitError) {
         setRetryAfter(err.retry_after);
         setStatus("rate_limited");
       } else if (err instanceof ProviderRateLimitError) {
@@ -181,15 +114,6 @@ export function AiRecommendationPanel({
       } else {
         setStatus("error");
       }
-    }
-  }
-
-  function handleAnalyzeClick() {
-    const stored = sessionStorage.getItem(SESSION_KEY);
-    if (stored) {
-      fireRequest(stored);
-    } else {
-      setStatus("awaiting_password");
     }
   }
 
@@ -216,7 +140,7 @@ export function AiRecommendationPanel({
             </select>
             <button
               disabled={!model || status === "loading"}
-              onClick={handleAnalyzeClick}
+              onClick={fireRequest}
               className="px-4 py-1.5 rounded-md bg-primary text-primary-foreground text-sm disabled:opacity-50 disabled:cursor-not-allowed transition-opacity"
             >
               {status === "loading" ? "Analyzing…" : "Analyze"}
@@ -290,13 +214,6 @@ export function AiRecommendationPanel({
         </p>
       )}
 
-      {/* Password gate */}
-      {status === "awaiting_password" && (
-        <PasswordGate
-          onConfirm={(pw) => fireRequest(pw)}
-          onCancel={() => setStatus("idle")}
-        />
-      )}
     </div>
   );
 }

@@ -7,7 +7,6 @@ from typing import Any, Literal
 from fastapi import APIRouter, Depends, HTTPException, Query, Request
 from pydantic import BaseModel
 
-from fintech_ai_segmentation.app.middleware import require_demo_password
 from fintech_ai_segmentation.app.repositories.customer import (
     CustomerRepository,
     get_customer_repository,
@@ -79,7 +78,6 @@ async def analyze_customer(
     customer_id: uuid.UUID,
     body: AnalyzeRequest,
     request: Request,
-    _: None = Depends(require_demo_password),
     repository: CustomerRepository = Depends(get_customer_repository),
     rate_limiter: RateLimiter = Depends(get_rate_limiter),
     log_store: RecommendationLogStore = Depends(get_recommendation_log_store),

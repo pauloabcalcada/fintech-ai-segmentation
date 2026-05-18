@@ -39,7 +39,13 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
 def create_app() -> FastAPI:
     settings = get_settings()
     _configure_langsmith(settings)
-    application = FastAPI(version=settings.VERSION, lifespan=lifespan)
+    is_dev = settings.ENVIRONMENT == "development"
+    application = FastAPI(
+        version=settings.VERSION,
+        lifespan=lifespan,
+        docs_url="/docs" if is_dev else None,
+        redoc_url="/redoc" if is_dev else None,
+    )
     application.add_middleware(
         CORSMiddleware,
         allow_origins=[settings.FRONTEND_ORIGIN],

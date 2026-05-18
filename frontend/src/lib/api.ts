@@ -124,13 +124,6 @@ export class RateLimitError extends Error {
   }
 }
 
-export class AuthError extends Error {
-  constructor() {
-    super("Invalid or missing demo password");
-    this.name = "AuthError";
-  }
-}
-
 export class ProviderRateLimitError extends Error {
   constructor() {
     super("AI provider temporarily unavailable");
@@ -163,18 +156,13 @@ export async function fetchCustomerProfile(
 
 export async function analyzeCustomer(
   customerId: string,
-  model: string,
-  password: string
+  model: string
 ): Promise<AnalyzeResponse> {
   const res = await fetch(`${BASE_URL}/customers/${customerId}/analyze`, {
     method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      "X-Demo-Password": password,
-    },
+    headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ model }),
   });
-  if (res.status === 401) throw new AuthError();
   if (res.status === 429) {
     const body = await res.json();
     throw new RateLimitError(body.detail.retry_after as string);

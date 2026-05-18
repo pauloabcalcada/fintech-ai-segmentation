@@ -6,11 +6,8 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
 class Settings(BaseSettings):
-    SUPABASE_URL: str = ""
-    SUPABASE_KEY: str = ""
     SUPABASE_DATABASE_URL: str = ""
     OPENROUTER_API_KEY: str = ""
-    DEMO_PASSWORD: str = ""
     LANGCHAIN_API_KEY: str = ""
     LANGCHAIN_PROJECT: str = ""
     MAX_PER_IP_DAILY: int = 10
