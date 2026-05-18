@@ -107,7 +107,9 @@ GRANT SELECT ON
   customers_raw,
   transactions_raw,
   products_raw,
-  customer_products_raw
+  customer_products_raw,
+  cohort_activity_matrix,
+  channel_m6_retention
 TO synaptiqpay_api;
 
 GRANT SELECT, INSERT ON recommendation_log TO synaptiqpay_api;
@@ -257,6 +259,8 @@ Enabling RLS adds a safety net for Phase 2, when the Supabase REST API may be us
 
 In the Supabase dashboard:  
 **Table Editor** → select each table → **RLS** → **Enable Row Level Security**
+
+Tables to enable RLS on: `customer_analysis`, `customers_raw`, `transactions_raw`, `products_raw`, `customer_products_raw`, `cohort_activity_matrix`, `channel_m6_retention`, `recommendation_log`
 
 The backend connects via direct Postgres (bypasses RLS), so this does not affect current functionality.
 
