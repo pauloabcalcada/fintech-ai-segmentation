@@ -39,6 +39,36 @@ def test_cors_allows_local_dev_origin() -> None:
     assert response.headers.get("access-control-allow-origin") == "http://localhost:5173"
 
 
+# ---------------------------------------------------------------------------
+# Docs visibility
+# ---------------------------------------------------------------------------
+
+
+def test_docs_disabled_in_production(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setenv("ENVIRONMENT", "production")
+    from fintech_ai_segmentation.app import main as main_module
+    from fintech_ai_segmentation.app import settings as settings_module
+    settings_module.get_settings.cache_clear()
+    prod_app = main_module.create_app()
+    from fastapi.testclient import TestClient as _TC
+    with _TC(prod_app) as prod_client:
+        assert prod_client.get("/docs").status_code == 404
+        assert prod_client.get("/redoc").status_code == 404
+    settings_module.get_settings.cache_clear()
+
+
+def test_docs_enabled_in_development(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setenv("ENVIRONMENT", "development")
+    from fintech_ai_segmentation.app import main as main_module
+    from fintech_ai_segmentation.app import settings as settings_module
+    settings_module.get_settings.cache_clear()
+    dev_app = main_module.create_app()
+    from fastapi.testclient import TestClient as _TC
+    with _TC(dev_app) as dev_client:
+        assert dev_client.get("/docs").status_code == 200
+    settings_module.get_settings.cache_clear()
+
+
 def test_settings_reads_max_per_ip_daily_from_env(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setenv("MAX_PER_IP_DAILY", "25")
     from fintech_ai_segmentation.app.settings import Settings

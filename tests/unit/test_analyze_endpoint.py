@@ -17,7 +17,6 @@ from fintech_ai_segmentation.app.repositories.recommendation import (
     get_recommendation_log_store,
 )
 from fintech_ai_segmentation.app.schemas.customer import (
-    ActivityTimelineEntry,
     ClusterProductProfile,
     CustomerProfile,
     RFMAverages,
@@ -116,123 +115,53 @@ class StubLogStore:
     async def record(self, customer_id, ip_address, model_used, recommendation_json):
         self.recorded.append((customer_id, ip_address, model_used, recommendation_json))
 
+    async def get_cached_recommendation(self, customer_id):
+        return None
 
-def _all_overrides(
-    profile=_STUB_PROFILE,
-    rate_result=None,
-    log_store=None,
-    agent=None,
-    monkeypatch=None,
-):
+
+def _all_overrides(profile=_STUB_PROFILE, rate_result=None, log_store=None, agent=None):
     stub_log = log_store or StubLogStore()
     stub_agent = agent or StubAgent()
     stub_limiter = StubRateLimiter(rate_result)
-
-    overrides = {
+    return {
         get_customer_repository: _repo_override(profile),
         get_rate_limiter: lambda: stub_limiter,
         get_recommendation_log_store: lambda: stub_log,
         get_recommendation_agent: lambda: stub_agent,
-    }
-    if monkeypatch:
-        monkeypatch.setenv("DEMO_PASSWORD", "secret")
-        from fintech_ai_segmentation.app import settings as settings_module
-        settings_module.get_settings.cache_clear()
-    return overrides, stub_log
-
-
-_CORRECT_HEADERS = {"X-Demo-Password": "secret"}
+    }, stub_log
 
 
 # ---------------------------------------------------------------------------
-# Cycle 1 — missing X-Demo-Password header → 401
+# Cycle 1 — no password required → analyze succeeds without any auth header
 # ---------------------------------------------------------------------------
 
 
-def test_analyze_without_password_header_returns_401() -> None:
-    app.dependency_overrides[get_customer_repository] = _repo_override()
-    try:
-        response = client.post(
-            f"/customers/{_CUSTOMER_ID}/analyze",
-            json={"model": "gemini-flash-free"},
-        )
-        assert response.status_code == 401
-    finally:
-        app.dependency_overrides.clear()
-
-
-# ---------------------------------------------------------------------------
-# Cycle 2 — wrong X-Demo-Password header → 401
-# ---------------------------------------------------------------------------
-
-
-def test_analyze_with_wrong_password_returns_401() -> None:
-    app.dependency_overrides[get_customer_repository] = _repo_override()
-    try:
-        response = client.post(
-            f"/customers/{_CUSTOMER_ID}/analyze",
-            json={"model": "gemini-flash-free"},
-            headers={"X-Demo-Password": "wrong-password"},
-        )
-        assert response.status_code == 401
-    finally:
-        app.dependency_overrides.clear()
-
-
-# ---------------------------------------------------------------------------
-# Cycle 3 — correct password → request is not rejected by auth (not 401)
-# ---------------------------------------------------------------------------
-# (password correctness is tested against the empty DEMO_PASSWORD default;
-#  Cycles 4+ use monkeypatch to set a real value)
-
-
-def test_analyze_with_correct_password_passes_auth(monkeypatch) -> None:
-    from fintech_ai_segmentation.app import settings as settings_module
-
-    overrides, _ = _all_overrides(monkeypatch=monkeypatch)
+def test_analyze_requires_no_password() -> None:
+    overrides, _ = _all_overrides()
     app.dependency_overrides.update(overrides)
     try:
         response = client.post(
             f"/customers/{_CUSTOMER_ID}/analyze",
             json={"model": "gemini-flash-free"},
-            headers=_CORRECT_HEADERS,
         )
-        assert response.status_code != 401
+        assert response.status_code == 200
+        assert response.json()["recommendation"]["risk_level"] == "critical"
     finally:
         app.dependency_overrides.clear()
-        settings_module.get_settings.cache_clear()
 
 
 # ---------------------------------------------------------------------------
-# Cycle 4 — Allowed → agent called, recommendation returned with cached=false
+# Cycle 2 — Allowed → agent called, recommendation returned with cached=false
 # ---------------------------------------------------------------------------
-# Helpers shared across Cycles 4+
-
-def _setup(monkeypatch):
-    from fintech_ai_segmentation.app import settings as settings_module
-    monkeypatch.setenv("DEMO_PASSWORD", "secret")
-    settings_module.get_settings.cache_clear()
-    return settings_module
 
 
-def _teardown(settings_module):
-    app.dependency_overrides.clear()
-    settings_module.get_settings.cache_clear()
-
-
-def test_analyze_allowed_returns_recommendation(monkeypatch) -> None:
-    from fintech_ai_segmentation.app import settings as settings_module
-
-    monkeypatch.setenv("DEMO_PASSWORD", "secret")
-    settings_module.get_settings.cache_clear()
-
+def test_analyze_allowed_returns_recommendation() -> None:
     overrides, stub_log = _all_overrides(rate_result=Allowed())
     app.dependency_overrides.update(overrides)
     try:
         response = client.post(
             f"/customers/{_CUSTOMER_ID}/analyze",
             json={"model": "gemini-flash-free"},
-            headers=_CORRECT_HEADERS,
         )
         assert response.status_code == 200
         body = response.json()
@@ -242,16 +171,14 @@ def test_analyze_allowed_returns_recommendation(monkeypatch) -> None:
         assert len(stub_log.recorded) == 1
     finally:
         app.dependency_overrides.clear()
-        settings_module.get_settings.cache_clear()
 
 
 # ---------------------------------------------------------------------------
-# Cycle 5 — CachedResult → returns cached data, no agent call
+# Cycle 3 — CachedResult → returns cached data, agent is never called
 # ---------------------------------------------------------------------------
 
 
-def test_analyze_cached_returns_cached_recommendation(monkeypatch) -> None:
-    settings_module = _setup(monkeypatch)
+def test_analyze_cached_returns_cached_recommendation() -> None:
     cached_at = datetime(2026, 5, 14, 10, 0, 0, tzinfo=timezone.utc)
     cached_result = CachedResult(
         recommendation_json=_STUB_RECOMMENDATION_JSON,
@@ -263,16 +190,12 @@ def test_analyze_cached_returns_cached_recommendation(monkeypatch) -> None:
         async def run(self, *args, **kwargs):
             raise AssertionError("Agent should not be called for cached result")
 
-    overrides, stub_log = _all_overrides(
-        rate_result=cached_result,
-        agent=NeverCalledAgent(),
-    )
+    overrides, stub_log = _all_overrides(rate_result=cached_result, agent=NeverCalledAgent())
     app.dependency_overrides.update(overrides)
     try:
         response = client.post(
             f"/customers/{_CUSTOMER_ID}/analyze",
             json={"model": "gemini-flash-free"},
-            headers=_CORRECT_HEADERS,
         )
         assert response.status_code == 200
         body = response.json()
@@ -281,72 +204,63 @@ def test_analyze_cached_returns_cached_recommendation(monkeypatch) -> None:
         assert body["recommendation"]["risk_level"] == "critical"
         assert len(stub_log.recorded) == 0
     finally:
-        _teardown(settings_module)
+        app.dependency_overrides.clear()
 
 
 # ---------------------------------------------------------------------------
-# Cycle 6 — Blocked → HTTP 429 with retry_after
+# Cycle 4 — Blocked → HTTP 429 with retry_after
 # ---------------------------------------------------------------------------
 
 
-def test_analyze_blocked_returns_429_with_retry_after(monkeypatch) -> None:
-    settings_module = _setup(monkeypatch)
+def test_analyze_blocked_returns_429_with_retry_after() -> None:
     retry_at = datetime(2026, 5, 15, 10, 0, 0, tzinfo=timezone.utc)
-    blocked_result = Blocked(retry_after=retry_at)
-
-    overrides, _ = _all_overrides(rate_result=blocked_result)
+    overrides, _ = _all_overrides(rate_result=Blocked(retry_after=retry_at))
     app.dependency_overrides.update(overrides)
     try:
         response = client.post(
             f"/customers/{_CUSTOMER_ID}/analyze",
             json={"model": "smart-auto"},
-            headers=_CORRECT_HEADERS,
         )
         assert response.status_code == 429
         body = response.json()
         assert body["detail"]["error"] == "rate_limit_exceeded"
         assert "2026-05-15" in body["detail"]["retry_after"]
     finally:
-        _teardown(settings_module)
+        app.dependency_overrides.clear()
 
 
 # ---------------------------------------------------------------------------
-# Cycle 7 — unknown customer → 404
+# Cycle 5 — unknown customer → 404
 # ---------------------------------------------------------------------------
 
 
-def test_analyze_unknown_customer_returns_404(monkeypatch) -> None:
-    settings_module = _setup(monkeypatch)
+def test_analyze_unknown_customer_returns_404() -> None:
     unknown_id = uuid.UUID("00000000-0000-0000-0000-000000000099")
-
     overrides, _ = _all_overrides(profile=None)
     app.dependency_overrides.update(overrides)
     try:
         response = client.post(
             f"/customers/{unknown_id}/analyze",
             json={"model": "gemini-flash-free"},
-            headers=_CORRECT_HEADERS,
         )
         assert response.status_code == 404
     finally:
-        _teardown(settings_module)
+        app.dependency_overrides.clear()
 
 
 # ---------------------------------------------------------------------------
-# Cycle 8 — unknown model string → 422
+# Cycle 6 — unknown model string → 422
 # ---------------------------------------------------------------------------
 
 
-def test_analyze_unknown_model_returns_422(monkeypatch) -> None:
-    settings_module = _setup(monkeypatch)
+def test_analyze_unknown_model_returns_422() -> None:
     overrides, _ = _all_overrides()
     app.dependency_overrides.update(overrides)
     try:
         response = client.post(
             f"/customers/{_CUSTOMER_ID}/analyze",
             json={"model": "gpt-4o"},
-            headers=_CORRECT_HEADERS,
         )
         assert response.status_code == 422
     finally:
-        _teardown(settings_module)
+        app.dependency_overrides.clear()
