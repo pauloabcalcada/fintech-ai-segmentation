@@ -101,14 +101,15 @@ async def test_well_formed_llm_response_returns_recommendation_output() -> None:
     assert result.suggested_product == "cashback credit card"
 
 
-async def test_malformed_llm_response_raises_validation_error() -> None:
+async def test_malformed_llm_response_normalizes_gracefully() -> None:
     repository = MagicMock()
     repository.get_customer_profile = AsyncMock(return_value=_make_profile("at_risk_churner"))
     repository.get_activity_timeline = AsyncMock(return_value=[])
     llm_client = MagicMock()
     llm_client.complete = MagicMock(return_value=_MALFORMED_LLM_RESPONSE)
 
-    from pydantic import ValidationError
     agent = LangGraphRecommendationAgent(llm_client=llm_client, repository=repository)
-    with pytest.raises((ValidationError, Exception)):
-        await agent.run(_CUSTOMER_ID)
+    result = await agent.run(_CUSTOMER_ID)
+    assert result.risk_level == "medium"
+    assert result.suggested_product == "none"
+    assert result.message_tone == "professional"

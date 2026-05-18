@@ -1,6 +1,8 @@
 from __future__ import annotations
 
+import asyncio
 import uuid
+
 from datetime import datetime, timezone
 from typing import Any, Literal
 
@@ -32,6 +34,8 @@ class AnalyzeRequest(BaseModel):
 
 
 router = APIRouter()
+
+_analyze_semaphore = asyncio.Semaphore(2)
 
 
 @router.get("/customers", response_model=CustomerListResponse)
@@ -107,6 +111,16 @@ async def analyze_customer(
             },
         )
 
+    if _analyze_semaphore._value == 0:
+        raise HTTPException(
+            status_code=503,
+            detail={
+                "error": "server_busy",
+                "message": "Too many analysis requests in progress. Please try again in a moment.",
+            },
+        )
+    await _analyze_semaphore.acquire()
+
     try:
         recommendation = await agent.run(customer_id, body.model)
     except Exception as exc:
@@ -120,6 +134,8 @@ async def analyze_customer(
                 },
             )
         raise
+    finally:
+        _analyze_semaphore.release()
 
     rec_json = recommendation.model_dump()
     await log_store.record(customer_id, ip, body.model, rec_json)
