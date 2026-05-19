@@ -131,6 +131,13 @@ export class ProviderRateLimitError extends Error {
   }
 }
 
+export class ServerBusyError extends Error {
+  constructor() {
+    super("Server is busy with too many concurrent requests");
+    this.name = "ServerBusyError";
+  }
+}
+
 export async function fetchCustomers(
   params: CustomerListParams = {}
 ): Promise<CustomerListResponse> {
@@ -167,7 +174,11 @@ export async function analyzeCustomer(
     const body = await res.json();
     throw new RateLimitError(body.detail.retry_after as string);
   }
-  if (res.status === 503) throw new ProviderRateLimitError();
+  if (res.status === 503) {
+    const body = await res.json().catch(() => ({}));
+    if (body?.detail?.error === "server_busy") throw new ServerBusyError();
+    throw new ProviderRateLimitError();
+  }
   if (!res.ok) throw new Error(`POST /customers/${customerId}/analyze failed: ${res.status}`);
   return res.json() as Promise<AnalyzeResponse>;
 }

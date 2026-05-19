@@ -5,6 +5,7 @@ import {
   MODEL_OPTIONS,
   RateLimitError,
   ProviderRateLimitError,
+  ServerBusyError,
   type AnalyzeResponse,
   type CachedRecommendation,
   type RecommendationResult,
@@ -76,7 +77,7 @@ function RecommendationCard({
 // Main panel
 // ---------------------------------------------------------------------------
 
-type Status = "idle" | "loading" | "success" | "rate_limited" | "provider_rate_limited" | "error";
+type Status = "idle" | "loading" | "success" | "rate_limited" | "provider_rate_limited" | "server_busy" | "error";
 
 export function AiRecommendationPanel({
   customerId,
@@ -109,6 +110,8 @@ export function AiRecommendationPanel({
       if (err instanceof RateLimitError) {
         setRetryAfter(err.retry_after);
         setStatus("rate_limited");
+      } else if (err instanceof ServerBusyError) {
+        setStatus("server_busy");
       } else if (err instanceof ProviderRateLimitError) {
         setStatus("provider_rate_limited");
       } else {
@@ -189,6 +192,13 @@ export function AiRecommendationPanel({
             })}
           </span>
           .
+        </div>
+      )}
+
+      {/* Server busy — too many concurrent analysis requests */}
+      {status === "server_busy" && (
+        <div className="rounded-md border border-blue-500/30 bg-blue-500/10 px-4 py-3 text-sm text-blue-400">
+          We're handling several analysis requests at the moment. Please wait a few seconds and try again.
         </div>
       )}
 
