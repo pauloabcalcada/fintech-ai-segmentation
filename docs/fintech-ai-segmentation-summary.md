@@ -226,7 +226,7 @@ Brazilian calendar effects are modeled with segment-specific sensitivity:
 | Data manipulation | Pandas | EDA, RFM scoring, cohort analysis |
 | Machine learning | Scikit-learn | K-Means clustering (k=3 operational segments) |
 | AI Agent | LangGraph + Pydantic | Personalized recommendations |
-| LLM | Anthropic Claude API (claude-sonnet-4-20250514) | Language model |
+| LLM | OpenRouter (OpenAI-compatible client) | Routes to free/smart-auto models (gemini-flash, llama-70b, mistral-7b) |
 | Backend | FastAPI | REST API connecting data to frontend |
 | Frontend | React + Vite + Tailwind CSS + shadcn/ui + Recharts | Business dashboard |
 | Database | Supabase (PostgreSQL) | Data persistence |
@@ -316,10 +316,11 @@ return structured response
 
 | Method | Endpoint | Description |
 |---|---|---|
-| GET | `/dashboard` | Aggregated KPI metrics for homepage |
+| GET | `/dashboard/summary` | Aggregated KPI counts (total customers, segment breakdown, at-risk count) |
+| GET | `/dashboard/aggregates` | Cohort retention heatmap data + segment distribution for charts |
 | GET | `/customers` | Paginated, filterable customer list |
 | GET | `/customers/{id}` | Individual customer profile + RFM scores + segment |
-| POST | `/customers/{id}/analyze` | Trigger LangGraph AI agent |
+| POST | `/customers/{id}/analyze` | Trigger LangGraph AI agent → returns structured recommendation |
 
 ## FastAPI Endpoints (Phase 2 Addition)
 
@@ -341,19 +342,20 @@ return structured response
 
 ## Phased Roadmap
 
-### Phase 1 — MVP (Build First, Ship Fast)
+### Phase 1 — MVP ✅ Complete
 ```
 ✅ Faker dataset generation (4 planted segments)
 ✅ EDA demographic (notebook 1) — discovery-first, no segment labels
 ✅ EDA cohort + behavioral discovery (notebook 2) — 8 discovery analyses
 ✅ Synthetic data validation (EDA_Validation_Fake_Dataset.ipynb)
 ✅ RFM Scoring + K-Means Clustering (k=3 operational segments)
-⬜ LangGraph AI Agent
-⬜ FastAPI (4 endpoints)
-⬜ React + Vite dashboard (3 pages)
-⬜ Supabase persistence (write-back of derived features)
-⬜ Docker
-⬜ Deployed on Vercel + Render/Fly.io
+✅ LangGraph AI Agent (4-route conditional graph, OpenRouter LLM, LangSmith tracing)
+✅ FastAPI — all endpoints including dashboard/summary + dashboard/aggregates
+✅ Rate limiting + recommendation log store (RateLimiter, RecommendationLogStore)
+✅ React + Vite dashboard — /dashboard, /customers list, /customers/:id + AI recommendation panel
+✅ Supabase write-back of derived features (customer_analysis mart)
+✅ Docker + Docker Compose
+✅ Deployed on Vercel (frontend) + Fly.io (backend)
 ```
 
 ### Phase 2 — Intelligence Layer
