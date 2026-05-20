@@ -9,6 +9,7 @@ def _sanitize(s: str) -> str:
 
 _PARAMETER_GLOSSARY = """
 Parameter reference — use these definitions to interpret each field:
+- customer_name: the customer's real first and last name — use it when addressing them directly in notification_text
 - cluster_name: the customer's behavioural segment (at_risk_churner, high_value_active, low_value_dormant)
 - cluster_position: where this customer ranks within their segment by RFM score (bottom_20 = lowest 20%, mid_60 = middle 60%, top_20 = highest 20%)
 - lifecycle_stage: current status derived from activity (active, dormant, churned)
@@ -114,6 +115,7 @@ def build_user_message(
     avg = f"{cluster_avg_rfm:.2f}" if cluster_avg_rfm is not None else "n/a"
     health = _sanitize(cohort_health) if cohort_health else "n/a"
     return f"""Customer profile:
+- customer_name: {_sanitize(profile.name)}
 - cluster_name: {_sanitize(profile.cluster_name) if profile.cluster_name else "none (no transaction history)"}
 - cluster_position: {_sanitize(profile.cluster_position) if profile.cluster_position else "n/a"}
 - lifecycle_stage: {_sanitize(profile.lifecycle_stage) if profile.lifecycle_stage else "n/a"}

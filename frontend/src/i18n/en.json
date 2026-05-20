@@ -51,10 +51,23 @@
     "analyzing": "Analyzing…",
     "reAnalyze": "Re-analyze",
     "notificationText": "Push Notification",
+    "notificationTextTooltip": "A short, ready-to-send push notification (~160 chars) personalised for this customer. Copy it and use it directly in your CRM or messaging tool.",
     "copy": "Copy",
     "copied": "Copied!",
     "reAnalyzeToGenerate": "Re-analyze to generate notification",
-    "idleHint": "Select a model and click Analyze to generate a personalized recommendation."
+    "idleHint": "Select a model and click Analyze to generate a personalized recommendation.",
+    "fields": {
+      "riskLevel": "Risk Level",
+      "riskLevelTooltip": "How urgently this customer needs attention. Critical = likely to churn soon; High = strong disengagement signals; Medium = early warning; Low = healthy relationship.",
+      "recommendedAction": "Recommended Action",
+      "recommendedActionTooltip": "The single most impactful step the account manager should take with this customer right now.",
+      "suggestedProduct": "Suggested Product",
+      "suggestedProductTooltip": "The product or feature most likely to deepen engagement or address the customer's current situation, based on their profile and what they already own.",
+      "messageTone": "Message Tone",
+      "messageToneTooltip": "The emotional register the account manager should use when contacting this customer — e.g. urgent, empathetic, celebratory.",
+      "reasoning": "Reasoning",
+      "reasoningTooltip": "The AI's explanation for its recommendation, grounded in this customer's actual data — RFM scores, tenure, acquisition channel, and product ownership."
+    }
   },
   "customers": {
     "title": "Customers",

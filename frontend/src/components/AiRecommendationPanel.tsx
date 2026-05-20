@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
+import { InfoTooltip } from "@/components/ui/InfoTooltip";
 import {
   analyzeCustomer,
   formatProvenance,
@@ -53,7 +54,10 @@ function NotificationCard({ text }: { text: string }) {
   return (
     <div className="rounded-md border border-border bg-muted/30 px-4 py-3">
       <div className="flex items-center justify-between mb-2">
-        <p className="text-xs text-muted-foreground">{t("aiPanel.notificationText")}</p>
+        <p className="text-xs text-muted-foreground flex items-center">
+          {t("aiPanel.notificationText")}
+          <InfoTooltip text={t("aiPanel.notificationTextTooltip")} />
+        </p>
         {!fallback && (
           <button
             onClick={handleCopy}
@@ -85,30 +89,49 @@ function RecommendationCard({
   result: RecommendationResult;
   provenance: string;
 }) {
+  const { t } = useTranslation();
   return (
     <div className="flex flex-col gap-4">
       <div className="flex items-center justify-between flex-wrap gap-2">
-        <RiskBadge level={result.risk_level} />
+        <div className="flex items-center gap-2">
+          <span className="text-xs text-muted-foreground font-medium uppercase tracking-wide">
+            {t("aiPanel.fields.riskLevel")}
+          </span>
+          <InfoTooltip text={t("aiPanel.fields.riskLevelTooltip")} />
+          <RiskBadge level={result.risk_level} />
+        </div>
         <span className="text-xs text-muted-foreground">{provenance}</span>
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
         <div className="rounded-md border border-border bg-muted/30 px-4 py-3">
-          <p className="text-xs text-muted-foreground mb-1">Recommended Action</p>
+          <p className="text-xs text-muted-foreground mb-1 flex items-center">
+            {t("aiPanel.fields.recommendedAction")}
+            <InfoTooltip text={t("aiPanel.fields.recommendedActionTooltip")} />
+          </p>
           <p className="text-sm font-medium">{result.recommended_action}</p>
         </div>
         <div className="rounded-md border border-border bg-muted/30 px-4 py-3">
-          <p className="text-xs text-muted-foreground mb-1">Suggested Product</p>
+          <p className="text-xs text-muted-foreground mb-1 flex items-center">
+            {t("aiPanel.fields.suggestedProduct")}
+            <InfoTooltip text={t("aiPanel.fields.suggestedProductTooltip")} />
+          </p>
           <p className="text-sm font-medium">{result.suggested_product}</p>
         </div>
         <div className="rounded-md border border-border bg-muted/30 px-4 py-3">
-          <p className="text-xs text-muted-foreground mb-1">Message Tone</p>
+          <p className="text-xs text-muted-foreground mb-1 flex items-center">
+            {t("aiPanel.fields.messageTone")}
+            <InfoTooltip text={t("aiPanel.fields.messageToneTooltip")} />
+          </p>
           <p className="text-sm font-medium">{result.message_tone}</p>
         </div>
       </div>
 
       <div className="rounded-md border border-border bg-muted/20 px-4 py-3">
-        <p className="text-xs text-muted-foreground mb-2">Reasoning</p>
+        <p className="text-xs text-muted-foreground mb-2 flex items-center">
+          {t("aiPanel.fields.reasoning")}
+          <InfoTooltip text={t("aiPanel.fields.reasoningTooltip")} />
+        </p>
         <p className="text-sm leading-relaxed text-foreground">{result.reasoning}</p>
       </div>
 

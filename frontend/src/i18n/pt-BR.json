@@ -51,10 +51,23 @@
     "analyzing": "Analisando…",
     "reAnalyze": "Reanalisar",
     "notificationText": "Notificação Push",
+    "notificationTextTooltip": "Uma notificação push curta e pronta para envio (~160 caracteres) personalizada para este cliente. Copie e use diretamente no seu CRM ou ferramenta de mensagens.",
     "copy": "Copiar",
     "copied": "Copiado!",
     "reAnalyzeToGenerate": "Reanalisar para gerar notificação",
-    "idleHint": "Selecione um modelo e clique em Analisar para gerar uma recomendação personalizada."
+    "idleHint": "Selecione um modelo e clique em Analisar para gerar uma recomendação personalizada.",
+    "fields": {
+      "riskLevel": "Nível de Risco",
+      "riskLevelTooltip": "O grau de urgência deste cliente. Crítico = provável churn em breve; Alto = sinais fortes de desengajamento; Médio = alerta precoce; Baixo = relacionamento saudável.",
+      "recommendedAction": "Ação Recomendada",
+      "recommendedActionTooltip": "O passo mais impactante que o gerente de conta deve tomar com este cliente agora.",
+      "suggestedProduct": "Produto Sugerido",
+      "suggestedProductTooltip": "O produto ou funcionalidade com maior potencial de aprofundar o engajamento ou resolver a situação atual do cliente, com base no perfil e no que ele já possui.",
+      "messageTone": "Tom da Mensagem",
+      "messageToneTooltip": "O registro emocional que o gerente deve usar ao contatar este cliente — ex: urgente, empático, celebratório.",
+      "reasoning": "Raciocínio",
+      "reasoningTooltip": "A explicação da IA para sua recomendação, baseada nos dados reais deste cliente — pontuações RFM, tempo de conta, canal de aquisição e produtos."
+    }
   },
   "customers": {
     "title": "Clientes",
