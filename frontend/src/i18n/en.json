@@ -7,13 +7,24 @@
     "title": "Population Overview",
     "kpi": {
       "totalCustomers": "Total Customers",
-      "totalCustomersSub": "registered wallets",
-      "avgRfm": "Avg RFM Score",
-      "avgRfmSub": "population-wide",
-      "atRisk": "At-Risk / Churned",
-      "atRiskSub": "{{pct}}% of population",
-      "largestSegment": "Largest Segment",
-      "largestSegmentSub": "{{count}} customers"
+      "totalCustomersSub": "all registered customers",
+      "totalCustomersTooltip": "Everyone who has ever signed up for the platform. This is the full base, including people who registered but never made a transaction.",
+      "atRisk": "Lapsed Customers",
+      "atRiskSub": "{{pct}}% of your base",
+      "atRiskTooltip": "Customers who were active at some point but have gone silent — no transactions in the last 90 days or more. These are the ones most likely to leave if not re-engaged soon.",
+      "noActivity": "Never Transacted",
+      "noActivitySub": "{{pct}}% of your base",
+      "noActivityTooltip": "People who signed up but have never made a single transaction. They created an account and stopped — a missed conversion opportunity."
+    },
+    "cluster": {
+      "customerCount": "Customers",
+      "customerCountTooltip": "How many customers fall into this segment.",
+      "pctOfTotal": "% of Base",
+      "pctOfTotalTooltip": "How large this segment is relative to all {{total}} registered customers. Useful for understanding which group has the most business impact.",
+      "avgRfm": "Engagement Score (RFM)",
+      "avgRfmTooltip": "A score from 1 to 5 summarising how recently, how often, and how much customers in this segment spend. Higher means more engaged and valuable.",
+      "avgAcqCost": "Avg. Acquisition Cost",
+      "avgAcqCostTooltip": "On average, how much was spent in marketing and promotions to bring each customer in this segment onto the platform."
     },
     "chart": {
       "segmentBreakdown": "Segment Breakdown",

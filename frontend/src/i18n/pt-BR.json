@@ -7,13 +7,24 @@
     "title": "Visão Geral da População",
     "kpi": {
       "totalCustomers": "Total de Clientes",
-      "totalCustomersSub": "carteiras registradas",
-      "avgRfm": "Pontuação RFM Média",
-      "avgRfmSub": "população total",
-      "atRisk": "Em Risco / Churn",
-      "atRiskSub": "{{pct}}% da população",
-      "largestSegment": "Maior Segmento",
-      "largestSegmentSub": "{{count}} clientes"
+      "totalCustomersSub": "todos os clientes cadastrados",
+      "totalCustomersTooltip": "Todos que já se cadastraram na plataforma — incluindo quem criou conta mas nunca fez uma transação. É a base completa.",
+      "atRisk": "Clientes Inativos",
+      "atRiskSub": "{{pct}}% da sua base",
+      "atRiskTooltip": "Clientes que já foram ativos mas pararam de transacionar há mais de 90 dias. São os mais propensos a abandonar a plataforma se não forem reengajados em breve.",
+      "noActivity": "Nunca Transacionaram",
+      "noActivitySub": "{{pct}}% da sua base",
+      "noActivityTooltip": "Pessoas que se cadastraram mas nunca fizeram uma única transação. Criaram conta e pararam — uma oportunidade de conversão perdida."
+    },
+    "cluster": {
+      "customerCount": "Clientes",
+      "customerCountTooltip": "Quantos clientes pertencem a este segmento.",
+      "pctOfTotal": "% da Base",
+      "pctOfTotalTooltip": "O tamanho deste segmento em relação aos {{total}} clientes cadastrados. Útil para entender qual grupo tem maior impacto no negócio.",
+      "avgRfm": "Pontuação de Engajamento (RFM)",
+      "avgRfmTooltip": "Uma nota de 1 a 5 que resume com que frequência, há quanto tempo e quanto os clientes deste segmento gastam. Quanto maior, mais engajado e valioso.",
+      "avgAcqCost": "Custo Médio de Aquisição",
+      "avgAcqCostTooltip": "Em média, quanto foi gasto em marketing e promoções para trazer cada cliente deste segmento para a plataforma."
     },
     "chart": {
       "segmentBreakdown": "Distribuição por Segmento",

@@ -187,16 +187,19 @@ export async function analyzeCustomer(
 // Dashboard types
 // ---------------------------------------------------------------------------
 
-export interface SegmentBreakdown {
+export interface ClusterKpi {
   cluster_name: string;
   customer_count: number;
+  pct_of_total: number;
+  avg_rfm_score: number;
+  avg_acquisition_cost: number;
 }
 
 export interface KpiCards {
   total_customers: number;
-  by_cluster: SegmentBreakdown[];
-  avg_rfm_score: number;
+  no_transaction_count: number;
   at_risk_count: number;
+  by_cluster: ClusterKpi[];
 }
 
 export interface AcquisitionCostByChannel {
