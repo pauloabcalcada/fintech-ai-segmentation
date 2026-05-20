@@ -58,6 +58,12 @@
     "idleHint": "Selecione um modelo e clique em Analisar para gerar uma recomendação personalizada.",
     "fields": {
       "riskLevel": "Nível de Risco",
+      "riskLevels": {
+        "low": "Baixo",
+        "medium": "Médio",
+        "high": "Alto",
+        "critical": "Crítico"
+      },
       "riskLevelTooltip": "O grau de urgência deste cliente. Crítico = provável churn em breve; Alto = sinais fortes de desengajamento; Médio = alerta precoce; Baixo = relacionamento saudável.",
       "recommendedAction": "Ação Recomendada",
       "recommendedActionTooltip": "O passo mais impactante que o gerente de conta deve tomar com este cliente agora.",

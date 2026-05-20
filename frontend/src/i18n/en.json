@@ -58,6 +58,12 @@
     "idleHint": "Select a model and click Analyze to generate a personalized recommendation.",
     "fields": {
       "riskLevel": "Risk Level",
+      "riskLevels": {
+        "low": "Low",
+        "medium": "Medium",
+        "high": "High",
+        "critical": "Critical"
+      },
       "riskLevelTooltip": "How urgently this customer needs attention. Critical = likely to churn soon; High = strong disengagement signals; Medium = early warning; Low = healthy relationship.",
       "recommendedAction": "Recommended Action",
       "recommendedActionTooltip": "The single most impactful step the account manager should take with this customer right now.",

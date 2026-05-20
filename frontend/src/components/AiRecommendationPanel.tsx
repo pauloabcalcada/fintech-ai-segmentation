@@ -25,11 +25,12 @@ const RISK_COLORS: Record<RecommendationResult["risk_level"], string> = {
 };
 
 function RiskBadge({ level }: { level: RecommendationResult["risk_level"] }) {
+  const { t } = useTranslation();
   return (
     <span
       className={`text-xs font-semibold px-2.5 py-0.5 rounded-full border uppercase tracking-wide ${RISK_COLORS[level]}`}
     >
-      {level}
+      {t(`aiPanel.fields.riskLevels.${level}`)}
     </span>
   );
 }
