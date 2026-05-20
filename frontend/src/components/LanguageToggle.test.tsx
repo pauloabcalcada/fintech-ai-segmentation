@@ -1,5 +1,5 @@
 import { render, screen, fireEvent } from "@testing-library/react";
-import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
+import { describe, it, expect, beforeEach, afterEach } from "vitest";
 import { I18nextProvider } from "react-i18next";
 import { createTestI18n } from "@/i18n/test-utils";
 import { LanguageToggle } from "./LanguageToggle";
