@@ -44,7 +44,7 @@ type SortOrder = "asc" | "desc";
 function SkeletonRows({ count }: { count: number }) {
   return Array.from({ length: count }).map((_, i) => (
     <TableRow key={i}>
-      {Array.from({ length: 7 }).map((_, j) => (
+      {Array.from({ length: 5 }).map((_, j) => (
         <TableCell key={j}>
           <Skeleton className="h-4 w-full" />
         </TableCell>
@@ -128,7 +128,7 @@ export function CustomersPage() {
       {/* Filters */}
       <div className="flex flex-wrap gap-3">
         <Input
-          placeholder="Search name or email…"
+          placeholder="Search by name…"
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           className="w-64 bg-card border-border"
@@ -165,16 +165,9 @@ export function CustomersPage() {
           <TableHeader>
             <TableRow className="border-border hover:bg-transparent">
               <TableHead>Name</TableHead>
-              <TableHead>Email</TableHead>
               <TableHead>Age</TableHead>
               <TableHead>State</TableHead>
               <TableHead>Cluster</TableHead>
-              <TableHead
-                className="cursor-pointer select-none"
-                onClick={() => toggleSort("rfm_score")}
-              >
-                RFM Score <SortArrow col="rfm_score" />
-              </TableHead>
               <TableHead
                 className="cursor-pointer select-none"
                 onClick={() => toggleSort("recency_days")}
@@ -189,7 +182,7 @@ export function CustomersPage() {
             ) : customers.length === 0 ? (
               <TableRow>
                 <TableCell
-                  colSpan={7}
+                  colSpan={5}
                   className="text-center text-muted-foreground py-12"
                 >
                   No customers match your filters.
@@ -203,18 +196,10 @@ export function CustomersPage() {
                   onClick={() => navigate(`/customers/${c.customer_id}`)}
                 >
                   <TableCell className="font-medium">{c.name}</TableCell>
-                  <TableCell className="text-muted-foreground text-sm">
-                    {c.email}
-                  </TableCell>
                   <TableCell>{c.age}</TableCell>
                   <TableCell>{c.state}</TableCell>
                   <TableCell>
                     <ClusterBadge cluster={c.cluster_name} />
-                  </TableCell>
-                  <TableCell>
-                    <span className="font-mono text-primary text-sm">
-                      {c.rfm_score?.toFixed(2) ?? "—"}
-                    </span>
                   </TableCell>
                   <TableCell>
                     <span className="font-mono text-sm">
