@@ -31,6 +31,7 @@ from fintech_ai_segmentation.app.schemas.customer import (
 
 class AnalyzeRequest(BaseModel):
     model: Literal["gemini-flash-free", "llama-70b-free", "mistral-7b-free", "smart-auto"]
+    language: Literal["en", "pt-BR"] = "en"
 
 
 router = APIRouter()
@@ -131,7 +132,7 @@ async def analyze_customer(
     await _analyze_semaphore.acquire()
 
     try:
-        recommendation = await agent.run(customer_id, body.model)
+        recommendation = await agent.run(customer_id, body.model, language=body.language)
     except Exception as exc:
         import openai
         if isinstance(exc, openai.RateLimitError):

@@ -12,3 +12,4 @@ class RecommendationOutput(BaseModel):
     message_tone: str
     reasoning: str
     strategy_used: Literal["retention", "upsell", "reactivation", "activation"]
+    notification_text: str

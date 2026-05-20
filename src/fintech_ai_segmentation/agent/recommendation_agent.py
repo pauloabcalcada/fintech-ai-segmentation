@@ -9,10 +9,7 @@ from langgraph.graph import END, StateGraph
 
 from fintech_ai_segmentation.agent.llm_client import OpenRouterLLMClient
 from fintech_ai_segmentation.agent.prompts import (
-    ACTIVATION_SYSTEM,
-    REACTIVATION_SYSTEM,
-    RETENTION_SYSTEM,
-    UPSELL_SYSTEM,
+    build_system_prompt,
     build_user_message,
 )
 from fintech_ai_segmentation.agent.schemas import RecommendationOutput
@@ -23,6 +20,7 @@ from fintech_ai_segmentation.app.schemas.customer import ActivityTimelineEntry, 
 class AgentState(TypedDict):
     customer_id: uuid.UUID
     model_id: str
+    language: str
     profile: CustomerProfile | None
     timeline: list[ActivityTimelineEntry]
     strategy: str | None
@@ -41,7 +39,7 @@ def _route(state: AgentState) -> str:
     return "generate_activation"
 
 
-def _strategy_node(system_prompt: str, strategy_name: str, llm_client: OpenRouterLLMClient):
+def _strategy_node(strategy_name: str, llm_client: OpenRouterLLMClient):
     async def node(state: AgentState) -> dict:
         profile = state["profile"]
         timeline = state["timeline"]
@@ -50,6 +48,7 @@ def _strategy_node(system_prompt: str, strategy_name: str, llm_client: OpenRoute
             if profile and profile.cluster_averages
             else None
         )
+        system_prompt = build_system_prompt(strategy_name, state["language"])
         user_message = build_user_message(profile, timeline, cluster_avg_rfm, cohort_health=None)
         messages = [
             {"role": "system", "content": system_prompt},
@@ -100,6 +99,7 @@ def _validate_output(state: AgentState) -> dict:
     data.setdefault("suggested_product", "none")
     data.setdefault("message_tone", "professional")
     data.setdefault("reasoning", data.get("recommended_action", "No reasoning provided."))
+    data.setdefault("notification_text", "")
 
     recommendation = RecommendationOutput(**data, strategy_used=state["strategy"])
     return {"recommendation": recommendation}
@@ -120,10 +120,10 @@ class LangGraphRecommendationAgent:
             return {"profile": profile, "timeline": timeline or []}
 
         g.add_node("build_context", build_context)
-        g.add_node("generate_retention", _strategy_node(RETENTION_SYSTEM, "retention", self._llm_client))
-        g.add_node("generate_upsell", _strategy_node(UPSELL_SYSTEM, "upsell", self._llm_client))
-        g.add_node("generate_reactivation", _strategy_node(REACTIVATION_SYSTEM, "reactivation", self._llm_client))
-        g.add_node("generate_activation", _strategy_node(ACTIVATION_SYSTEM, "activation", self._llm_client))
+        g.add_node("generate_retention", _strategy_node("retention", self._llm_client))
+        g.add_node("generate_upsell", _strategy_node("upsell", self._llm_client))
+        g.add_node("generate_reactivation", _strategy_node("reactivation", self._llm_client))
+        g.add_node("generate_activation", _strategy_node("activation", self._llm_client))
         g.add_node("validate_output", _validate_output)
 
         g.set_entry_point("build_context")
@@ -139,10 +139,11 @@ class LangGraphRecommendationAgent:
 
         return g.compile()
 
-    async def run(self, customer_id: uuid.UUID, model_id: str = "smart-auto") -> RecommendationOutput:
+    async def run(self, customer_id: uuid.UUID, model_id: str = "smart-auto", language: str = "en") -> RecommendationOutput:
         initial: AgentState = {
             "customer_id": customer_id,
             "model_id": model_id,
+            "language": language,
             "profile": None,
             "timeline": [],
             "strategy": None,

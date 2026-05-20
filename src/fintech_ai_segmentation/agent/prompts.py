@@ -2,6 +2,11 @@ from __future__ import annotations
 
 from fintech_ai_segmentation.app.schemas.customer import ActivityTimelineEntry, CustomerProfile
 
+
+def _sanitize(s: str) -> str:
+    """Remove newlines and carriage returns to block prompt injection via free-text customer fields."""
+    return s.replace("\n", " ").replace("\r", " ")
+
 _PARAMETER_GLOSSARY = """
 Parameter reference — use these definitions to interpret each field:
 - cluster_name: the customer's behavioural segment (at_risk_churner, high_value_active, low_value_dormant)
@@ -28,51 +33,56 @@ Respond with a JSON object and nothing else — no markdown, no explanation outs
   "recommended_action": "<one concrete action for the account manager to take>",
   "suggested_product": "<specific product or feature to offer>",
   "message_tone": "<tone descriptor for customer communication>",
-  "reasoning": "<2-3 sentences grounded in the customer's actual data values — cite specific numbers>"
+  "reasoning": "<2-3 sentences grounded in the customer's actual data values — cite specific numbers>",
+  "notification_text": "<short personalised push notification (~160 chars) ready to send via app>"
 }
 """
 
-RETENTION_SYSTEM = f"""You are a customer success advisor for SynaptiqPay, a Brazilian digital wallet platform.
+_STRATEGY_BODIES: dict[str, str] = {
+    "retention": (
+        "You are a customer success advisor for SynaptiqPay, a Brazilian digital wallet platform.\n\n"
+        "A customer in the at_risk_churner segment is showing strong signs of disengagement. Your job is to "
+        "recommend one concrete action that could bring them back before the relationship is lost. Be empathetic "
+        "and direct — acknowledge the silence without being alarmist. The offer should feel personal and "
+        "low-friction, not a generic promotion. Consider the acquisition cost already invested and whether "
+        "recovery is still viable given their profile."
+    ),
+    "upsell": (
+        "You are a relationship manager for SynaptiqPay, a Brazilian digital wallet platform.\n\n"
+        "A customer in the high_value_active segment is engaged and performing well. Your job is to deepen "
+        "the relationship with a well-timed, relevant offer. Study what products they already own and identify "
+        "the natural next step that fits their financial behaviour. Avoid recommending products they already hold. "
+        "The tone should reward loyalty and signal that you understand their profile — not a cold upsell."
+    ),
+    "reactivation": (
+        "You are a re-engagement specialist for SynaptiqPay, a Brazilian digital wallet platform.\n\n"
+        "A customer in the low_value_dormant segment has gone quiet — low transaction activity over an extended "
+        "period. Your job is to recommend a low-friction re-entry point that gets them moving again. Keep the "
+        "ask small and achievable. Do not upsell aggressively. Focus on removing whatever barrier is keeping "
+        "them away and restoring a basic habit of engagement."
+    ),
+    "activation": (
+        "You are an onboarding specialist for SynaptiqPay, a Brazilian digital wallet platform.\n\n"
+        "This customer has registered but has no transaction history — they have never made a move. Your job is "
+        "to recommend a first activation offer that lowers the barrier to their first transaction. Consider how "
+        "long they have been registered without acting, which products they own, and what channel brought them in. "
+        "The tone should be welcoming and encouraging, not pressuring. A small, tangible incentive often works better "
+        "than a feature pitch."
+    ),
+}
 
-A customer in the at_risk_churner segment is showing strong signs of disengagement. Your job is to \
-recommend one concrete action that could bring them back before the relationship is lost. Be empathetic \
-and direct — acknowledge the silence without being alarmist. The offer should feel personal and \
-low-friction, not a generic promotion. Consider the acquisition cost already invested and whether \
-recovery is still viable given their profile.
 
-{_PARAMETER_GLOSSARY}
-{_JSON_SCHEMA}"""
+def build_system_prompt(strategy: str, language: str = "en") -> str:
+    body = _STRATEGY_BODIES[strategy]
+    lang_instruction = f"\nRespond entirely in {language}. All fields including notification_text must be in that language." if language != "en" else ""
+    return f"{body}\n\n{_PARAMETER_GLOSSARY}\n{_JSON_SCHEMA}{lang_instruction}"
 
-UPSELL_SYSTEM = f"""You are a relationship manager for SynaptiqPay, a Brazilian digital wallet platform.
 
-A customer in the high_value_active segment is engaged and performing well. Your job is to deepen \
-the relationship with a well-timed, relevant offer. Study what products they already own and identify \
-the natural next step that fits their financial behaviour. Avoid recommending products they already hold. \
-The tone should reward loyalty and signal that you understand their profile — not a cold upsell.
-
-{_PARAMETER_GLOSSARY}
-{_JSON_SCHEMA}"""
-
-REACTIVATION_SYSTEM = f"""You are a re-engagement specialist for SynaptiqPay, a Brazilian digital wallet platform.
-
-A customer in the low_value_dormant segment has gone quiet — low transaction activity over an extended \
-period. Your job is to recommend a low-friction re-entry point that gets them moving again. Keep the \
-ask small and achievable. Do not upsell aggressively. Focus on removing whatever barrier is keeping \
-them away and restoring a basic habit of engagement.
-
-{_PARAMETER_GLOSSARY}
-{_JSON_SCHEMA}"""
-
-ACTIVATION_SYSTEM = f"""You are an onboarding specialist for SynaptiqPay, a Brazilian digital wallet platform.
-
-This customer has registered but has no transaction history — they have never made a move. Your job is \
-to recommend a first activation offer that lowers the barrier to their first transaction. Consider how \
-long they have been registered without acting, which products they own, and what channel brought them in. \
-The tone should be welcoming and encouraging, not pressuring. A small, tangible incentive often works better \
-than a feature pitch.
-
-{_PARAMETER_GLOSSARY}
-{_JSON_SCHEMA}"""
+# Backward-compatible aliases used by recommendation_agent.py
+RETENTION_SYSTEM = build_system_prompt("retention")
+UPSELL_SYSTEM = build_system_prompt("upsell")
+REACTIVATION_SYSTEM = build_system_prompt("reactivation")
+ACTIVATION_SYSTEM = build_system_prompt("activation")
 
 
 def _products_list(profile: CustomerProfile) -> str:
@@ -102,18 +112,18 @@ def build_user_message(
     cohort_health: str | None,
 ) -> str:
     avg = f"{cluster_avg_rfm:.2f}" if cluster_avg_rfm is not None else "n/a"
-    health = cohort_health or "n/a"
+    health = _sanitize(cohort_health) if cohort_health else "n/a"
     return f"""Customer profile:
-- cluster_name: {profile.cluster_name or "none (no transaction history)"}
-- cluster_position: {profile.cluster_position or "n/a"}
-- lifecycle_stage: {profile.lifecycle_stage or "n/a"}
+- cluster_name: {_sanitize(profile.cluster_name) if profile.cluster_name else "none (no transaction history)"}
+- cluster_position: {_sanitize(profile.cluster_position) if profile.cluster_position else "n/a"}
+- lifecycle_stage: {_sanitize(profile.lifecycle_stage) if profile.lifecycle_stage else "n/a"}
 - rfm_score: {profile.rfm_score or "n/a"} (cluster_avg_rfm: {avg})
 - recency_score: {profile.recency_score or "n/a"}
 - frequency_score: {profile.frequency_score or "n/a"}
 - monetary_score: {profile.monetary_score or "n/a"}
 - recency_days: {profile.recency_days or "n/a"}
 - products_owned: {_products_list(profile)}
-- acquisition_channel: {profile.acquisition_channel}
+- acquisition_channel: {_sanitize(profile.acquisition_channel)}
 - acquisition_cost: R${profile.acquisition_cost:.0f}
 - tenure_months: {profile.tenure_months}
 - cohort_health: {health}

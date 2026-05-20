@@ -87,6 +87,7 @@ _STUB_RECOMMENDATION = RecommendationOutput(
     message_tone="urgent, empathetic",
     reasoning="Customer is at risk.",
     strategy_used="retention",
+    notification_text="We miss you! Come back and get a special offer today.",
 )
 
 _STUB_RECOMMENDATION_JSON = _STUB_RECOMMENDATION.model_dump()
@@ -96,7 +97,7 @@ class StubAgent:
     def __init__(self, result=_STUB_RECOMMENDATION):
         self._result = result
 
-    async def run(self, customer_id, model_id="smart-auto"):
+    async def run(self, customer_id, model_id="smart-auto", language="en"):
         return self._result
 
 
@@ -187,7 +188,7 @@ def test_analyze_cached_returns_cached_recommendation() -> None:
     )
 
     class NeverCalledAgent:
-        async def run(self, *args, **kwargs):
+        async def run(self, customer_id, model_id="smart-auto", language="en"):
             raise AssertionError("Agent should not be called for cached result")
 
     overrides, stub_log = _all_overrides(rate_result=cached_result, agent=NeverCalledAgent())
@@ -260,6 +261,58 @@ def test_analyze_unknown_model_returns_422() -> None:
         response = client.post(
             f"/customers/{_CUSTOMER_ID}/analyze",
             json={"model": "gpt-4o"},
+        )
+        assert response.status_code == 422
+    finally:
+        app.dependency_overrides.clear()
+
+
+# ---------------------------------------------------------------------------
+# Cycle 7 — unsupported language → 422
+# ---------------------------------------------------------------------------
+
+
+def test_analyze_language_forwarded_to_agent() -> None:
+    received: list[str] = []
+
+    class CapturingAgent:
+        async def run(self, customer_id, model_id="smart-auto", language="en"):
+            received.append(language)
+            return _STUB_RECOMMENDATION
+
+    overrides, _ = _all_overrides(agent=CapturingAgent())
+    app.dependency_overrides.update(overrides)
+    try:
+        client.post(
+            f"/customers/{_CUSTOMER_ID}/analyze",
+            json={"model": "gemini-flash-free", "language": "pt-BR"},
+        )
+        assert received == ["pt-BR"]
+    finally:
+        app.dependency_overrides.clear()
+
+
+def test_analyze_pt_br_language_returns_200() -> None:
+    overrides, _ = _all_overrides()
+    app.dependency_overrides.update(overrides)
+    try:
+        response = client.post(
+            f"/customers/{_CUSTOMER_ID}/analyze",
+            json={"model": "gemini-flash-free", "language": "pt-BR"},
+        )
+        assert response.status_code == 200
+        assert response.json()["recommendation"]["risk_level"] == "critical"
+    finally:
+        app.dependency_overrides.clear()
+
+
+def test_analyze_unsupported_language_returns_422() -> None:
+    overrides, _ = _all_overrides()
+    app.dependency_overrides.update(overrides)
+    try:
+        response = client.post(
+            f"/customers/{_CUSTOMER_ID}/analyze",
+            json={"model": "gemini-flash-free", "language": "fr"},
         )
         assert response.status_code == 422
     finally:
