@@ -15,7 +15,7 @@ export function AppShell() {
       <header className="sticky top-0 z-50 border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
         <nav className="flex items-center h-14 px-6 gap-6">
           <NavLink
-            to="/dashboard"
+            to="/"
             className="text-primary font-semibold text-lg tracking-tight shrink-0"
           >
             SynaptiqPay
