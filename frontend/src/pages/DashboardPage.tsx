@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
 import {
   BarChart,
   Bar,
@@ -125,32 +126,37 @@ function KpiCard({
 }
 
 function KpiRow({ data }: { data: DashboardSummaryResponse["kpi_cards"] }) {
+  const { t } = useTranslation();
   const topCluster = [...data.by_cluster].sort((a, b) => b.customer_count - a.customer_count)[0];
   const atRiskPct = ((data.at_risk_count / data.total_customers) * 100).toFixed(1);
 
   return (
     <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
       <KpiCard
-        label="Total Customers"
+        label={t("dashboard.kpi.totalCustomers")}
         value={data.total_customers.toLocaleString()}
-        sub="registered wallets"
+        sub={t("dashboard.kpi.totalCustomersSub")}
       />
       <KpiCard
-        label="Avg RFM Score"
+        label={t("dashboard.kpi.avgRfm")}
         value={data.avg_rfm_score.toFixed(2)}
-        sub="population-wide"
+        sub={t("dashboard.kpi.avgRfmSub")}
         accent="#60a5fa"
       />
       <KpiCard
-        label="At-Risk / Churned"
+        label={t("dashboard.kpi.atRisk")}
         value={data.at_risk_count.toLocaleString()}
-        sub={`${atRiskPct}% of population`}
+        sub={t("dashboard.kpi.atRiskSub", { pct: atRiskPct })}
         accent="#f87171"
       />
       <KpiCard
-        label="Largest Segment"
+        label={t("dashboard.kpi.largestSegment")}
         value={clusterLabel(topCluster?.cluster_name ?? "—")}
-        sub={topCluster ? `${topCluster.customer_count.toLocaleString()} customers` : undefined}
+        sub={
+          topCluster
+            ? t("dashboard.kpi.largestSegmentSub", { count: topCluster.customer_count.toLocaleString() })
+            : undefined
+        }
         accent={CLUSTER_COLORS[topCluster?.cluster_name ?? ""] ?? undefined}
       />
     </div>
@@ -162,10 +168,11 @@ function KpiRow({ data }: { data: DashboardSummaryResponse["kpi_cards"] }) {
 // ---------------------------------------------------------------------------
 
 function SegmentBreakdown({ data }: { data: DashboardSummaryResponse["kpi_cards"] }) {
+  const { t } = useTranslation();
   const total = data.total_customers;
   return (
     <div className="rounded-lg border border-border bg-card px-5 py-4 flex flex-col gap-3">
-      <span className="text-sm font-medium text-foreground">Segment Breakdown</span>
+      <span className="text-sm font-medium text-foreground">{t("dashboard.chart.segmentBreakdown")}</span>
       <div className="flex h-4 w-full rounded overflow-hidden">
         {data.by_cluster.map((seg) => (
           <div
@@ -202,16 +209,29 @@ function SegmentBreakdown({ data }: { data: DashboardSummaryResponse["kpi_cards"
 // Chart 1: Acquisition cost by channel
 // ---------------------------------------------------------------------------
 
+function useChannelLabel() {
+  const { t } = useTranslation();
+  return (ch: string): string =>
+    ({
+      organic: t("customers.organic"),
+      paid_ads: t("customers.paidAds"),
+      referral: t("customers.referral"),
+      partnership: t("customers.partnership"),
+    }[ch] ?? ch.replace("_", " "));
+}
+
 function AcqCostChart({ data }: { data: DashboardSummaryResponse["acquisition_cost_by_channel"] }) {
+  const { t } = useTranslation();
+  const channelLabel = useChannelLabel();
   const formatted = data.map((r) => ({
-    channel: r.acquisition_channel.replace("_", " "),
+    channel: channelLabel(r.acquisition_channel),
     cost: Math.round(r.avg_acquisition_cost),
     fill: CHANNEL_COLORS[r.acquisition_channel] ?? "#71717a",
   }));
 
   return (
     <div className="rounded-lg border border-border bg-card px-5 py-4 flex flex-col gap-3">
-      <span className="text-sm font-medium text-foreground">Avg Acquisition Cost by Channel (R$)</span>
+      <span className="text-sm font-medium text-foreground">{t("dashboard.chart.acqCost")}</span>
       <ResponsiveContainer width="100%" height={220}>
         <BarChart data={formatted} layout="vertical" margin={{ left: 8, right: 24, top: 4, bottom: 4 }}>
           <CartesianGrid strokeDasharray="3 3" stroke="#27272a" horizontal={false} />
@@ -221,7 +241,7 @@ function AcqCostChart({ data }: { data: DashboardSummaryResponse["acquisition_co
             contentStyle={{ backgroundColor: "#18181b", border: "1px solid #27272a", borderRadius: 6 }}
             labelStyle={{ color: "#e4e4e7" }}
             itemStyle={{ color: "#a1a1aa" }}
-            formatter={(v) => [`R$ ${((v as number) ?? 0).toLocaleString()}`, "Avg cost"]}
+            formatter={(v) => [`R$ ${((v as number) ?? 0).toLocaleString()}`, t("dashboard.tooltip.avgCost")]}
           />
           <Bar dataKey="cost" radius={[0, 4, 4, 0]}>
             {formatted.map((entry, i) => (
@@ -239,9 +259,10 @@ function AcqCostChart({ data }: { data: DashboardSummaryResponse["acquisition_co
 // ---------------------------------------------------------------------------
 
 function ProductsOwnedChart({ data }: { data: DashboardSummaryResponse["population_by_products_owned"] }) {
+  const { t } = useTranslation();
   return (
     <div className="rounded-lg border border-border bg-card px-5 py-4 flex flex-col gap-3">
-      <span className="text-sm font-medium text-foreground">Customers by Products Owned</span>
+      <span className="text-sm font-medium text-foreground">{t("dashboard.chart.productsOwned")}</span>
       <ResponsiveContainer width="100%" height={220}>
         <BarChart data={data} margin={{ left: 0, right: 8, top: 4, bottom: 4 }}>
           <CartesianGrid strokeDasharray="3 3" stroke="#27272a" vertical={false} />
@@ -251,7 +272,7 @@ function ProductsOwnedChart({ data }: { data: DashboardSummaryResponse["populati
             contentStyle={{ backgroundColor: "#18181b", border: "1px solid #27272a", borderRadius: 6 }}
             labelStyle={{ color: "#e4e4e7" }}
             itemStyle={{ color: "#a1a1aa" }}
-            formatter={(v) => [((v as number) ?? 0).toLocaleString(), "customers"]}
+            formatter={(v) => [((v as number) ?? 0).toLocaleString(), t("dashboard.tooltip.customers")]}
             labelFormatter={(l) => `${l} product(s)`}
           />
           <Bar dataKey="customer_count" fill="#60a5fa" radius={[4, 4, 0, 0]} />
@@ -266,6 +287,7 @@ function ProductsOwnedChart({ data }: { data: DashboardSummaryResponse["populati
 // ---------------------------------------------------------------------------
 
 function TenureChart({ data }: { data: DashboardSummaryResponse["product_ownership_vs_tenure"] }) {
+  const { t } = useTranslation();
   const TENURE_ORDER = ["0-6m", "6-12m", "12-24m", "24m+"];
   const sorted = [...data].sort(
     (a, b) => TENURE_ORDER.indexOf(a.tenure_bucket) - TENURE_ORDER.indexOf(b.tenure_bucket)
@@ -273,7 +295,7 @@ function TenureChart({ data }: { data: DashboardSummaryResponse["product_ownersh
 
   return (
     <div className="rounded-lg border border-border bg-card px-5 py-4 flex flex-col gap-3">
-      <span className="text-sm font-medium text-foreground">Avg Products Owned vs Tenure</span>
+      <span className="text-sm font-medium text-foreground">{t("dashboard.chart.tenure")}</span>
       <ResponsiveContainer width="100%" height={220}>
         <LineChart data={sorted} margin={{ left: 0, right: 16, top: 4, bottom: 4 }}>
           <CartesianGrid strokeDasharray="3 3" stroke="#27272a" vertical={false} />
@@ -283,7 +305,7 @@ function TenureChart({ data }: { data: DashboardSummaryResponse["product_ownersh
             contentStyle={{ backgroundColor: "#18181b", border: "1px solid #27272a", borderRadius: 6 }}
             labelStyle={{ color: "#e4e4e7" }}
             itemStyle={{ color: "#a1a1aa" }}
-            formatter={(v) => [((v as number) ?? 0).toFixed(2), "avg products"]}
+            formatter={(v) => [((v as number) ?? 0).toFixed(2), t("dashboard.tooltip.avgProducts")]}
           />
           <Line
             type="monotone"
@@ -304,6 +326,7 @@ function TenureChart({ data }: { data: DashboardSummaryResponse["product_ownersh
 // ---------------------------------------------------------------------------
 
 function CommonProductsChart({ data }: { data: DashboardSummaryResponse["most_common_products"] }) {
+  const { t } = useTranslation();
   const formatted = data.map((r) => ({
     ...r,
     label: r.product_type.replace("_", " "),
@@ -312,7 +335,7 @@ function CommonProductsChart({ data }: { data: DashboardSummaryResponse["most_co
 
   return (
     <div className="rounded-lg border border-border bg-card px-5 py-4 flex flex-col gap-3">
-      <span className="text-sm font-medium text-foreground">Active Product Ownership</span>
+      <span className="text-sm font-medium text-foreground">{t("dashboard.chart.commonProducts")}</span>
       <ResponsiveContainer width="100%" height={220}>
         <BarChart data={formatted} margin={{ left: 0, right: 8, top: 4, bottom: 4 }}>
           <CartesianGrid strokeDasharray="3 3" stroke="#27272a" vertical={false} />
@@ -322,7 +345,7 @@ function CommonProductsChart({ data }: { data: DashboardSummaryResponse["most_co
             contentStyle={{ backgroundColor: "#18181b", border: "1px solid #27272a", borderRadius: 6 }}
             labelStyle={{ color: "#e4e4e7" }}
             itemStyle={{ color: "#a1a1aa" }}
-            formatter={(v) => [((v as number) ?? 0).toLocaleString(), "active owners"]}
+            formatter={(v) => [((v as number) ?? 0).toLocaleString(), t("dashboard.tooltip.activeOwners")]}
           />
           <Bar dataKey="ownership_count" radius={[4, 4, 0, 0]}>
             {formatted.map((entry, i) => (
@@ -351,40 +374,51 @@ function buildHeatmapGrid(rows: CohortActivityEntry[]) {
     const offset = monthDiff(row.cohort_month, row.activity_month);
     grid.get(row.cohort_month)!.set(offset, row.active_rate);
   }
-  return { cohortMonths, maxOffset, grid };
+
+  const nonZero = rows.map((r) => r.active_rate).filter((r) => r > 0);
+  const minRate = nonZero.length > 0 ? Math.min(...nonZero) : 0;
+  const maxRate = nonZero.length > 0 ? Math.max(...nonZero) : 1;
+
+  return { cohortMonths, maxOffset, grid, minRate, maxRate };
 }
 
-function CohortHeatmap({ data }: { data: CohortActivityEntry[] }) {
-  const { cohortMonths, maxOffset, grid } = buildHeatmapGrid(data);
-  const offsets = Array.from({ length: maxOffset + 1 }, (_, i) => i);
+type HeatmapTooltip = { x: number; y: number; cohort: string; offset: number; rate: number };
 
-  const CELL_W = 18;
+function CohortHeatmap({ data }: { data: CohortActivityEntry[] }) {
+  const { t } = useTranslation();
+  const { cohortMonths, maxOffset, grid, minRate, maxRate } = buildHeatmapGrid(data);
+  const normalize = (rate: number) =>
+    rate === 0 ? 0 : (rate - minRate) / (maxRate - minRate || 1);
+  const offsets = Array.from({ length: maxOffset + 1 }, (_, i) => i);
+  const [tooltip, setTooltip] = useState<HeatmapTooltip | null>(null);
+
   const CELL_H = 16;
   const LABEL_W = 62;
-  const totalW = LABEL_W + offsets.length * CELL_W;
+  const MIN_CELL_W = 10;
+  const minGridW = LABEL_W + offsets.length * MIN_CELL_W;
 
   return (
     <div className="rounded-lg border border-border bg-card px-5 py-4 flex flex-col gap-3">
       <div className="flex items-center justify-between">
-        <span className="text-sm font-medium text-foreground">Cohort Activity Heatmap</span>
+        <span className="text-sm font-medium text-foreground">{t("dashboard.chart.cohortHeatmap")}</span>
         <div className="flex items-center gap-2 text-xs text-muted-foreground">
-          <span>0%</span>
+          <span>{(minRate * 100).toFixed(0)}%</span>
           <div className="flex gap-px">
             {[0, 0.25, 0.5, 0.75, 1].map((v) => (
               <div key={v} className="h-3 w-4 rounded-sm" style={{ backgroundColor: rateColor(v) }} />
             ))}
           </div>
-          <span>100%</span>
+          <span>{(maxRate * 100).toFixed(0)}%</span>
         </div>
       </div>
       <div className="overflow-x-auto">
-        <div style={{ minWidth: totalW }}>
+        <div style={{ minWidth: minGridW, width: "100%" }}>
           {/* Header row: month offsets */}
           <div className="flex" style={{ marginLeft: LABEL_W }}>
             {offsets.map((o) => (
               <div
                 key={o}
-                style={{ width: CELL_W, fontSize: 9, color: "#71717a", textAlign: "center" }}
+                style={{ flex: 1, minWidth: MIN_CELL_W, fontSize: 9, color: "#71717a", textAlign: "center" }}
               >
                 {o === 0 ? "M0" : o % 3 === 0 ? `M${o}` : ""}
               </div>
@@ -411,18 +445,23 @@ function CohortHeatmap({ data }: { data: CohortActivityEntry[] }) {
                   <div
                     key={o}
                     style={{
-                      width: CELL_W - 1,
+                      flex: 1,
+                      minWidth: MIN_CELL_W,
                       height: CELL_H - 2,
                       marginRight: 1,
                       borderRadius: 2,
-                      backgroundColor: rate !== undefined ? rateColor(rate) : "transparent",
-                      flexShrink: 0,
+                      backgroundColor: rate !== undefined ? rateColor(normalize(rate)) : "transparent",
+                      cursor: rate !== undefined ? "default" : undefined,
                     }}
-                    title={
-                      rate !== undefined
-                        ? `${cohort} M+${o}: ${(rate * 100).toFixed(1)}%`
-                        : undefined
-                    }
+                    onMouseEnter={(e) => {
+                      if (rate !== undefined)
+                        setTooltip({ x: e.clientX, y: e.clientY, cohort, offset: o, rate });
+                    }}
+                    onMouseMove={(e) => {
+                      if (rate !== undefined)
+                        setTooltip((prev) => prev ? { ...prev, x: e.clientX, y: e.clientY } : null);
+                    }}
+                    onMouseLeave={() => setTooltip(null)}
                   />
                 );
               })}
@@ -430,9 +469,35 @@ function CohortHeatmap({ data }: { data: CohortActivityEntry[] }) {
           ))}
         </div>
       </div>
-      <p className="text-xs text-muted-foreground">
-        Each row = acquisition cohort. Columns = months since registration (M0…). Colour = % active that month.
-      </p>
+      <p className="text-xs text-muted-foreground">{t("dashboard.chart.cohortHeatmapDesc")}</p>
+
+      {tooltip && (
+        <div
+          style={{
+            position: "fixed",
+            left: tooltip.x + 14,
+            top: tooltip.y - 36,
+            pointerEvents: "none",
+            zIndex: 50,
+            backgroundColor: "#18181b",
+            border: "1px solid #27272a",
+            borderRadius: 6,
+            padding: "5px 10px",
+            fontSize: 12,
+            color: "#e4e4e7",
+            whiteSpace: "nowrap",
+          }}
+        >
+          <span style={{ color: "#a1a1aa" }}>
+            {tooltip.cohort} · M+{tooltip.offset}
+          </span>
+          {"  "}
+          <span style={{ color: "#34d399", fontWeight: 600 }}>
+            {(tooltip.rate * 100).toFixed(1)}%
+          </span>
+          <span style={{ color: "#71717a" }}> active</span>
+        </div>
+      )}
     </div>
   );
 }
@@ -457,11 +522,13 @@ function buildRetentionSeries(rows: ChannelM6RetentionEntry[]) {
 }
 
 function M6RetentionChart({ data }: { data: ChannelM6RetentionEntry[] }) {
+  const { t } = useTranslation();
+  const channelLabel = useChannelLabel();
   const { series, channels } = buildRetentionSeries(data);
 
   return (
     <div className="rounded-lg border border-border bg-card px-5 py-4 flex flex-col gap-3">
-      <span className="text-sm font-medium text-foreground">M6 Active Rate by Channel over Cohorts</span>
+      <span className="text-sm font-medium text-foreground">{t("dashboard.chart.m6retention")}</span>
       <ResponsiveContainer width="100%" height={280}>
         <LineChart data={series} margin={{ left: 0, right: 16, top: 4, bottom: 40 }}>
           <CartesianGrid strokeDasharray="3 3" stroke="#27272a" vertical={false} />
@@ -487,12 +554,12 @@ function M6RetentionChart({ data }: { data: ChannelM6RetentionEntry[] }) {
             itemStyle={{ color: "#a1a1aa" }}
             formatter={(v, name) => [
               `${(((v as number) ?? 0) * 100).toFixed(1)}%`,
-              (name as string).replace("_", " "),
+              channelLabel(name as string),
             ]}
           />
           <Legend
             wrapperStyle={{ fontSize: 11, color: "#a1a1aa" }}
-            formatter={(value) => value.replace(/_/g, " ")}
+            formatter={(value) => channelLabel(value)}
           />
           {channels.map((ch) => (
             <Line
@@ -507,9 +574,7 @@ function M6RetentionChart({ data }: { data: ChannelM6RetentionEntry[] }) {
           ))}
         </LineChart>
       </ResponsiveContainer>
-      <p className="text-xs text-muted-foreground">
-        % of customers still active 6 months after first transaction, by acquisition cohort.
-      </p>
+      <p className="text-xs text-muted-foreground">{t("dashboard.chart.m6retentionDesc")}</p>
     </div>
   );
 }
@@ -519,6 +584,7 @@ function M6RetentionChart({ data }: { data: ChannelM6RetentionEntry[] }) {
 // ---------------------------------------------------------------------------
 
 export function DashboardPage() {
+  const { t } = useTranslation();
   const [summary, setSummary] = useState<DashboardSummaryResponse | null>(null);
   const [aggregates, setAggregates] = useState<DashboardAggregatesResponse | null>(null);
   const [summaryLoading, setSummaryLoading] = useState(true);
@@ -538,7 +604,7 @@ export function DashboardPage() {
 
   return (
     <div className="flex flex-col gap-6">
-      <h1 className="text-xl font-semibold">Population Overview</h1>
+      <h1 className="text-xl font-semibold">{t("dashboard.title")}</h1>
 
       {/* KPI cards */}
       {summaryLoading || !summary ? (

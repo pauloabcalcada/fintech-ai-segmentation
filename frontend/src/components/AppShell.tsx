@@ -1,11 +1,15 @@
 import { NavLink, Outlet } from "react-router-dom";
-
-const NAV = [
-  { to: "/dashboard", label: "Dashboard" },
-  { to: "/customers", label: "Customers" },
-];
+import { useTranslation } from "react-i18next";
+import { LanguageToggle } from "./LanguageToggle";
 
 export function AppShell() {
+  const { t } = useTranslation();
+
+  const NAV = [
+    { to: "/dashboard", label: t("nav.dashboard") },
+    { to: "/customers", label: t("nav.customers") },
+  ];
+
   return (
     <div className="min-h-screen flex flex-col">
       <header className="sticky top-0 z-50 border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
@@ -34,7 +38,9 @@ export function AppShell() {
               </NavLink>
             ))}
           </div>
-          <div className="ml-auto" data-testid="topnav-right-slot" />
+          <div className="ml-auto flex items-center" data-testid="topnav-right-slot">
+            <LanguageToggle />
+          </div>
         </nav>
       </header>
       <main className="flex-1 p-6">

@@ -1,0 +1,62 @@
+{
+  "nav": {
+    "dashboard": "Painel",
+    "customers": "Clientes"
+  },
+  "dashboard": {
+    "title": "Visão Geral da População",
+    "kpi": {
+      "totalCustomers": "Total de Clientes",
+      "totalCustomersSub": "carteiras registradas",
+      "avgRfm": "Pontuação RFM Média",
+      "avgRfmSub": "população total",
+      "atRisk": "Em Risco / Churn",
+      "atRiskSub": "{{pct}}% da população",
+      "largestSegment": "Maior Segmento",
+      "largestSegmentSub": "{{count}} clientes"
+    },
+    "chart": {
+      "segmentBreakdown": "Distribuição por Segmento",
+      "acqCost": "CAC Médio por Canal (R$)",
+      "productsOwned": "Total de Clientes por Produtos adquiridos",
+      "tenure": "Média de Produtos Adquiridos vs Tempo de casa",
+      "commonProducts": "Posse Ativa de Produtos",
+      "cohortHeatmap": "Mapa de Calor de Atividade por Cohort",
+      "cohortHeatmapDesc": "Cada linha = cohort de aquisição. Colunas = meses desde o cadastro (M0…). Cor = % ativo naquele mês.",
+      "m6retention": "Taxa Ativa M6 por Canal por Cohort",
+      "m6retentionDesc": "% de clientes ainda ativos 6 meses após a primeira transação, por cohort de aquisição."
+    },
+    "tooltip": {
+      "avgCost": "Custo médio",
+      "customers": "clientes",
+      "avgProducts": "produtos médios",
+      "activeOwners": "proprietários ativos"
+    }
+  },
+  "customers": {
+    "title": "Clientes",
+    "loading": "Carregando…",
+    "results": "{{count}} resultados",
+    "searchPlaceholder": "Buscar por nome…",
+    "allClusters": "Todos os segmentos",
+    "allChannels": "Todos os canais",
+    "highValueActive": "Alto valor ativo",
+    "lowValueDormant": "Baixo valor inativo",
+    "atRiskChurner": "Em risco de churn",
+    "paidAds": "Anúncios pagos",
+    "organic": "Orgânico",
+    "referral": "Indicação",
+    "partnership": "Parceria",
+    "col": {
+      "name": "Nome",
+      "age": "Idade",
+      "state": "Estado",
+      "cluster": "Segmento",
+      "recency": "Recência (dias)"
+    },
+    "noResults": "Nenhum cliente encontrado com esses filtros.",
+    "pagination": "Página {{page}} de {{total}} — {{count}} clientes",
+    "prev": "Anterior",
+    "next": "Próximo"
+  }
+}

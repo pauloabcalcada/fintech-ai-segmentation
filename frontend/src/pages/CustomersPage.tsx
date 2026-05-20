@@ -1,4 +1,5 @@
 import { useEffect, useState, useCallback } from "react";
+import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
 import {
   Table,
@@ -23,20 +24,6 @@ import { fetchCustomers, type CustomerSummary } from "@/lib/api";
 const PAGE_SIZE = 50;
 const ACTIVE_LIFECYCLE = "active_clustered";
 
-const CLUSTERS = [
-  { value: "all", label: "All clusters" },
-  { value: "high_value_active", label: "High value active" },
-  { value: "low_value_dormant", label: "Low value dormant" },
-  { value: "at_risk_churner", label: "At risk churner" },
-];
-
-const CHANNELS = [
-  { value: "all", label: "All channels" },
-  { value: "paid_ads", label: "Paid ads" },
-  { value: "organic", label: "Organic" },
-  { value: "referral", label: "Referral" },
-  { value: "partnership", label: "Partnership" },
-];
 
 type SortCol = "rfm_score" | "recency_days" | "monetary_total";
 type SortOrder = "asc" | "desc";
@@ -54,6 +41,7 @@ function SkeletonRows({ count }: { count: number }) {
 }
 
 export function CustomersPage() {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const [customers, setCustomers] = useState<CustomerSummary[]>([]);
   const [total, setTotal] = useState(0);
@@ -102,6 +90,21 @@ export function CustomersPage() {
 
   const totalPages = Math.ceil(total / PAGE_SIZE);
 
+  const CLUSTERS = [
+    { value: "all", label: t("customers.allClusters") },
+    { value: "high_value_active", label: t("customers.highValueActive") },
+    { value: "low_value_dormant", label: t("customers.lowValueDormant") },
+    { value: "at_risk_churner", label: t("customers.atRiskChurner") },
+  ];
+
+  const CHANNELS = [
+    { value: "all", label: t("customers.allChannels") },
+    { value: "paid_ads", label: t("customers.paidAds") },
+    { value: "organic", label: t("customers.organic") },
+    { value: "referral", label: t("customers.referral") },
+    { value: "partnership", label: t("customers.partnership") },
+  ];
+
   function toggleSort(col: SortCol) {
     if (sort === col) {
       setOrder((o) => (o === "desc" ? "asc" : "desc"));
@@ -119,16 +122,16 @@ export function CustomersPage() {
   return (
     <div className="flex flex-col gap-4">
       <div className="flex items-center justify-between">
-        <h1 className="text-xl font-semibold">Customers</h1>
+        <h1 className="text-xl font-semibold">{t("customers.title")}</h1>
         <span className="text-muted-foreground text-sm">
-          {loading ? "Loading…" : `${total.toLocaleString()} results`}
+          {loading ? t("customers.loading") : t("customers.results", { count: total.toLocaleString() })}
         </span>
       </div>
 
       {/* Filters */}
       <div className="flex flex-wrap gap-3">
         <Input
-          placeholder="Search by name…"
+          placeholder={t("customers.searchPlaceholder")}
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           className="w-64 bg-card border-border"
@@ -164,15 +167,15 @@ export function CustomersPage() {
         <Table>
           <TableHeader>
             <TableRow className="border-border hover:bg-transparent">
-              <TableHead>Name</TableHead>
-              <TableHead>Age</TableHead>
-              <TableHead>State</TableHead>
-              <TableHead>Cluster</TableHead>
+              <TableHead>{t("customers.col.name")}</TableHead>
+              <TableHead>{t("customers.col.age")}</TableHead>
+              <TableHead>{t("customers.col.state")}</TableHead>
+              <TableHead>{t("customers.col.cluster")}</TableHead>
               <TableHead
                 className="cursor-pointer select-none"
                 onClick={() => toggleSort("recency_days")}
               >
-                Recency (days) <SortArrow col="recency_days" />
+                {t("customers.col.recency")} <SortArrow col="recency_days" />
               </TableHead>
             </TableRow>
           </TableHeader>
@@ -185,7 +188,7 @@ export function CustomersPage() {
                   colSpan={5}
                   className="text-center text-muted-foreground py-12"
                 >
-                  No customers match your filters.
+                  {t("customers.noResults")}
                 </TableCell>
               </TableRow>
             ) : (
@@ -217,7 +220,7 @@ export function CustomersPage() {
       {totalPages > 1 && (
         <div className="flex items-center justify-between text-sm">
           <span className="text-muted-foreground">
-            Page {page} of {totalPages} — {total.toLocaleString()} customers
+            {t("customers.pagination", { page, total: totalPages, count: total.toLocaleString() })}
           </span>
           <div className="flex gap-2">
             <button
@@ -225,14 +228,14 @@ export function CustomersPage() {
               disabled={page <= 1}
               className="px-3 py-1.5 rounded-md border border-border bg-card hover:bg-muted/40 disabled:opacity-40 disabled:cursor-not-allowed"
             >
-              Previous
+              {t("customers.prev")}
             </button>
             <button
               onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
               disabled={page >= totalPages}
               className="px-3 py-1.5 rounded-md border border-border bg-card hover:bg-muted/40 disabled:opacity-40 disabled:cursor-not-allowed"
             >
-              Next
+              {t("customers.next")}
             </button>
           </div>
         </div>
