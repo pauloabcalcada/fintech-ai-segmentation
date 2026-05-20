@@ -81,5 +81,30 @@
     "pagination": "Page {{page}} of {{total}} — {{count}} customers",
     "prev": "Previous",
     "next": "Next"
+  },
+  "landing": {
+    "hero": {
+      "heading": "SynaptiqPay AI Segmentation",
+      "tagline": "Customer behaviour analysis for a Brazilian fintech — replacing manual, one-size-fits-all treatment with AI-driven segmentation and recommendations.",
+      "cta": "Open Dashboard →"
+    },
+    "about": {
+      "heading": "What this is",
+      "body": "SynaptiqPay is a Brazilian fintech with 8,000 digital wallet customers. This system replaces manual, one-size-fits-all customer treatment with a segmentation and AI-driven workflow that identifies customer value, behaviour patterns, churn risk, and recommends next actions. Customer data is synthetic, generated with realistic Brazilian demographics and statistical behavioural models."
+    },
+    "stack": {
+      "heading": "Tech Stack",
+      "items": "Faker · Pandas · Scikit-learn · LangGraph · FastAPI · React · Supabase · Vercel · Fly.io"
+    },
+    "outOfScope": {
+      "heading": "Out of Scope",
+      "cacPayback": "CAC payback with real revenue margin — dataset only has GTV, no fee or margin column",
+      "churnModel": "Churn prediction model (logistic regression / random forest) — Phase 3",
+      "ltvHeatmap": "LTV/CAC heatmap — requires both revenue model and churn model",
+      "chatbot": "Text-to-SQL chatbot — Phase 2 roadmap"
+    },
+    "github": {
+      "label": "View on GitHub"
+    }
   }
 }

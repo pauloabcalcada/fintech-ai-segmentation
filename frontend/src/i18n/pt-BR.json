@@ -81,5 +81,30 @@
     "pagination": "Página {{page}} de {{total}} — {{count}} clientes",
     "prev": "Anterior",
     "next": "Próximo"
+  },
+  "landing": {
+    "hero": {
+      "heading": "SynaptiqPay AI Segmentation",
+      "tagline": "Análise de comportamento de clientes para uma fintech brasileira — substituindo tratamento manual e uniforme por segmentação e recomendações com IA.",
+      "cta": "Abrir Painel →"
+    },
+    "about": {
+      "heading": "O que é isso",
+      "body": "A SynaptiqPay é uma fintech brasileira com 8.000 clientes de carteira digital. Este sistema substitui o tratamento manual e uniforme por um fluxo de segmentação e IA que identifica o valor do cliente, padrões de comportamento, risco de churn e recomenda próximas ações. Os dados dos clientes são sintéticos, gerados com demografia brasileira realista e modelos estatísticos de comportamento."
+    },
+    "stack": {
+      "heading": "Stack Tecnológica",
+      "items": "Faker · Pandas · Scikit-learn · LangGraph · FastAPI · React · Supabase · Vercel · Fly.io"
+    },
+    "outOfScope": {
+      "heading": "Fora do Escopo",
+      "cacPayback": "Payback de CAC com margem real de receita — o dataset só tem GTV, sem coluna de taxa ou margem",
+      "churnModel": "Modelo de predição de churn (regressão logística / random forest) — Fase 3",
+      "ltvHeatmap": "Heatmap de LTV/CAC — requer modelo de receita e modelo de churn",
+      "chatbot": "Chatbot Text-to-SQL — roadmap da Fase 2"
+    },
+    "github": {
+      "label": "Ver no GitHub"
+    }
   }
 }
