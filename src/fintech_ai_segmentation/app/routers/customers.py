@@ -63,6 +63,15 @@ async def list_customers(
     return CustomerListResponse(data=customers, total=total, page=page, page_size=page_size)
 
 
+@router.get("/customers/sample", response_model=CustomerListResponse)
+async def sample_customers(
+    per_cluster: int = Query(default=2, ge=1, le=5),
+    repository: CustomerRepository = Depends(get_customer_repository),
+) -> CustomerListResponse:
+    customers = await repository.sample_customers(per_cluster)
+    return CustomerListResponse(data=customers, total=len(customers), page=1, page_size=per_cluster * 3)
+
+
 @router.get("/customers/{customer_id}", response_model=CustomerProfileResponse)
 async def get_customer(
     customer_id: uuid.UUID,

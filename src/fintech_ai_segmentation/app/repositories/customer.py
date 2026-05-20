@@ -262,6 +262,39 @@ class CustomerRepository:
             cluster_product_profile=cluster_product_profile,
         )
 
+    async def sample_customers(self, per_cluster: int) -> list[CustomerSummary]:
+        sql = text("""
+            (
+                SELECT cr.customer_id, cr.name, cr.email, cr.age, cr.state,
+                       ca.cluster_name, ca.lifecycle_stage, ca.rfm_score, ca.recency_days
+                FROM customer_analysis ca
+                JOIN customers_raw cr ON cr.customer_id = ca.customer_id::uuid
+                WHERE ca.cluster_name = 'high_value_active'
+                ORDER BY RANDOM() LIMIT :n
+            )
+            UNION ALL
+            (
+                SELECT cr.customer_id, cr.name, cr.email, cr.age, cr.state,
+                       ca.cluster_name, ca.lifecycle_stage, ca.rfm_score, ca.recency_days
+                FROM customer_analysis ca
+                JOIN customers_raw cr ON cr.customer_id = ca.customer_id::uuid
+                WHERE ca.cluster_name = 'at_risk_churner'
+                ORDER BY RANDOM() LIMIT :n
+            )
+            UNION ALL
+            (
+                SELECT cr.customer_id, cr.name, cr.email, cr.age, cr.state,
+                       ca.cluster_name, ca.lifecycle_stage, ca.rfm_score, ca.recency_days
+                FROM customer_analysis ca
+                JOIN customers_raw cr ON cr.customer_id = ca.customer_id::uuid
+                WHERE ca.cluster_name = 'low_value_dormant'
+                ORDER BY RANDOM() LIMIT :n
+            )
+        """)
+        async with self._engine.connect() as conn:
+            result = await conn.execute(sql, {"n": per_cluster})
+            return [CustomerSummary(**dict(row._mapping)) for row in result]
+
     async def get_activity_timeline(
         self, customer_id: uuid.UUID
     ) -> list[ActivityTimelineEntry]:
