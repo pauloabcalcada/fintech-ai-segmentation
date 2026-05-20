@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import {
   analyzeCustomer,
   formatProvenance,
@@ -29,6 +30,47 @@ function RiskBadge({ level }: { level: RecommendationResult["risk_level"] }) {
     >
       {level}
     </span>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Notification text card with copy button
+// ---------------------------------------------------------------------------
+
+function NotificationCard({ text }: { text: string }) {
+  const { t } = useTranslation();
+  const [copied, setCopied] = useState(false);
+
+  const fallback = !text;
+
+  function handleCopy() {
+    navigator.clipboard.writeText(text).then(() => {
+      setCopied(true);
+      setTimeout(() => setCopied(false), 1500);
+    });
+  }
+
+  return (
+    <div className="rounded-md border border-border bg-muted/30 px-4 py-3">
+      <div className="flex items-center justify-between mb-2">
+        <p className="text-xs text-muted-foreground">{t("aiPanel.notificationText")}</p>
+        {!fallback && (
+          <button
+            onClick={handleCopy}
+            className="text-xs text-muted-foreground hover:text-foreground transition-colors px-2 py-0.5 rounded border border-border"
+          >
+            {copied ? t("aiPanel.copied") : t("aiPanel.copy")}
+          </button>
+        )}
+      </div>
+      {fallback ? (
+        <p className="text-sm text-muted-foreground italic">
+          {t("aiPanel.reAnalyzeToGenerate")}
+        </p>
+      ) : (
+        <p className="text-sm leading-relaxed">{text}</p>
+      )}
+    </div>
   );
 }
 
@@ -69,6 +111,8 @@ function RecommendationCard({
         <p className="text-xs text-muted-foreground mb-2">Reasoning</p>
         <p className="text-sm leading-relaxed text-foreground">{result.reasoning}</p>
       </div>
+
+      <NotificationCard text={result.notification_text} />
     </div>
   );
 }
@@ -86,6 +130,7 @@ export function AiRecommendationPanel({
   customerId: string;
   initialRecommendation: CachedRecommendation | null;
 }) {
+  const { t, i18n } = useTranslation();
   const [model, setModel] = useState<string>("");
   const [status, setStatus] = useState<Status>(initialRecommendation ? "success" : "idle");
   const [result, setResult] = useState<AnalyzeResponse | null>(
@@ -103,7 +148,7 @@ export function AiRecommendationPanel({
   async function fireRequest() {
     setStatus("loading");
     try {
-      const response = await analyzeCustomer(customerId, model);
+      const response = await analyzeCustomer(customerId, model, i18n.language);
       setResult(response);
       setStatus("success");
     } catch (err) {
@@ -122,54 +167,40 @@ export function AiRecommendationPanel({
 
   return (
     <div className="rounded-lg border border-border bg-card p-6 flex flex-col gap-5">
+      {/* Top controls — always visible */}
       <div className="flex items-center justify-between flex-wrap gap-3">
-        <h3 className="text-sm font-semibold">AI Recommendation</h3>
+        <h3 className="text-sm font-semibold">{t("aiPanel.title")}</h3>
 
-        {status !== "success" && (
-          <div className="flex items-center gap-2">
-            <select
-              value={model}
-              onChange={(e) => setModel(e.target.value)}
-              className="rounded-md border border-border bg-background px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
-            >
-              <option value="" disabled>
-                Select model…
-              </option>
-              {MODEL_OPTIONS.map((m) => (
-                <option key={m.value} value={m.value}>
-                  {m.label}
-                </option>
-              ))}
-            </select>
-            <button
-              disabled={!model || status === "loading"}
-              onClick={fireRequest}
-              className="px-4 py-1.5 rounded-md bg-primary text-primary-foreground text-sm disabled:opacity-50 disabled:cursor-not-allowed transition-opacity"
-            >
-              {status === "loading" ? "Analyzing…" : "Analyze"}
-            </button>
-          </div>
-        )}
-
-        {status === "success" && result && (
-          <button
-            onClick={() => {
-              setStatus("idle");
-              setResult(null);
-              setModel("");
-            }}
-            className="text-xs text-muted-foreground hover:text-foreground underline underline-offset-2"
+        <div className="flex items-center gap-2">
+          <select
+            value={model}
+            onChange={(e) => setModel(e.target.value)}
+            className="rounded-md border border-border bg-background px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
           >
-            Re-analyze
+            <option value="" disabled>
+              {t("aiPanel.selectModel")}
+            </option>
+            {MODEL_OPTIONS.map((m) => (
+              <option key={m.value} value={m.value}>
+                {m.label}
+              </option>
+            ))}
+          </select>
+          <button
+            disabled={!model || status === "loading"}
+            onClick={fireRequest}
+            className="px-4 py-1.5 rounded-md bg-primary text-primary-foreground text-sm disabled:opacity-50 disabled:cursor-not-allowed transition-opacity"
+          >
+            {status === "loading" ? t("aiPanel.analyzing") : t("aiPanel.analyze")}
           </button>
-        )}
+        </div>
       </div>
 
       {/* Loading state */}
       {status === "loading" && (
         <div className="flex items-center gap-3 py-6 text-muted-foreground text-sm">
           <div className="h-4 w-4 rounded-full border-2 border-primary border-t-transparent animate-spin" />
-          AI is thinking…
+          {t("aiPanel.analyzing")}
         </div>
       )}
 
@@ -195,7 +226,7 @@ export function AiRecommendationPanel({
         </div>
       )}
 
-      {/* Server busy — too many concurrent analysis requests */}
+      {/* Server busy */}
       {status === "server_busy" && (
         <div className="rounded-md border border-blue-500/30 bg-blue-500/10 px-4 py-3 text-sm text-blue-400">
           We're handling several analysis requests at the moment. Please wait a few seconds and try again.
@@ -219,11 +250,8 @@ export function AiRecommendationPanel({
 
       {/* Idle hint */}
       {status === "idle" && (
-        <p className="text-sm text-muted-foreground">
-          Select a model and click Analyze to generate a personalized recommendation.
-        </p>
+        <p className="text-sm text-muted-foreground">{t("aiPanel.idleHint")}</p>
       )}
-
     </div>
   );
 }

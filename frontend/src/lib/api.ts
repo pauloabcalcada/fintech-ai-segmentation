@@ -52,6 +52,7 @@ export interface RecommendationResult {
   message_tone: string;
   reasoning: string;
   strategy_used: string;
+  notification_text: string;
 }
 
 export interface CachedRecommendation {
@@ -163,12 +164,13 @@ export async function fetchCustomerProfile(
 
 export async function analyzeCustomer(
   customerId: string,
-  model: string
+  model: string,
+  language: string = "en"
 ): Promise<AnalyzeResponse> {
   const res = await fetch(`${BASE_URL}/customers/${customerId}/analyze`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ model }),
+    body: JSON.stringify({ model, language }),
   });
   if (res.status === 429) {
     const body = await res.json();
