@@ -8,6 +8,7 @@ from fintech_ai_segmentation.app.database import get_engine
 from fintech_ai_segmentation.app.schemas.dashboard import (
     AcquisitionCostByChannel,
     ChannelM6RetentionEntry,
+    ClusterKpi,
     CohortActivityEntry,
     DashboardAggregatesResponse,
     DashboardSummaryResponse,
@@ -15,7 +16,6 @@ from fintech_ai_segmentation.app.schemas.dashboard import (
     MostCommonProduct,
     PopulationByProductsOwned,
     ProductOwnershipVsTenure,
-    SegmentBreakdown,
 )
 
 _TENURE_CASE = """
@@ -36,11 +36,13 @@ class DashboardRepository:
 
     async def get_summary(self) -> DashboardSummaryResponse:
         async with self._engine.connect() as conn:
-            # KPI: total + by_cluster + avg_rfm + at_risk
+            # KPI: total from customers_raw, no_transaction_count, at_risk
             kpi_row = (await conn.execute(text("""
                 SELECT
-                    COUNT(*)::int                                        AS total_customers,
-                    AVG(rfm_score)::float                               AS avg_rfm_score,
+                    (SELECT COUNT(*)::int FROM customers_raw)           AS total_customers,
+                    COUNT(*) FILTER (
+                        WHERE cluster_name IS NULL
+                    )::int                                              AS no_transaction_count,
                     COUNT(*) FILTER (
                         WHERE lifecycle_stage = 'churned'
                            OR recency_days > 90
@@ -49,10 +51,15 @@ class DashboardRepository:
             """))).mappings().one()
 
             cluster_rows = (await conn.execute(text("""
-                SELECT cluster_name, COUNT(*)::int AS customer_count
-                FROM customer_analysis
-                WHERE cluster_name IS NOT NULL
-                GROUP BY cluster_name
+                SELECT
+                    ca.cluster_name,
+                    COUNT(*)::int                       AS customer_count,
+                    AVG(ca.rfm_score)::float            AS avg_rfm_score,
+                    AVG(cr.acquisition_cost)::float     AS avg_acquisition_cost
+                FROM customer_analysis ca
+                JOIN customers_raw cr ON cr.customer_id::text = ca.customer_id
+                WHERE ca.cluster_name IS NOT NULL
+                GROUP BY ca.cluster_name
                 ORDER BY customer_count DESC
             """))).mappings().all()
 
@@ -104,11 +111,21 @@ class DashboardRepository:
                 ORDER BY ownership_count DESC
             """))).mappings().all()
 
+        total = kpi_row["total_customers"] or 1
         kpi = KpiCards(
             total_customers=kpi_row["total_customers"],
-            by_cluster=[SegmentBreakdown(**dict(r)) for r in cluster_rows],
-            avg_rfm_score=round(kpi_row["avg_rfm_score"] or 0.0, 2),
+            no_transaction_count=kpi_row["no_transaction_count"],
             at_risk_count=kpi_row["at_risk_count"],
+            by_cluster=[
+                ClusterKpi(
+                    cluster_name=r["cluster_name"],
+                    customer_count=r["customer_count"],
+                    pct_of_total=round(r["customer_count"] / total * 100, 2),
+                    avg_rfm_score=round(r["avg_rfm_score"] or 0.0, 2),
+                    avg_acquisition_cost=round(r["avg_acquisition_cost"] or 0.0, 2),
+                )
+                for r in cluster_rows
+            ],
         )
 
         return DashboardSummaryResponse(

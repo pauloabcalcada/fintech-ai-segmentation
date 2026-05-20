@@ -11,6 +11,7 @@ from fintech_ai_segmentation.app.repositories.dashboard import (
 from fintech_ai_segmentation.app.schemas.dashboard import (
     AcquisitionCostByChannel,
     ChannelM6RetentionEntry,
+    ClusterKpi,
     CohortActivityEntry,
     DashboardAggregatesResponse,
     DashboardSummaryResponse,
@@ -18,7 +19,6 @@ from fintech_ai_segmentation.app.schemas.dashboard import (
     MostCommonProduct,
     PopulationByProductsOwned,
     ProductOwnershipVsTenure,
-    SegmentBreakdown,
 )
 
 client = TestClient(app)
@@ -30,13 +30,31 @@ client = TestClient(app)
 _STUB_SUMMARY = DashboardSummaryResponse(
     kpi_cards=KpiCards(
         total_customers=8000,
-        by_cluster=[
-            SegmentBreakdown(cluster_name="high_value_active", customer_count=2500),
-            SegmentBreakdown(cluster_name="mid_value_regular", customer_count=3000),
-            SegmentBreakdown(cluster_name="at_risk_churner", customer_count=2500),
-        ],
-        avg_rfm_score=2.8,
+        no_transaction_count=1194,
         at_risk_count=1500,
+        by_cluster=[
+            ClusterKpi(
+                cluster_name="high_value_active",
+                customer_count=2500,
+                pct_of_total=31.25,
+                avg_rfm_score=4.2,
+                avg_acquisition_cost=45.0,
+            ),
+            ClusterKpi(
+                cluster_name="mid_value_regular",
+                customer_count=3000,
+                pct_of_total=37.50,
+                avg_rfm_score=2.9,
+                avg_acquisition_cost=120.0,
+            ),
+            ClusterKpi(
+                cluster_name="at_risk_churner",
+                customer_count=2500,
+                pct_of_total=31.25,
+                avg_rfm_score=1.3,
+                avg_acquisition_cost=210.0,
+            ),
+        ],
     ),
     acquisition_cost_by_channel=[
         AcquisitionCostByChannel(acquisition_channel="organic", avg_acquisition_cost=50.0),
@@ -145,11 +163,46 @@ def test_dashboard_summary_kpi_cards_shape() -> None:
         response = client.get("/dashboard/summary")
         kpi = response.json()["kpi_cards"]
         assert kpi["total_customers"] == 8000
-        assert kpi["avg_rfm_score"] == pytest.approx(2.8)
+        assert kpi["no_transaction_count"] == 1194
         assert kpi["at_risk_count"] == 1500
+        assert "avg_rfm_score" not in kpi, "avg_rfm_score must not appear at the top-level kpi_cards"
         clusters = {c["cluster_name"] for c in kpi["by_cluster"]}
         assert "high_value_active" in clusters
         assert "at_risk_churner" in clusters
+    finally:
+        _clear()
+
+
+# ---------------------------------------------------------------------------
+# Cycle 2 — each by_cluster item has avg_rfm_score, avg_acquisition_cost, pct_of_total
+# ---------------------------------------------------------------------------
+
+
+def test_dashboard_summary_kpi_by_cluster_has_new_fields() -> None:
+    _override_dashboard()
+    try:
+        response = client.get("/dashboard/summary")
+        clusters = response.json()["kpi_cards"]["by_cluster"]
+        for item in clusters:
+            assert "avg_rfm_score" in item
+            assert "avg_acquisition_cost" in item
+            assert "pct_of_total" in item
+    finally:
+        _clear()
+
+
+# ---------------------------------------------------------------------------
+# Cycle 3 — pct_of_total sums to ~100 across all clusters
+# ---------------------------------------------------------------------------
+
+
+def test_dashboard_summary_kpi_pct_of_total_sums_to_100() -> None:
+    _override_dashboard()
+    try:
+        response = client.get("/dashboard/summary")
+        clusters = response.json()["kpi_cards"]["by_cluster"]
+        total_pct = sum(c["pct_of_total"] for c in clusters)
+        assert total_pct == pytest.approx(100.0, abs=1.0)
     finally:
         _clear()
 

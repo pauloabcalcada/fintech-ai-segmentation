@@ -3,16 +3,19 @@ from __future__ import annotations
 from pydantic import BaseModel
 
 
-class SegmentBreakdown(BaseModel):
+class ClusterKpi(BaseModel):
     cluster_name: str
     customer_count: int
+    pct_of_total: float
+    avg_rfm_score: float
+    avg_acquisition_cost: float
 
 
 class KpiCards(BaseModel):
     total_customers: int
-    by_cluster: list[SegmentBreakdown]
-    avg_rfm_score: float
+    no_transaction_count: int
     at_risk_count: int
+    by_cluster: list[ClusterKpi]
 
 
 class AcquisitionCostByChannel(BaseModel):
