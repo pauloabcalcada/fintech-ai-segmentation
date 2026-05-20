@@ -1,6 +1,7 @@
 import { NavLink, Outlet } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { LanguageToggle } from "./LanguageToggle";
+import { ThemeToggle } from "./ThemeToggle";
 
 export function AppShell() {
   const { t } = useTranslation();
@@ -38,7 +39,8 @@ export function AppShell() {
               </NavLink>
             ))}
           </div>
-          <div className="ml-auto flex items-center" data-testid="topnav-right-slot">
+          <div className="ml-auto flex items-center gap-1" data-testid="topnav-right-slot">
+            <ThemeToggle />
             <LanguageToggle />
           </div>
         </nav>

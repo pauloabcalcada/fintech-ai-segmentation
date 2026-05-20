@@ -86,6 +86,48 @@
     --sidebar-ring: #dcb8ff;
 }
 
+/* SynaptiqPay light design tokens */
+.light {
+    --background: #f5f3f8;
+    --foreground: #1a1325;
+
+    --card: #ffffff;
+    --card-foreground: #1a1325;
+
+    --popover: #ffffff;
+    --popover-foreground: #1a1325;
+
+    /* Primary: purple */
+    --primary: #7c3aed;
+    --primary-foreground: #ffffff;
+
+    /* Secondary: cyan */
+    --secondary: #0891b2;
+    --secondary-foreground: #ffffff;
+
+    --muted: #ede9f4;
+    --muted-foreground: #6b5f7d;
+
+    --accent: #ede9f4;
+    --accent-foreground: #1a1325;
+
+    --destructive: oklch(0.577 0.245 27.325);
+
+    --border: #ddd6e8;
+    --input: #ddd6e8;
+    --ring: #7c3aed;
+
+    /* Sidebar */
+    --sidebar: #eee9f6;
+    --sidebar-foreground: #1a1325;
+    --sidebar-primary: #7c3aed;
+    --sidebar-primary-foreground: #ffffff;
+    --sidebar-accent: #ddd6e8;
+    --sidebar-accent-foreground: #1a1325;
+    --sidebar-border: #ddd6e8;
+    --sidebar-ring: #7c3aed;
+}
+
 @layer base {
     * {
         @apply border-border outline-ring/50;

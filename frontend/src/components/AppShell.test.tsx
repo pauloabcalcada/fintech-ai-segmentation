@@ -1,20 +1,33 @@
 import { render, screen } from "@testing-library/react";
-import { describe, it, expect } from "vitest";
+import { describe, it, expect, beforeEach, afterEach } from "vitest";
 import { MemoryRouter } from "react-router-dom";
 import { I18nextProvider } from "react-i18next";
 import { createTestI18n } from "@/i18n/test-utils";
+import { ThemeProvider } from "@/context/ThemeContext";
 import { AppShell } from "./AppShell";
 
 function renderShell(lng = "en") {
   const i18n = createTestI18n(lng);
   return render(
-    <I18nextProvider i18n={i18n}>
-      <MemoryRouter>
-        <AppShell />
-      </MemoryRouter>
-    </I18nextProvider>
+    <ThemeProvider>
+      <I18nextProvider i18n={i18n}>
+        <MemoryRouter>
+          <AppShell />
+        </MemoryRouter>
+      </I18nextProvider>
+    </ThemeProvider>
   );
 }
+
+beforeEach(() => {
+  localStorage.clear();
+  document.documentElement.className = "";
+});
+
+afterEach(() => {
+  localStorage.clear();
+  document.documentElement.className = "";
+})
 
 describe("AppShell topnav", () => {
   it("renders SynaptiqPay brand as a link", () => {
@@ -54,5 +67,10 @@ describe("AppShell topnav", () => {
     renderShell();
     expect(screen.getByTestId("lang-en")).toBeInTheDocument();
     expect(screen.getByTestId("lang-pt-BR")).toBeInTheDocument();
+  });
+
+  it("renders the ThemeToggle in the right slot", () => {
+    renderShell();
+    expect(screen.getByTestId("theme-toggle")).toBeInTheDocument();
   });
 });
