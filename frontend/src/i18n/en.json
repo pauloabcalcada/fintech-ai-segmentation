@@ -130,7 +130,10 @@
       "clusterRank": "Cluster Rank",
       "tenure": "Tenure",
       "tenureValue": "{{months}} months",
-      "lifecycle": "Lifecycle"
+      "lifecycle": "Lifecycle",
+      "acquisitionCost": "Acq. Cost",
+      "activityTrend": "Activity Trend",
+      "earlyWindowFreq": "Early Freq. Ratio"
     },
     "info": {
       "age": "Age",

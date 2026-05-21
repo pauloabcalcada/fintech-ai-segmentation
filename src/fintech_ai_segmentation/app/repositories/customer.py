@@ -46,6 +46,8 @@ _PROFILE_SQL = text("""
         ca.has_investment,
         ca.has_insurance,
         ca.has_loan,
+        ca.activity_trend_ratio,
+        ca.early_window_freq_ratio,
         (
             ca.has_wallet::int + ca.has_credit_card::int + ca.has_investment::int
             + ca.has_insurance::int + ca.has_loan::int
@@ -260,6 +262,8 @@ class CustomerRepository:
             cluster_averages=cluster_averages,
             population_averages=population_averages,
             cluster_product_profile=cluster_product_profile,
+            activity_trend_ratio=float(row["activity_trend_ratio"]) if row["activity_trend_ratio"] is not None else None,
+            early_window_freq_ratio=float(row["early_window_freq_ratio"]) if row["early_window_freq_ratio"] is not None else None,
         )
 
     async def sample_customers(self, per_cluster: int) -> list[CustomerSummary]:

@@ -74,6 +74,8 @@ class CustomerProfile(BaseModel):
     population_averages: RFMAverages | None
     cluster_product_profile: ClusterProductProfile | None
     cached_recommendation: dict | None = None
+    activity_trend_ratio: float | None = None
+    early_window_freq_ratio: float | None = None
 
 
 class CustomerProfileResponse(BaseModel):

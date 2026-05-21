@@ -89,6 +89,8 @@ export interface CustomerProfile {
   population_averages: RFMAverages | null;
   cluster_product_profile: ClusterProductProfile | null;
   cached_recommendation: CachedRecommendation | null;
+  activity_trend_ratio: number | null;
+  early_window_freq_ratio: number | null;
 }
 
 export interface ActivityTimelineEntry {

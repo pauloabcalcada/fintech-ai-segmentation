@@ -130,7 +130,10 @@
       "clusterRank": "Posição no Segmento",
       "tenure": "Tempo de Conta",
       "tenureValue": "{{months}} meses",
-      "lifecycle": "Ciclo de Vida"
+      "lifecycle": "Ciclo de Vida",
+      "acquisitionCost": "Custo de Aquisição",
+      "activityTrend": "Tendência de Atividade",
+      "earlyWindowFreq": "Freq. Janela Inicial"
     },
     "info": {
       "age": "Idade",

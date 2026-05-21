@@ -36,7 +36,9 @@ const FIXTURE = {
     age: 32,
     state: "SP",
     acquisition_channel: "organic",
-    acquisition_cost: 50,
+    acquisition_cost: 240,
+    activity_trend_ratio: 1.23,
+    early_window_freq_ratio: 0.87,
     registration_date: "2023-01-15",
     tenure_months: 28,
     cluster_name: "high_value_active",
@@ -106,6 +108,35 @@ describe("CustomerDetailInline", () => {
     expect(screen.getByText("28 months")).toBeInTheDocument();
   });
 
+  it("renders Acquisition Cost badge as 'R$ 240'", async () => {
+    renderInline();
+    await screen.findByText("Ana Lima");
+    expect(screen.getByText("R$ 240")).toBeInTheDocument();
+  });
+
+  it("renders Activity Trend Ratio badge as '1.23'", async () => {
+    renderInline();
+    await screen.findByText("Ana Lima");
+    expect(screen.getByText("1.23")).toBeInTheDocument();
+  });
+
+  it("renders Early Window Freq. Ratio badge as '0.87'", async () => {
+    renderInline();
+    await screen.findByText("Ana Lima");
+    expect(screen.getByText("0.87")).toBeInTheDocument();
+  });
+
+  it("renders em-dash for null activity_trend_ratio and early_window_freq_ratio", async () => {
+    mockFetchCustomerProfile.mockResolvedValueOnce({
+      ...FIXTURE,
+      data: { ...FIXTURE.data, activity_trend_ratio: null, early_window_freq_ratio: null },
+    });
+    renderInline();
+    await screen.findByText("Ana Lima");
+    const dashes = screen.getAllByText("—");
+    expect(dashes.length).toBeGreaterThanOrEqual(2);
+  });
+
   it("does not render a lifecycle KPI badge", async () => {
     renderInline();
     await screen.findByText("Ana Lima");
@@ -144,6 +175,9 @@ describe("CustomerDetailInline", () => {
     await screen.findByText("Ana Lima");
     expect(screen.getByText("Posição no Segmento")).toBeInTheDocument();
     expect(screen.getByText("Tempo de Conta")).toBeInTheDocument();
+    expect(screen.getByText("Custo de Aquisição")).toBeInTheDocument();
+    expect(screen.getByText("Tendência de Atividade")).toBeInTheDocument();
+    expect(screen.getByText("Freq. Janela Inicial")).toBeInTheDocument();
   });
 
   it("renders Portuguese products section header when language is pt-BR", async () => {

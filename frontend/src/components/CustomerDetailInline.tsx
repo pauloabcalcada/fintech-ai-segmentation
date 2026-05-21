@@ -140,6 +140,18 @@ export function CustomerDetailInline({ customerId }: { customerId: string }) {
           label={t("customerDetail.kpi.tenure")}
           value={t("customerDetail.kpi.tenureValue", { months: profile.tenure_months })}
         />
+        <KpiBadge
+          label={t("customerDetail.kpi.acquisitionCost")}
+          value={profile.acquisition_cost != null ? `R$ ${Math.round(profile.acquisition_cost)}` : "—"}
+        />
+        <KpiBadge
+          label={t("customerDetail.kpi.activityTrend")}
+          value={profile.activity_trend_ratio?.toFixed(2) ?? "—"}
+        />
+        <KpiBadge
+          label={t("customerDetail.kpi.earlyWindowFreq")}
+          value={profile.early_window_freq_ratio?.toFixed(2) ?? "—"}
+        />
       </div>
 
       {/* Product ownership chips */}
