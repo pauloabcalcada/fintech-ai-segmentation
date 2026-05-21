@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
+import { Sparkles } from "lucide-react";
 import { InfoTooltip } from "@/components/ui/InfoTooltip";
 import {
   analyzeCustomer,
@@ -213,8 +214,9 @@ export function AiRecommendationPanel({
           <button
             disabled={!model || status === "loading"}
             onClick={fireRequest}
-            className="px-4 py-1.5 rounded-md bg-primary text-primary-foreground text-sm disabled:opacity-50 disabled:cursor-not-allowed transition-opacity"
+            className="inline-flex items-center gap-1.5 px-4 py-1.5 rounded-md bg-primary text-primary-foreground text-sm disabled:opacity-50 disabled:cursor-not-allowed transition-opacity"
           >
+            <Sparkles size={16} aria-hidden="true" data-testid="sparkles-icon" />
             {status === "loading" ? t("aiPanel.analyzing") : t("aiPanel.analyze")}
           </button>
         </div>

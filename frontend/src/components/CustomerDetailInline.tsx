@@ -138,11 +138,12 @@ export function CustomerDetailInline({ customerId }: { customerId: string }) {
         />
         <KpiBadge
           label={t("customerDetail.kpi.tenure")}
-          value={`${profile.tenure_months}mo`}
+          value={t("customerDetail.kpi.tenureValue", { months: profile.tenure_months })}
         />
       </div>
 
       {/* Product ownership chips */}
+      <p className="text-xs text-muted-foreground">{t("customerDetail.products.header")}</p>
       <div className="flex flex-wrap gap-1.5">
         {PRODUCTS.map((p) => (
           <span

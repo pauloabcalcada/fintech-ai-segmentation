@@ -46,6 +46,34 @@ describe("AiRecommendationPanel — top controls", () => {
     expect(screen.getByRole("combobox")).toBeInTheDocument();
     expect(screen.getByRole("button", { name: /analyze/i })).toBeInTheDocument();
   });
+
+  it("Analyze button contains a Sparkles icon in idle state", () => {
+    renderPanel();
+    const button = screen.getByRole("button", { name: /analyze/i });
+    expect(button.querySelector("[data-testid='sparkles-icon']")).toBeInTheDocument();
+  });
+
+  it("Analyze button contains a Sparkles icon when disabled (no model selected)", () => {
+    renderPanel();
+    const button = screen.getByRole("button", { name: /analyze/i });
+    expect(button).toBeDisabled();
+    expect(button.querySelector("[data-testid='sparkles-icon']")).toBeInTheDocument();
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Cycle 5 — Sparkles icon present during loading state
+// ---------------------------------------------------------------------------
+
+describe("AiRecommendationPanel — Sparkles icon during loading", () => {
+  it("Analyze button contains a Sparkles icon while loading", async () => {
+    vi.spyOn(api, "analyzeCustomer").mockImplementation(() => new Promise(() => {}));
+    renderPanel();
+    fireEvent.change(screen.getByRole("combobox"), { target: { value: "smart-auto" } });
+    fireEvent.click(screen.getByRole("button", { name: /analyze/i }));
+    const button = await screen.findByRole("button", { name: /analyzing/i });
+    expect(button.querySelector("[data-testid='sparkles-icon']")).toBeInTheDocument();
+  });
 });
 
 // ---------------------------------------------------------------------------

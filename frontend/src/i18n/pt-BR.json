@@ -111,6 +111,7 @@
   },
   "customerDetail": {
     "products": {
+      "header": "Produtos do cliente",
       "wallet": "Carteira Digital",
       "creditCard": "Cartão de Crédito",
       "investment": "Investimento",
@@ -127,6 +128,7 @@
       "rfmScore": "RFM Score",
       "clusterRank": "Posição no Segmento",
       "tenure": "Tempo de Conta",
+      "tenureValue": "{{months}} meses",
       "lifecycle": "Ciclo de Vida"
     },
     "info": {

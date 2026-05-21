@@ -103,7 +103,7 @@ describe("CustomerDetailInline", () => {
     await screen.findByText("Ana Lima");
     expect(screen.getByText("4.50")).toBeInTheDocument();
     expect(screen.getByText("Top 20%")).toBeInTheDocument();
-    expect(screen.getByText("28mo")).toBeInTheDocument();
+    expect(screen.getByText("28 months")).toBeInTheDocument();
   });
 
   it("does not render a lifecycle KPI badge", async () => {
@@ -111,6 +111,12 @@ describe("CustomerDetailInline", () => {
     await screen.findByText("Ana Lima");
     expect(screen.queryByText(/ciclo de vida/i)).toBeNull();
     expect(screen.queryByText(/lifecycle/i)).toBeNull();
+  });
+
+  it("renders products section header in English", async () => {
+    renderInline();
+    await screen.findByText("Ana Lima");
+    expect(screen.getByText("Products owned by the customer")).toBeInTheDocument();
   });
 
   it("renders product ownership chips in English", async () => {
@@ -138,5 +144,11 @@ describe("CustomerDetailInline", () => {
     await screen.findByText("Ana Lima");
     expect(screen.getByText("Posição no Segmento")).toBeInTheDocument();
     expect(screen.getByText("Tempo de Conta")).toBeInTheDocument();
+  });
+
+  it("renders Portuguese products section header when language is pt-BR", async () => {
+    renderInline("pt-BR");
+    await screen.findByText("Ana Lima");
+    expect(screen.getByText("Produtos do cliente")).toBeInTheDocument();
   });
 });

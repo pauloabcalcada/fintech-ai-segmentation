@@ -111,6 +111,7 @@
   },
   "customerDetail": {
     "products": {
+      "header": "Products owned by the customer",
       "wallet": "Wallet",
       "creditCard": "Credit Card",
       "investment": "Investment",
@@ -127,6 +128,7 @@
       "rfmScore": "RFM Score",
       "clusterRank": "Cluster Rank",
       "tenure": "Tenure",
+      "tenureValue": "{{months}} months",
       "lifecycle": "Lifecycle"
     },
     "info": {
