@@ -6,7 +6,7 @@ from langsmith import traceable
 from fintech_ai_segmentation.app.settings import get_settings
 
 _MODEL_MAP = {
-    "gemini-flash-free": "google/gemma-4-31b-it:free",
+    "gemini-2.5-flash-lite": "google/gemini-2.5-flash-lite",
     "llama-70b-free": "meta-llama/llama-3.3-70b-instruct:free",
     "mistral-7b-free": "deepseek/deepseek-v4-flash:free",
     "smart-auto": "openrouter/auto",

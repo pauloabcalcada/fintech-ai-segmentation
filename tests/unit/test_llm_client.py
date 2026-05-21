@@ -25,11 +25,10 @@ def _make_client() -> tuple[OpenRouterLLMClient, MagicMock]:
     return client, mock_create
 
 
-def test_gemini_flash_free_sends_correct_model_string() -> None:
-    client, mock_create = _make_client()
-    client.complete("gemini-flash-free", MESSAGES)
-    _, kwargs = mock_create.call_args
-    assert kwargs["model"] == "google/gemma-4-31b-it:free"
+def test_gemini_flash_free_raises_value_error() -> None:
+    client, _ = _make_client()
+    with pytest.raises(ValueError, match="Unknown model_id"):
+        client.complete("gemini-flash-free", MESSAGES)
 
 
 def test_llama_70b_free_sends_correct_model_string() -> None:
@@ -55,8 +54,31 @@ def test_smart_auto_sends_openrouter_auto_model() -> None:
 
 def test_complete_returns_string_from_response() -> None:
     client, mock_create = _make_client()
-    result = client.complete("gemini-flash-free", MESSAGES)
+    result = client.complete("gemini-2.5-flash-lite", MESSAGES)
     assert result == "reply"
+
+
+def test_gemini_2_5_flash_lite_sends_correct_model_string() -> None:
+    client, mock_create = _make_client()
+    client.complete("gemini-2.5-flash-lite", MESSAGES)
+    _, kwargs = mock_create.call_args
+    assert kwargs["model"] == "google/gemini-2.5-flash-lite"
+
+
+def test_none_choices_raises_value_error() -> None:
+    mock_completion = MagicMock()
+    mock_completion.choices = None
+
+    mock_create = MagicMock(return_value=mock_completion)
+    mock_openai = MagicMock()
+    mock_openai.chat.completions.create = mock_create
+
+    with patch("fintech_ai_segmentation.agent.llm_client.OpenAI", return_value=mock_openai):
+        client = OpenRouterLLMClient(api_key="test-key")
+    client._openai = mock_openai
+
+    with pytest.raises(ValueError, match="no choices"):
+        client.complete("llama-70b-free", MESSAGES)
 
 
 def test_unknown_model_id_raises_value_error() -> None:

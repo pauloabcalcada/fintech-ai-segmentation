@@ -30,7 +30,7 @@ from fintech_ai_segmentation.app.schemas.customer import (
 
 
 class AnalyzeRequest(BaseModel):
-    model: Literal["gemini-flash-free", "llama-70b-free", "mistral-7b-free", "smart-auto"]
+    model: Literal["gemini-2.5-flash-lite", "llama-70b-free", "mistral-7b-free", "smart-auto"]
     language: Literal["en", "pt-BR"] = "en"
 
 

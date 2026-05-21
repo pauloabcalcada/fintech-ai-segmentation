@@ -275,7 +275,7 @@ export async function fetchDashboardAggregates(): Promise<DashboardAggregatesRes
 
 export const MODEL_OPTIONS: { value: string; label: string }[] = [
   { value: "smart-auto", label: "Smart Auto" },
-  { value: "gemini-flash-free", label: "Gemini 2.0 Flash" },
+  { value: "gemini-2.5-flash-lite", label: "Gemini 2.5 Flash Lite" },
   { value: "llama-70b-free", label: "Llama 3.3 70B" },
   { value: "mistral-7b-free", label: "Mistral 7B" },
 ];
