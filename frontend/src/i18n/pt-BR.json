@@ -102,12 +102,21 @@
       "cluster": "Segmento",
       "recency": "Recência (dias)"
     },
+    "refresh": "Atualizar",
+    "expandHint": "Clique em um cliente para expandir o perfil e gerar uma recomendação de IA personalizada.",
     "noResults": "Nenhum cliente encontrado com esses filtros.",
     "pagination": "Página {{page}} de {{total}} — {{count}} clientes",
     "prev": "Anterior",
     "next": "Próximo"
   },
   "customerDetail": {
+    "products": {
+      "wallet": "Carteira Digital",
+      "creditCard": "Cartão de Crédito",
+      "investment": "Investimento",
+      "insurance": "Seguro",
+      "loan": "Empréstimo"
+    },
     "sections": {
       "customerInfo": "Informações do Cliente",
       "rfmComparison": "Comparação de Pontuação RFM",

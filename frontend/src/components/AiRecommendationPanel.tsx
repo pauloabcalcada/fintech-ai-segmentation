@@ -104,7 +104,7 @@ function RecommendationCard({
         <span className="text-xs text-muted-foreground">{provenance}</span>
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+      <div className="flex flex-col gap-2">
         <div className="rounded-md border border-border bg-muted/30 px-4 py-3">
           <p className="text-xs text-muted-foreground mb-1 flex items-center">
             {t("aiPanel.fields.recommendedAction")}

@@ -102,12 +102,21 @@
       "cluster": "Cluster",
       "recency": "Recency (days)"
     },
+    "refresh": "Refresh",
+    "expandHint": "Click on a customer to expand their profile and generate a personalized AI recommendation.",
     "noResults": "No customers match your filters.",
     "pagination": "Page {{page}} of {{total}} — {{count}} customers",
     "prev": "Previous",
     "next": "Next"
   },
   "customerDetail": {
+    "products": {
+      "wallet": "Wallet",
+      "creditCard": "Credit Card",
+      "investment": "Investment",
+      "insurance": "Insurance",
+      "loan": "Loan"
+    },
     "sections": {
       "customerInfo": "Customer Info",
       "rfmComparison": "RFM Score Comparison",

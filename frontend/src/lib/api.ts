@@ -139,6 +139,16 @@ export class ServerBusyError extends Error {
   }
 }
 
+export async function fetchCustomerSample(
+  perCluster = 3
+): Promise<CustomerListResponse> {
+  const url = new URL(`${BASE_URL}/customers/sample`);
+  url.searchParams.set("per_cluster", String(perCluster));
+  const res = await fetch(url.toString());
+  if (!res.ok) throw new Error(`GET /customers/sample failed: ${res.status}`);
+  return res.json() as Promise<CustomerListResponse>;
+}
+
 export async function fetchCustomers(
   params: CustomerListParams = {}
 ): Promise<CustomerListResponse> {

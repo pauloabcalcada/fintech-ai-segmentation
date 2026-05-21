@@ -306,17 +306,17 @@ export function CustomerDetailPage() {
   return (
     <div className="flex flex-col gap-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <button
-            onClick={() => navigate("/customers")}
-            className="text-xs text-muted-foreground hover:text-foreground mb-1 flex items-center gap-1"
-          >
-            ← Customers
-          </button>
+      <div>
+        <button
+          onClick={() => navigate("/customers")}
+          className="text-xs text-muted-foreground hover:text-foreground mb-1 flex items-center gap-1"
+        >
+          ← Customers
+        </button>
+        <div className="flex items-center gap-2">
           <h1 className="text-xl font-semibold">{profile.name}</h1>
+          <ClusterBadge cluster={profile.cluster_name} />
         </div>
-        <ClusterBadge cluster={profile.cluster_name} />
       </div>
 
       {/* KPI badges */}
@@ -329,16 +329,11 @@ export function CustomerDetailPage() {
         <KpiBadge
           label={t("customerDetail.kpi.clusterRank")}
           value={clusterPositionLabel(profile.cluster_position)}
-          sub={profile.cluster_name ?? "—"}
         />
         <KpiBadge
           label={t("customerDetail.kpi.tenure")}
           value={`${profile.tenure_months}mo`}
           sub={`since ${profile.registration_date}`}
-        />
-        <KpiBadge
-          label={t("customerDetail.kpi.lifecycle")}
-          value={profile.lifecycle_stage?.replace(/_/g, " ") ?? "—"}
         />
       </div>
 
