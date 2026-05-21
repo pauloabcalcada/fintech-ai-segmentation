@@ -80,6 +80,53 @@ describe("CustomerDetailInline", () => {
     mockFetchCustomerProfile.mockResolvedValue(FIXTURE);
   });
 
+  describe("cachedData prop", () => {
+    it("does not call fetchCustomerProfile when cachedData is provided", () => {
+      const i18n = createTestI18n("en");
+      render(
+        <I18nextProvider i18n={i18n}>
+          <CustomerDetailInline customerId="abc-123" cachedData={FIXTURE} />
+        </I18nextProvider>
+      );
+      expect(mockFetchCustomerProfile).not.toHaveBeenCalled();
+    });
+
+    it("renders immediately without a loading skeleton when cachedData is provided", () => {
+      const i18n = createTestI18n("en");
+      render(
+        <I18nextProvider i18n={i18n}>
+          <CustomerDetailInline customerId="abc-123" cachedData={FIXTURE} />
+        </I18nextProvider>
+      );
+      expect(screen.queryByTestId("customer-detail-inline-loading")).toBeNull();
+      expect(screen.getByText("Ana Lima")).toBeInTheDocument();
+    });
+
+    it("calls onLoaded with customerId and response after a successful fetch", async () => {
+      const onLoaded = vi.fn();
+      const i18n = createTestI18n("en");
+      render(
+        <I18nextProvider i18n={i18n}>
+          <CustomerDetailInline customerId="abc-123" onLoaded={onLoaded} />
+        </I18nextProvider>
+      );
+      await screen.findByText("Ana Lima");
+      expect(onLoaded).toHaveBeenCalledOnce();
+      expect(onLoaded).toHaveBeenCalledWith("abc-123", FIXTURE);
+    });
+
+    it("does not call onLoaded when cachedData is provided", () => {
+      const onLoaded = vi.fn();
+      const i18n = createTestI18n("en");
+      render(
+        <I18nextProvider i18n={i18n}>
+          <CustomerDetailInline customerId="abc-123" cachedData={FIXTURE} onLoaded={onLoaded} />
+        </I18nextProvider>
+      );
+      expect(onLoaded).not.toHaveBeenCalled();
+    });
+  });
+
   it("shows a loading container while fetching", () => {
     mockFetchCustomerProfile.mockImplementation(() => new Promise(() => {}));
     renderInline();

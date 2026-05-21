@@ -11,7 +11,11 @@ import {
 import { Skeleton } from "@/components/ui/skeleton";
 import { ClusterBadge } from "@/components/ClusterBadge";
 import { CustomerDetailInline } from "@/components/CustomerDetailInline";
-import { fetchCustomerSample, type CustomerSummary } from "@/lib/api";
+import {
+  fetchCustomerSample,
+  type CustomerSummary,
+  type CustomerProfileResponse,
+} from "@/lib/api";
 import { InfoTooltip } from "@/components/ui/InfoTooltip";
 import { Info } from "lucide-react";
 
@@ -32,16 +36,22 @@ export function CustomersPage() {
   const [customers, setCustomers] = useState<CustomerSummary[]>([]);
   const [loading, setLoading] = useState(true);
   const [expandedId, setExpandedId] = useState<string | null>(null);
+  const [profileCache, setProfileCache] = useState<Map<string, CustomerProfileResponse>>(new Map());
 
   const load = useCallback(async () => {
     setLoading(true);
     setExpandedId(null);
+    setProfileCache(new Map());
     try {
       const resp = await fetchCustomerSample(3);
       setCustomers(resp.data);
     } finally {
       setLoading(false);
     }
+  }, []);
+
+  const handleProfileLoaded = useCallback((customerId: string, data: CustomerProfileResponse) => {
+    setProfileCache((prev) => new Map(prev).set(customerId, data));
   }, []);
 
   useEffect(() => {
@@ -125,7 +135,11 @@ export function CustomersPage() {
                   {expandedId === c.customer_id && (
                     <TableRow>
                       <TableCell colSpan={4} className="p-0 whitespace-normal">
-                        <CustomerDetailInline customerId={c.customer_id} />
+                        <CustomerDetailInline
+                          customerId={c.customer_id}
+                          cachedData={profileCache.get(c.customer_id)}
+                          onLoaded={handleProfileLoaded}
+                        />
                       </TableCell>
                     </TableRow>
                   )}

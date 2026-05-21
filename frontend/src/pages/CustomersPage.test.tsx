@@ -1,4 +1,4 @@
-import { render, screen, within, fireEvent } from "@testing-library/react";
+import { render, screen, within, fireEvent, waitFor } from "@testing-library/react";
 import { vi, describe, it, expect, beforeEach } from "vitest";
 import { MemoryRouter } from "react-router-dom";
 import { I18nextProvider } from "react-i18next";
@@ -11,9 +11,26 @@ vi.mock("@/lib/api", () => ({
 }));
 
 vi.mock("@/components/CustomerDetailInline", () => ({
-  CustomerDetailInline: ({ customerId }: { customerId: string }) => (
-    <div data-testid="customer-detail-inline" data-customer-id={customerId} />
-  ),
+  CustomerDetailInline: ({
+    customerId,
+    cachedData,
+    onLoaded,
+  }: {
+    customerId: string;
+    cachedData?: object;
+    onLoaded?: (id: string, data: object) => void;
+  }) => {
+    if (!cachedData && onLoaded) {
+      Promise.resolve().then(() => onLoaded(customerId, { _stub: true }));
+    }
+    return (
+      <div
+        data-testid="customer-detail-inline"
+        data-customer-id={customerId}
+        data-cached={cachedData ? "true" : "false"}
+      />
+    );
+  },
 }));
 
 const mockFetchCustomerSample = vi.mocked(fetchCustomerSample);
@@ -212,6 +229,51 @@ describe("CustomersPage", () => {
     await screen.findByText("Ana Lima");
     const clusterHeader = screen.getByRole("columnheader", { name: /cluster/i });
     expect(within(clusterHeader).getByTestId("info-tooltip-trigger")).toBeInTheDocument();
+  });
+
+  describe("profile cache", () => {
+    it("CustomerDetailInline receives cachedData on second expand of the same row", async () => {
+      renderCustomers();
+      await screen.findByText("Ana Lima");
+
+      // First expand — no cache yet
+      fireEvent.click(screen.getByText("Ana Lima"));
+      expect(screen.getByTestId("customer-detail-inline")).toHaveAttribute("data-cached", "false");
+
+      // Allow mock onLoaded to fire
+      await waitFor(() =>
+        expect(screen.getByTestId("customer-detail-inline")).toBeInTheDocument()
+      );
+
+      // Collapse
+      fireEvent.click(screen.getByText("Ana Lima"));
+      expect(screen.queryByTestId("customer-detail-inline")).toBeNull();
+
+      // Second expand — cache should be populated
+      fireEvent.click(screen.getByText("Ana Lima"));
+      expect(screen.getByTestId("customer-detail-inline")).toHaveAttribute("data-cached", "true");
+    });
+
+    it("after clicking refresh, re-expanding a row shows no cached data", async () => {
+      renderCustomers();
+      await screen.findByText("Ana Lima");
+
+      // Expand and wait for cache to populate
+      fireEvent.click(screen.getByText("Ana Lima"));
+      await waitFor(() =>
+        expect(screen.getByTestId("customer-detail-inline")).toHaveAttribute("data-cached", "false")
+      );
+      // Allow onLoaded to fire
+      await waitFor(() => {});
+
+      // Refresh — clears cache
+      fireEvent.click(screen.getByRole("button", { name: /refresh/i }));
+      await screen.findByText("Ana Lima");
+
+      // Expand again — should have no cache
+      fireEvent.click(screen.getByText("Ana Lima"));
+      expect(screen.getByTestId("customer-detail-inline")).toHaveAttribute("data-cached", "false");
+    });
   });
 
   it("clicking a different row collapses previous and expands new", async () => {

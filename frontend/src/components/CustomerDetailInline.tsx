@@ -16,6 +16,7 @@ import {
   NotFoundError,
   type CustomerProfile,
   type ActivityTimelineEntry,
+  type CustomerProfileResponse,
 } from "@/lib/api";
 
 function KpiBadge({ label, value }: { label: string; value: string }) {
@@ -117,26 +118,40 @@ const PRODUCTS: { hasKey: keyof CustomerProfile; i18nKey: string }[] = [
   { hasKey: "has_loan", i18nKey: "customerDetail.products.loan" },
 ];
 
-export function CustomerDetailInline({ customerId }: { customerId: string }) {
+export function CustomerDetailInline({
+  customerId,
+  cachedData,
+  onLoaded,
+}: {
+  customerId: string;
+  cachedData?: CustomerProfileResponse;
+  onLoaded?: (customerId: string, data: CustomerProfileResponse) => void;
+}) {
   const { t } = useTranslation();
-  const [profile, setProfile] = useState<CustomerProfile | null>(null);
-  const [timeline, setTimeline] = useState<ActivityTimelineEntry[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [profile, setProfile] = useState<CustomerProfile | null>(
+    cachedData?.data ?? null
+  );
+  const [timeline, setTimeline] = useState<ActivityTimelineEntry[]>(
+    cachedData?.activity_timeline ?? []
+  );
+  const [loading, setLoading] = useState(!cachedData);
   const [error, setError] = useState(false);
 
   useEffect(() => {
+    if (cachedData) return;
     setLoading(true);
     setError(false);
     fetchCustomerProfile(customerId)
       .then((resp) => {
         setProfile(resp.data);
         setTimeline(resp.activity_timeline);
+        onLoaded?.(customerId, resp);
       })
       .catch((err: unknown) => {
         if (!(err instanceof NotFoundError)) setError(true);
       })
       .finally(() => setLoading(false));
-  }, [customerId]);
+  }, [customerId, cachedData, onLoaded]);
 
   if (loading) {
     return (
