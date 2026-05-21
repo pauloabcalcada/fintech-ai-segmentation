@@ -244,25 +244,44 @@ const CLUSTER_TREND_INVERSE: Record<string, boolean> = {
   at_risk_churner: true,
 };
 
+const CLUSTER_TOOLTIP_KEY: Record<string, string> = {
+  high_value_active: "dashboard.clusters.highValueActiveTooltip",
+  low_value_dormant: "dashboard.clusters.lowValueDormantTooltip",
+  at_risk_churner: "dashboard.clusters.atRiskChurnerTooltip",
+};
+
 function ClusterStrip({ data }: { data: DashboardSummaryResponse["kpi_cards"] }) {
   const { t } = useTranslation();
   return (
-    <div data-testid="cluster-strip" className="grid grid-cols-1 md:grid-cols-3 gap-4">
-      {data.by_cluster.map((cluster) => (
-        <div
-          key={cluster.cluster_name}
-          data-testid={`cluster-col-${cluster.cluster_name}`}
-          className="rounded-lg border border-border bg-card px-5 py-4 flex flex-col gap-3"
-        >
-          <div className="flex items-center justify-between gap-2">
-            <div className="flex items-center gap-2">
-              <span
-                className="h-3 w-3 rounded-full shrink-0"
-                data-brand-color={CLUSTER_COLORS[cluster.cluster_name] ?? "#71717a"}
-                style={{ backgroundColor: CLUSTER_COLORS[cluster.cluster_name] ?? "#71717a" }}
-              />
-              <span className="text-sm font-medium text-foreground">{clusterLabel(cluster.cluster_name)}</span>
-            </div>
+    <div className="flex flex-col gap-3">
+      <h2 data-testid="cluster-section-title" className="text-sm font-semibold text-foreground">
+        {t("dashboard.clusters.title")}
+      </h2>
+      <div
+        data-testid="cluster-strip"
+        className="grid grid-cols-1 md:grid-cols-3 gap-4 rounded-lg border border-border p-4"
+      >
+        {data.by_cluster.map((cluster) => (
+          <div
+            key={cluster.cluster_name}
+            data-testid={`cluster-col-${cluster.cluster_name}`}
+            className="rounded-lg border border-border bg-card px-5 py-4 flex flex-col gap-3"
+          >
+            <div className="flex items-center justify-between gap-2">
+              <div
+                data-testid={`cluster-name-header-${cluster.cluster_name}`}
+                className="flex items-center gap-2"
+              >
+                <span
+                  className="h-3 w-3 rounded-full shrink-0"
+                  data-brand-color={CLUSTER_COLORS[cluster.cluster_name] ?? "#71717a"}
+                  style={{ backgroundColor: CLUSTER_COLORS[cluster.cluster_name] ?? "#71717a" }}
+                />
+                <span className="text-sm font-medium text-foreground">{clusterLabel(cluster.cluster_name)}</span>
+                {CLUSTER_TOOLTIP_KEY[cluster.cluster_name] && (
+                  <InfoTooltip text={t(CLUSTER_TOOLTIP_KEY[cluster.cluster_name])} />
+                )}
+              </div>
             {CLUSTER_TREND[cluster.cluster_name] !== undefined && (
               <TrendBadge
                 delta={CLUSTER_TREND[cluster.cluster_name]}
@@ -310,6 +329,7 @@ function ClusterStrip({ data }: { data: DashboardSummaryResponse["kpi_cards"] })
           </div>
         </div>
       ))}
+      </div>
     </div>
   );
 }

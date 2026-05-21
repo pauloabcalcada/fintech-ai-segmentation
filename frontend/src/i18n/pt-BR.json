@@ -16,6 +16,12 @@
       "noActivitySub": "{{pct}}% da sua base",
       "noActivityTooltip": "Pessoas que se cadastraram mas nunca fizeram uma única transação. Criaram conta e pararam — uma oportunidade de conversão perdida."
     },
+    "clusters": {
+      "title": "Grupos de Segmentação por IA",
+      "highValueActiveTooltip": "Clientes com altas pontuações de recência, frequência e valor monetário. Engajadores de alto nível que transacionam regularmente e possuem produtos premium como investimentos e seguros.",
+      "lowValueDormantTooltip": "Clientes com baixas taxas de atividade e longos intervalos desde a última transação. Provavelmente desengajados, mas ainda não perdidos — campanhas de reativação podem recuperar uma parte deles.",
+      "atRiskChurnerTooltip": "Clientes com fortes sinais de churn: transações pouco frequentes e em queda, pouco tempo de conta e poucos produtos. Exigem ação imediata de retenção."
+    },
     "cluster": {
       "customerCount": "Clientes",
       "customerCountTooltip": "Quantos clientes pertencem a este segmento.",

@@ -144,6 +144,55 @@ describe("DashboardPage cluster colours", () => {
 });
 
 // ---------------------------------------------------------------------------
+// Cycle 6 — Cluster section title + bordered frame + per-cluster tooltips
+// ---------------------------------------------------------------------------
+
+describe("DashboardPage ClusterStrip — section title and tooltips", () => {
+  it("renders 'AI Segmentation Groups' heading above the cluster strip", async () => {
+    mockSummary.mockResolvedValue(STUB_SUMMARY);
+    renderDashboard();
+    await screen.findByTestId("cluster-strip");
+    expect(screen.getByTestId("cluster-section-title")).toHaveTextContent("AI Segmentation Groups");
+  });
+
+  it("renders the section title in PT-BR when language is pt-BR", async () => {
+    mockSummary.mockResolvedValue(STUB_SUMMARY);
+    renderDashboard("pt-BR");
+    await screen.findByTestId("cluster-strip");
+    expect(screen.getByTestId("cluster-section-title")).toHaveTextContent("Grupos de Segmentação por IA");
+  });
+
+  it("shows cluster description tooltip on hover of the cluster name ⓘ", async () => {
+    mockSummary.mockResolvedValue(STUB_SUMMARY);
+    renderDashboard();
+    await screen.findByTestId("cluster-strip");
+
+    const header = screen.getByTestId("cluster-name-header-high_value_active");
+    const tooltipTrigger = header.querySelector("[data-testid='info-tooltip-trigger']")!;
+
+    expect(screen.queryByRole("tooltip")).not.toBeInTheDocument();
+    fireEvent.mouseEnter(tooltipTrigger);
+    const tooltip = screen.getByRole("tooltip");
+    expect(tooltip.textContent).toMatch(/Top-tier engagers/);
+    fireEvent.mouseLeave(tooltipTrigger);
+    expect(screen.queryByRole("tooltip")).not.toBeInTheDocument();
+  });
+
+  it("shows PT-BR cluster description tooltip for high_value_active", async () => {
+    mockSummary.mockResolvedValue(STUB_SUMMARY);
+    renderDashboard("pt-BR");
+    await screen.findByTestId("cluster-strip");
+
+    const header = screen.getByTestId("cluster-name-header-high_value_active");
+    const tooltipTrigger = header.querySelector("[data-testid='info-tooltip-trigger']")!;
+
+    fireEvent.mouseEnter(tooltipTrigger);
+    const tooltip = screen.getByRole("tooltip");
+    expect(tooltip.textContent).not.toMatch(/Top-tier engagers/);
+  });
+});
+
+// ---------------------------------------------------------------------------
 // Cycle 2 — KpiRow: 3 correct cards, old cards absent
 // ---------------------------------------------------------------------------
 
