@@ -174,13 +174,12 @@ export async function fetchCustomerProfile(
 
 export async function analyzeCustomer(
   customerId: string,
-  model: string,
   language: string = "en"
 ): Promise<AnalyzeResponse> {
   const res = await fetch(`${BASE_URL}/customers/${customerId}/analyze`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ model, language }),
+    body: JSON.stringify({ language }),
   });
   if (res.status === 429) {
     const body = await res.json();
@@ -273,16 +272,9 @@ export async function fetchDashboardAggregates(): Promise<DashboardAggregatesRes
   return res.json() as Promise<DashboardAggregatesResponse>;
 }
 
-export const MODEL_OPTIONS: { value: string; label: string }[] = [
-  { value: "smart-auto", label: "Smart Auto" },
-  { value: "gemini-2.5-flash-lite", label: "Gemini 2.5 Flash Lite" },
-  { value: "llama-70b-free", label: "Llama 3.3 70B" },
-  { value: "mistral-7b-free", label: "Mistral 7B" },
-];
-
-export function modelLabel(value: string): string {
-  return MODEL_OPTIONS.find((m) => m.value === value)?.label ?? value;
-}
+const _MODEL_LABELS: Record<string, string> = {
+  "smart-auto": "Smart Auto",
+};
 
 export function formatProvenance(generated_at: string, model_used: string): string {
   const date = new Date(generated_at);
@@ -292,5 +284,6 @@ export function formatProvenance(generated_at: string, model_used: string): stri
     hour: "2-digit",
     minute: "2-digit",
   });
-  return `Generated ${formatted} · ${modelLabel(model_used)}`;
+  const label = _MODEL_LABELS[model_used] ?? model_used;
+  return `Generated ${formatted} · ${label}`;
 }

@@ -52,7 +52,6 @@
   },
   "aiPanel": {
     "title": "AI Recommendation",
-    "selectModel": "Select model…",
     "analyze": "Analyze",
     "analyzing": "Analyzing…",
     "reAnalyze": "Re-analyze",
@@ -61,7 +60,7 @@
     "copy": "Copy",
     "copied": "Copied!",
     "reAnalyzeToGenerate": "Re-analyze to generate notification",
-    "idleHint": "Select a model and click Analyze to generate a personalized recommendation.",
+    "idleHint": "Click Analyze to generate a personalized recommendation.",
     "fields": {
       "riskLevel": "Risk Level",
       "riskLevels": {

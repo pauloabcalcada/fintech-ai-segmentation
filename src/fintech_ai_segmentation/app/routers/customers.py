@@ -29,8 +29,10 @@ from fintech_ai_segmentation.app.schemas.customer import (
 )
 
 
+_MODEL = "smart-auto"
+
+
 class AnalyzeRequest(BaseModel):
-    model: Literal["gemini-2.5-flash-lite", "llama-70b-free", "mistral-7b-free", "smart-auto"]
     language: Literal["en", "pt-BR"] = "en"
 
 
@@ -132,7 +134,7 @@ async def analyze_customer(
     await _analyze_semaphore.acquire()
 
     try:
-        recommendation = await agent.run(customer_id, body.model, language=body.language)
+        recommendation = await agent.run(customer_id, _MODEL, language=body.language)
     except Exception as exc:
         import openai
         if isinstance(exc, openai.RateLimitError):
@@ -148,10 +150,10 @@ async def analyze_customer(
         _analyze_semaphore.release()
 
     rec_json = recommendation.model_dump()
-    await log_store.record(customer_id, ip, body.model, rec_json)
+    await log_store.record(customer_id, ip, _MODEL, rec_json)
     return {
         "cached": False,
         "generated_at": datetime.now(timezone.utc).isoformat(),
-        "model_used": body.model,
+        "model_used": _MODEL,
         "recommendation": rec_json,
     }

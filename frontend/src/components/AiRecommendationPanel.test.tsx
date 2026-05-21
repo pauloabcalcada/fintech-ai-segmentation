@@ -37,26 +37,23 @@ const _STUB_RESPONSE: api.AnalyzeResponse = {
 };
 
 // ---------------------------------------------------------------------------
-// Cycle 1 — model selector and Analyze button visible at top (idle state)
+// Cycle 1 — Analyze button visible and enabled; no model selector
 // ---------------------------------------------------------------------------
 
 describe("AiRecommendationPanel — top controls", () => {
-  it("shows model selector and Analyze button in idle state", () => {
+  it("shows no model selector in idle state", () => {
     renderPanel();
-    expect(screen.getByRole("combobox")).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: /analyze/i })).toBeInTheDocument();
+    expect(screen.queryByRole("combobox")).not.toBeInTheDocument();
+  });
+
+  it("Analyze button is enabled without selecting a model", () => {
+    renderPanel();
+    expect(screen.getByRole("button", { name: /analyze/i })).toBeEnabled();
   });
 
   it("Analyze button contains a Sparkles icon in idle state", () => {
     renderPanel();
     const button = screen.getByRole("button", { name: /analyze/i });
-    expect(button.querySelector("[data-testid='sparkles-icon']")).toBeInTheDocument();
-  });
-
-  it("Analyze button contains a Sparkles icon when disabled (no model selected)", () => {
-    renderPanel();
-    const button = screen.getByRole("button", { name: /analyze/i });
-    expect(button).toBeDisabled();
     expect(button.querySelector("[data-testid='sparkles-icon']")).toBeInTheDocument();
   });
 });
@@ -69,7 +66,6 @@ describe("AiRecommendationPanel — Sparkles icon during loading", () => {
   it("Analyze button contains a Sparkles icon while loading", async () => {
     vi.spyOn(api, "analyzeCustomer").mockImplementation(() => new Promise(() => {}));
     renderPanel();
-    fireEvent.change(screen.getByRole("combobox"), { target: { value: "smart-auto" } });
     fireEvent.click(screen.getByRole("button", { name: /analyze/i }));
     const button = await screen.findByRole("button", { name: /analyzing/i });
     expect(button.querySelector("[data-testid='sparkles-icon']")).toBeInTheDocument();
@@ -87,16 +83,14 @@ describe("AiRecommendationPanel — language forwarding", () => {
 
   it("passes 'en' language to analyzeCustomer when language is English", async () => {
     renderPanel({ lng: "en" });
-    fireEvent.change(screen.getByRole("combobox"), { target: { value: "smart-auto" } });
     fireEvent.click(screen.getByRole("button", { name: /analyze/i }));
-    await waitFor(() => expect(api.analyzeCustomer).toHaveBeenCalledWith("test-id", "smart-auto", "en"));
+    await waitFor(() => expect(api.analyzeCustomer).toHaveBeenCalledWith("test-id", "en"));
   });
 
   it("passes 'pt-BR' language to analyzeCustomer when language is pt-BR", async () => {
     renderPanel({ lng: "pt-BR" });
-    fireEvent.change(screen.getByRole("combobox"), { target: { value: "smart-auto" } });
     fireEvent.click(screen.getByRole("button", { name: /anali/i }));
-    await waitFor(() => expect(api.analyzeCustomer).toHaveBeenCalledWith("test-id", "smart-auto", "pt-BR"));
+    await waitFor(() => expect(api.analyzeCustomer).toHaveBeenCalledWith("test-id", "pt-BR"));
   });
 });
 
@@ -111,7 +105,6 @@ describe("AiRecommendationPanel — notification_text card", () => {
 
   it("shows notification_text after a successful analyze", async () => {
     renderPanel();
-    fireEvent.change(screen.getByRole("combobox"), { target: { value: "smart-auto" } });
     fireEvent.click(screen.getByRole("button", { name: /analyze/i }));
     await waitFor(() =>
       expect(screen.getByText("We miss you! Activate your cashback card today.")).toBeInTheDocument()
@@ -120,7 +113,6 @@ describe("AiRecommendationPanel — notification_text card", () => {
 
   it("copy button exists alongside notification_text", async () => {
     renderPanel();
-    fireEvent.change(screen.getByRole("combobox"), { target: { value: "smart-auto" } });
     fireEvent.click(screen.getByRole("button", { name: /analyze/i }));
     await waitFor(() => screen.getByText("We miss you! Activate your cashback card today."));
     expect(screen.getByRole("button", { name: /copy/i })).toBeInTheDocument();

@@ -5,7 +5,6 @@ import { InfoTooltip } from "@/components/ui/InfoTooltip";
 import {
   analyzeCustomer,
   formatProvenance,
-  MODEL_OPTIONS,
   RateLimitError,
   ProviderRateLimitError,
   ServerBusyError,
@@ -156,7 +155,6 @@ export function AiRecommendationPanel({
   initialRecommendation: CachedRecommendation | null;
 }) {
   const { t, i18n } = useTranslation();
-  const [model, setModel] = useState<string>("");
   const [status, setStatus] = useState<Status>(initialRecommendation ? "success" : "idle");
   const [result, setResult] = useState<AnalyzeResponse | null>(
     initialRecommendation
@@ -173,7 +171,7 @@ export function AiRecommendationPanel({
   async function fireRequest() {
     setStatus("loading");
     try {
-      const response = await analyzeCustomer(customerId, model, i18n.language);
+      const response = await analyzeCustomer(customerId, i18n.language);
       setResult(response);
       setStatus("success");
     } catch (err) {
@@ -197,22 +195,8 @@ export function AiRecommendationPanel({
         <h3 className="text-sm font-semibold">{t("aiPanel.title")}</h3>
 
         <div className="flex items-center gap-2">
-          <select
-            value={model}
-            onChange={(e) => setModel(e.target.value)}
-            className="rounded-md border border-border bg-background px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
-          >
-            <option value="" disabled>
-              {t("aiPanel.selectModel")}
-            </option>
-            {MODEL_OPTIONS.map((m) => (
-              <option key={m.value} value={m.value}>
-                {m.label}
-              </option>
-            ))}
-          </select>
           <button
-            disabled={!model || status === "loading"}
+            disabled={status === "loading"}
             onClick={fireRequest}
             className="inline-flex items-center gap-1.5 px-4 py-1.5 rounded-md bg-primary text-primary-foreground text-sm disabled:opacity-50 disabled:cursor-not-allowed transition-opacity"
           >

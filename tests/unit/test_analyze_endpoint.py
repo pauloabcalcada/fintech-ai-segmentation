@@ -133,6 +133,25 @@ def _all_overrides(profile=_STUB_PROFILE, rate_result=None, log_store=None, agen
 
 
 # ---------------------------------------------------------------------------
+# Cycle 0 — POST with no model field → 200 (model is hardcoded server-side)
+# ---------------------------------------------------------------------------
+
+
+def test_analyze_no_model_field_returns_200() -> None:
+    overrides, _ = _all_overrides()
+    app.dependency_overrides.update(overrides)
+    try:
+        response = client.post(
+            f"/customers/{_CUSTOMER_ID}/analyze",
+            json={},
+        )
+        assert response.status_code == 200
+        assert response.json()["recommendation"]["risk_level"] == "critical"
+    finally:
+        app.dependency_overrides.clear()
+
+
+# ---------------------------------------------------------------------------
 # Cycle 1 — no password required → analyze succeeds without any auth header
 # ---------------------------------------------------------------------------
 
@@ -143,7 +162,7 @@ def test_analyze_requires_no_password() -> None:
     try:
         response = client.post(
             f"/customers/{_CUSTOMER_ID}/analyze",
-            json={"model": "gemini-2.5-flash-lite"},
+            json={},
         )
         assert response.status_code == 200
         assert response.json()["recommendation"]["risk_level"] == "critical"
@@ -162,7 +181,7 @@ def test_analyze_allowed_returns_recommendation() -> None:
     try:
         response = client.post(
             f"/customers/{_CUSTOMER_ID}/analyze",
-            json={"model": "gemini-2.5-flash-lite"},
+            json={},
         )
         assert response.status_code == 200
         body = response.json()
@@ -196,7 +215,7 @@ def test_analyze_cached_returns_cached_recommendation() -> None:
     try:
         response = client.post(
             f"/customers/{_CUSTOMER_ID}/analyze",
-            json={"model": "gemini-2.5-flash-lite"},
+            json={},
         )
         assert response.status_code == 200
         body = response.json()
@@ -220,7 +239,7 @@ def test_analyze_blocked_returns_429_with_retry_after() -> None:
     try:
         response = client.post(
             f"/customers/{_CUSTOMER_ID}/analyze",
-            json={"model": "smart-auto"},
+            json={},
         )
         assert response.status_code == 429
         body = response.json()
@@ -242,7 +261,7 @@ def test_analyze_unknown_customer_returns_404() -> None:
     try:
         response = client.post(
             f"/customers/{unknown_id}/analyze",
-            json={"model": "gemini-2.5-flash-lite"},
+            json={},
         )
         assert response.status_code == 404
     finally:
@@ -250,51 +269,7 @@ def test_analyze_unknown_customer_returns_404() -> None:
 
 
 # ---------------------------------------------------------------------------
-# Cycle 6 — unknown model string → 422
-# ---------------------------------------------------------------------------
-
-
-def test_analyze_accepts_gemini_2_5_flash_lite() -> None:
-    overrides, _ = _all_overrides()
-    app.dependency_overrides.update(overrides)
-    try:
-        response = client.post(
-            f"/customers/{_CUSTOMER_ID}/analyze",
-            json={"model": "gemini-2.5-flash-lite"},
-        )
-        assert response.status_code == 200
-    finally:
-        app.dependency_overrides.clear()
-
-
-def test_analyze_rejects_gemini_flash_free_with_422() -> None:
-    overrides, _ = _all_overrides()
-    app.dependency_overrides.update(overrides)
-    try:
-        response = client.post(
-            f"/customers/{_CUSTOMER_ID}/analyze",
-            json={"model": "gemini-flash-free"},
-        )
-        assert response.status_code == 422
-    finally:
-        app.dependency_overrides.clear()
-
-
-def test_analyze_unknown_model_returns_422() -> None:
-    overrides, _ = _all_overrides()
-    app.dependency_overrides.update(overrides)
-    try:
-        response = client.post(
-            f"/customers/{_CUSTOMER_ID}/analyze",
-            json={"model": "gpt-4o"},
-        )
-        assert response.status_code == 422
-    finally:
-        app.dependency_overrides.clear()
-
-
-# ---------------------------------------------------------------------------
-# Cycle 7 — unsupported language → 422
+# Cycle 6 — unsupported language → 422
 # ---------------------------------------------------------------------------
 
 
@@ -311,7 +286,7 @@ def test_analyze_language_forwarded_to_agent() -> None:
     try:
         client.post(
             f"/customers/{_CUSTOMER_ID}/analyze",
-            json={"model": "gemini-2.5-flash-lite", "language": "pt-BR"},
+            json={"language": "pt-BR"},
         )
         assert received == ["pt-BR"]
     finally:
@@ -324,7 +299,7 @@ def test_analyze_pt_br_language_returns_200() -> None:
     try:
         response = client.post(
             f"/customers/{_CUSTOMER_ID}/analyze",
-            json={"model": "gemini-2.5-flash-lite", "language": "pt-BR"},
+            json={"language": "pt-BR"},
         )
         assert response.status_code == 200
         assert response.json()["recommendation"]["risk_level"] == "critical"
@@ -338,7 +313,7 @@ def test_analyze_unsupported_language_returns_422() -> None:
     try:
         response = client.post(
             f"/customers/{_CUSTOMER_ID}/analyze",
-            json={"model": "gemini-2.5-flash-lite", "language": "fr"},
+            json={"language": "fr"},
         )
         assert response.status_code == 422
     finally:
