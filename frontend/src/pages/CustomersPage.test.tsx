@@ -195,6 +195,25 @@ describe("CustomersPage", () => {
     expect(screen.queryByTestId("customer-detail-inline")).toBeNull();
   });
 
+  it("renders a synthetic data disclosure banner in English", async () => {
+    renderCustomers();
+    await screen.findByText("Ana Lima");
+    expect(screen.getByText(/synthetic/i)).toBeInTheDocument();
+  });
+
+  it("renders a synthetic data disclosure banner in pt-BR", async () => {
+    renderCustomers("pt-BR");
+    await screen.findByText("Ana Lima");
+    expect(screen.getByText(/sintéticos/i)).toBeInTheDocument();
+  });
+
+  it("renders an InfoTooltip trigger in the Cluster column header", async () => {
+    renderCustomers();
+    await screen.findByText("Ana Lima");
+    const clusterHeader = screen.getByRole("columnheader", { name: /cluster/i });
+    expect(within(clusterHeader).getByTestId("info-tooltip-trigger")).toBeInTheDocument();
+  });
+
   it("clicking a different row collapses previous and expands new", async () => {
     renderCustomers();
     await screen.findByText("Ana Lima");

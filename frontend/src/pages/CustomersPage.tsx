@@ -12,6 +12,8 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { ClusterBadge } from "@/components/ClusterBadge";
 import { CustomerDetailInline } from "@/components/CustomerDetailInline";
 import { fetchCustomerSample, type CustomerSummary } from "@/lib/api";
+import { InfoTooltip } from "@/components/ui/InfoTooltip";
+import { Info } from "lucide-react";
 
 function SkeletonRows({ count }: { count: number }) {
   return Array.from({ length: count }).map((_, i) => (
@@ -73,6 +75,12 @@ export function CustomersPage() {
         </div>
       </div>
 
+      {/* Disclosure banner */}
+      <div className="flex items-start gap-2 rounded-md border border-border bg-muted/30 px-3 py-2">
+        <Info className="mt-0.5 h-3.5 w-3.5 shrink-0 text-muted-foreground" />
+        <p className="text-xs text-muted-foreground">{t("customers.disclosure")}</p>
+      </div>
+
       {/* Table */}
       <div className="rounded-lg border border-border bg-card overflow-hidden">
         <Table>
@@ -81,7 +89,10 @@ export function CustomersPage() {
               <TableHead>{t("customers.col.name")}</TableHead>
               <TableHead>{t("customers.col.age")}</TableHead>
               <TableHead>{t("customers.col.state")}</TableHead>
-              <TableHead>{t("customers.col.cluster")}</TableHead>
+              <TableHead>
+                {t("customers.col.cluster")}
+                <InfoTooltip text={t("customers.clusterTooltip")} side="left" />
+              </TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>

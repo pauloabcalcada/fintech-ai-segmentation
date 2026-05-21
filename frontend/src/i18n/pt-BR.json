@@ -104,6 +104,8 @@
     },
     "refresh": "Atualizar",
     "expandHint": "Clique em um cliente para expandir o perfil e gerar uma recomendação de IA personalizada.",
+    "disclosure": "Os dados de clientes exibidos aqui são sintéticos — amostras aleatórias de um conjunto gerado com dados demográficos brasileiros realistas e modelos comportamentais estatísticos para este projeto de portfólio.",
+    "clusterTooltip": "Os clientes foram agrupados por um processo de clusterização K-Means com base em métricas RFM (Recência, Frequência, Valor Monetário). Três grupos: Alto Valor Ativo — engajados, transacionam com frequência; Baixo Valor Inativo — usuários superficiais que nunca criaram um hábito; Em Risco de Churn — clientes com histórico sólido, mas atualmente inativos.",
     "noResults": "Nenhum cliente encontrado com esses filtros.",
     "pagination": "Página {{page}} de {{total}} — {{count}} clientes",
     "prev": "Anterior",

@@ -104,6 +104,8 @@
     },
     "refresh": "Refresh",
     "expandHint": "Click on a customer to expand their profile and generate a personalized AI recommendation.",
+    "disclosure": "Customer data shown here is synthetic — randomly sampled from a dataset generated with realistic Brazilian demographics and statistical behavioural models for this portfolio project.",
+    "clusterTooltip": "Customers were grouped by a K-Means clustering process run on RFM behavioural features (Recency, Frequency, Monetary). Three clusters: High Value Active — top-tier engagers who transact regularly; Low Value Dormant — shallow users who never built a habit; At-Risk Churner — lapsed legacy customers with solid history but currently silent.",
     "noResults": "No customers match your filters.",
     "pagination": "Page {{page}} of {{total}} — {{count}} customers",
     "prev": "Previous",
