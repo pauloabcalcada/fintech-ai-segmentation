@@ -101,6 +101,29 @@
     "prev": "Anterior",
     "next": "Próximo"
   },
+  "customerDetail": {
+    "sections": {
+      "customerInfo": "Informações do Cliente",
+      "rfmComparison": "Comparação de Pontuação RFM",
+      "monthlyVolume": "Volume Mensal de Transações",
+      "productOwnership": "Produtos vs Segmento"
+    },
+    "kpi": {
+      "rfmScore": "RFM Score",
+      "clusterRank": "Posição no Segmento",
+      "tenure": "Tempo de Conta",
+      "lifecycle": "Ciclo de Vida"
+    },
+    "info": {
+      "age": "Idade",
+      "state": "Estado",
+      "channel": "Canal",
+      "acqCost": "Custo de Aquisição",
+      "registration": "Cadastro",
+      "products": "Produtos",
+      "recency": "Recência"
+    }
+  },
   "landing": {
     "hero": {
       "heading": "SynaptiqPay AI Segmentation",

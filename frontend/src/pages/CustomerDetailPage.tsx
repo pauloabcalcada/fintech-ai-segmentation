@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { useParams, useNavigate } from "react-router-dom";
 import {
   BarChart,
@@ -73,6 +74,7 @@ function InfoRow({ label, value }: { label: string; value: string }) {
 // ---------------------------------------------------------------------------
 
 function RfmComparisonChart({ profile }: { profile: CustomerProfile }) {
+  const { t } = useTranslation();
   if (!profile.cluster_averages || !profile.population_averages) return null;
 
   const data = [
@@ -98,7 +100,7 @@ function RfmComparisonChart({ profile }: { profile: CustomerProfile }) {
 
   return (
     <div className="rounded-lg border border-border bg-card p-5">
-      <h3 className="text-sm font-medium mb-4">RFM Score Comparison</h3>
+      <h3 className="text-sm font-medium mb-4">{t("customerDetail.sections.rfmComparison")}</h3>
       <ResponsiveContainer width="100%" height={220}>
         <BarChart data={data} barGap={4}>
           <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
@@ -134,6 +136,7 @@ function ActivityTimelineChart({
 }: {
   timeline: ActivityTimelineEntry[];
 }) {
+  const { t } = useTranslation();
   if (timeline.length === 0)
     return (
       <div className="rounded-lg border border-border bg-card p-5 flex items-center justify-center text-muted-foreground text-sm h-[180px]">
@@ -143,7 +146,7 @@ function ActivityTimelineChart({
 
   return (
     <div className="rounded-lg border border-border bg-card p-5">
-      <h3 className="text-sm font-medium mb-4">Monthly Transaction Volume</h3>
+      <h3 className="text-sm font-medium mb-4">{t("customerDetail.sections.monthlyVolume")}</h3>
       <ResponsiveContainer width="100%" height={200}>
         <LineChart data={timeline}>
           <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
@@ -191,6 +194,7 @@ const PRODUCTS: {
 ];
 
 function ProductOwnershipChart({ profile }: { profile: CustomerProfile }) {
+  const { t } = useTranslation();
   const data = PRODUCTS.map((p) => ({
     product: p.label,
     "Cluster %": profile.cluster_product_profile
@@ -201,7 +205,7 @@ function ProductOwnershipChart({ profile }: { profile: CustomerProfile }) {
 
   return (
     <div className="rounded-lg border border-border bg-card p-5">
-      <h3 className="text-sm font-medium mb-4">Product Ownership vs Cluster</h3>
+      <h3 className="text-sm font-medium mb-4">{t("customerDetail.sections.productOwnership")}</h3>
       <ResponsiveContainer width="100%" height={220}>
         <BarChart data={data} layout="vertical" barGap={4}>
           <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
@@ -251,6 +255,7 @@ function ProductOwnershipChart({ profile }: { profile: CustomerProfile }) {
 export function CustomerDetailPage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const { t } = useTranslation();
   const [profile, setProfile] = useState<CustomerProfile | null>(null);
   const [timeline, setTimeline] = useState<ActivityTimelineEntry[]>([]);
   const [loading, setLoading] = useState(true);
@@ -317,22 +322,22 @@ export function CustomerDetailPage() {
       {/* KPI badges */}
       <div className="flex flex-wrap gap-3">
         <KpiBadge
-          label="RFM Score"
+          label={t("customerDetail.kpi.rfmScore")}
           value={profile.rfm_score?.toFixed(2) ?? "—"}
           sub="out of 5.0"
         />
         <KpiBadge
-          label="Cluster Rank"
+          label={t("customerDetail.kpi.clusterRank")}
           value={clusterPositionLabel(profile.cluster_position)}
           sub={profile.cluster_name ?? "—"}
         />
         <KpiBadge
-          label="Tenure"
+          label={t("customerDetail.kpi.tenure")}
           value={`${profile.tenure_months}mo`}
           sub={`since ${profile.registration_date}`}
         />
         <KpiBadge
-          label="Lifecycle"
+          label={t("customerDetail.kpi.lifecycle")}
           value={profile.lifecycle_stage?.replace(/_/g, " ") ?? "—"}
         />
       </div>
@@ -341,24 +346,24 @@ export function CustomerDetailPage() {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Customer info panel */}
         <div className="rounded-lg border border-border bg-card p-5 flex flex-col gap-0.5">
-          <h3 className="text-sm font-medium mb-3">Customer Info</h3>
-          <InfoRow label="Age" value={String(profile.age)} />
-          <InfoRow label="State" value={profile.state} />
+          <h3 className="text-sm font-medium mb-3">{t("customerDetail.sections.customerInfo")}</h3>
+          <InfoRow label={t("customerDetail.info.age")} value={String(profile.age)} />
+          <InfoRow label={t("customerDetail.info.state")} value={profile.state} />
           <InfoRow
-            label="Channel"
+            label={t("customerDetail.info.channel")}
             value={profile.acquisition_channel.replace(/_/g, " ")}
           />
           <InfoRow
-            label="Acq. Cost"
+            label={t("customerDetail.info.acqCost")}
             value={`R$ ${profile.acquisition_cost.toFixed(2)}`}
           />
-          <InfoRow label="Registration" value={profile.registration_date} />
+          <InfoRow label={t("customerDetail.info.registration")} value={profile.registration_date} />
           <InfoRow
-            label="Products"
+            label={t("customerDetail.info.products")}
             value={`${profile.products_owned_count} / 5`}
           />
           <InfoRow
-            label="Recency"
+            label={t("customerDetail.info.recency")}
             value={
               profile.recency_days != null ? `${profile.recency_days}d` : "—"
             }

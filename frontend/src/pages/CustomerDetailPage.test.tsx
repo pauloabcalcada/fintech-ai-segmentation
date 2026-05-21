@@ -1,6 +1,8 @@
 import { render, screen } from "@testing-library/react";
 import { vi, describe, it, expect, beforeEach } from "vitest";
 import { MemoryRouter, Route, Routes } from "react-router-dom";
+import { I18nextProvider } from "react-i18next";
+import { createTestI18n } from "@/i18n/test-utils";
 import { fetchCustomerProfile } from "@/lib/api";
 import { CustomerDetailPage } from "./CustomerDetailPage";
 
@@ -60,13 +62,16 @@ const FIXTURE_PROFILE = {
   cached_recommendation: null,
 };
 
-function renderDetailPage() {
+function renderDetailPage(lng = "en") {
+  const i18n = createTestI18n(lng);
   return render(
-    <MemoryRouter initialEntries={["/customers/abc-123"]}>
-      <Routes>
-        <Route path="/customers/:id" element={<CustomerDetailPage />} />
-      </Routes>
-    </MemoryRouter>
+    <I18nextProvider i18n={i18n}>
+      <MemoryRouter initialEntries={["/customers/abc-123"]}>
+        <Routes>
+          <Route path="/customers/:id" element={<CustomerDetailPage />} />
+        </Routes>
+      </MemoryRouter>
+    </I18nextProvider>
   );
 }
 
@@ -82,5 +87,46 @@ describe("CustomerDetailPage", () => {
     renderDetailPage();
     await screen.findByText("Ana Lima");
     expect(screen.queryByText("ana@example.com")).toBeNull();
+  });
+
+  describe("pt-BR language", () => {
+    it("renders 'Informações do Cliente' as the customer info section header", async () => {
+      renderDetailPage("pt-BR");
+      await screen.findByText("Ana Lima");
+      expect(screen.getByText("Informações do Cliente")).toBeTruthy();
+    });
+
+    it("renders 'Comparação de Pontuação RFM' as the RFM chart section header", async () => {
+      mockFetchCustomerProfile.mockResolvedValueOnce({
+        data: {
+          ...FIXTURE_PROFILE,
+          cluster_averages: { recency_score: 3, frequency_score: 3, monetary_score: 3 },
+          population_averages: { recency_score: 3, frequency_score: 3, monetary_score: 3 },
+        },
+        activity_timeline: [],
+      });
+      renderDetailPage("pt-BR");
+      await screen.findByText("Ana Lima");
+      expect(screen.getByText("Comparação de Pontuação RFM")).toBeTruthy();
+    });
+
+    it("renders translated KPI badge labels", async () => {
+      renderDetailPage("pt-BR");
+      await screen.findByText("Ana Lima");
+      expect(screen.getByText("Posição no Segmento")).toBeTruthy();
+      expect(screen.getByText("Tempo de Conta")).toBeTruthy();
+      expect(screen.getByText("Ciclo de Vida")).toBeTruthy();
+    });
+
+    it("renders translated InfoRow labels", async () => {
+      renderDetailPage("pt-BR");
+      await screen.findByText("Ana Lima");
+      expect(screen.getByText("Idade")).toBeTruthy();
+      expect(screen.getByText("Estado")).toBeTruthy();
+      expect(screen.getByText("Canal")).toBeTruthy();
+      expect(screen.getByText("Custo de Aquisição")).toBeTruthy();
+      expect(screen.getByText("Cadastro")).toBeTruthy();
+      expect(screen.getByText("Recência")).toBeTruthy();
+    });
   });
 });
