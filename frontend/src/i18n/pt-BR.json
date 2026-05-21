@@ -135,6 +135,12 @@
       "activityTrend": "Tendência de Atividade",
       "earlyWindowFreq": "Freq. Janela Inicial"
     },
+    "chart": {
+      "toggle": {
+        "transactions": "Transações",
+        "gtv": "VBT"
+      }
+    },
     "info": {
       "age": "Idade",
       "state": "Estado",

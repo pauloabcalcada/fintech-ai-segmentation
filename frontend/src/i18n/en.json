@@ -135,6 +135,12 @@
       "activityTrend": "Activity Trend",
       "earlyWindowFreq": "Early Freq. Ratio"
     },
+    "chart": {
+      "toggle": {
+        "transactions": "Transactions",
+        "gtv": "GTV"
+      }
+    },
     "info": {
       "age": "Age",
       "state": "State",

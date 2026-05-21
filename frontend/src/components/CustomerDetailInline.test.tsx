@@ -1,4 +1,4 @@
-import { render, screen } from "@testing-library/react";
+import { render, screen, fireEvent } from "@testing-library/react";
 import { vi, describe, it, expect, beforeEach } from "vitest";
 import { I18nextProvider } from "react-i18next";
 import { createTestI18n } from "@/i18n/test-utils";
@@ -184,5 +184,45 @@ describe("CustomerDetailInline", () => {
     renderInline("pt-BR");
     await screen.findByText("Ana Lima");
     expect(screen.getByText("Produtos do cliente")).toBeInTheDocument();
+  });
+
+  describe("activity chart GTV toggle", () => {
+    it("renders both Transactions and GTV toggle buttons", async () => {
+      renderInline();
+      await screen.findByText("Ana Lima");
+      expect(screen.getByRole("button", { name: "Transactions" })).toBeInTheDocument();
+      expect(screen.getByRole("button", { name: "GTV" })).toBeInTheDocument();
+    });
+
+    it("Transactions toggle is active and GTV is inactive by default", async () => {
+      renderInline();
+      await screen.findByText("Ana Lima");
+      expect(screen.getByRole("button", { name: "Transactions" })).toHaveAttribute("aria-pressed", "true");
+      expect(screen.getByRole("button", { name: "GTV" })).toHaveAttribute("aria-pressed", "false");
+    });
+
+    it("clicking GTV makes GTV active and Transactions inactive", async () => {
+      renderInline();
+      await screen.findByText("Ana Lima");
+      fireEvent.click(screen.getByRole("button", { name: "GTV" }));
+      expect(screen.getByRole("button", { name: "GTV" })).toHaveAttribute("aria-pressed", "true");
+      expect(screen.getByRole("button", { name: "Transactions" })).toHaveAttribute("aria-pressed", "false");
+    });
+
+    it("clicking Transactions after GTV restores Transactions as active", async () => {
+      renderInline();
+      await screen.findByText("Ana Lima");
+      fireEvent.click(screen.getByRole("button", { name: "GTV" }));
+      fireEvent.click(screen.getByRole("button", { name: "Transactions" }));
+      expect(screen.getByRole("button", { name: "Transactions" })).toHaveAttribute("aria-pressed", "true");
+      expect(screen.getByRole("button", { name: "GTV" })).toHaveAttribute("aria-pressed", "false");
+    });
+
+    it("renders Portuguese toggle labels when language is pt-BR", async () => {
+      renderInline("pt-BR");
+      await screen.findByText("Ana Lima");
+      expect(screen.getByRole("button", { name: "Transações" })).toBeInTheDocument();
+      expect(screen.getByRole("button", { name: "VBT" })).toBeInTheDocument();
+    });
   });
 });

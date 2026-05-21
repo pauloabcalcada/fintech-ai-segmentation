@@ -30,34 +30,75 @@ function KpiBadge({ label, value }: { label: string; value: string }) {
 }
 
 function ActivityTimeline({ timeline }: { timeline: ActivityTimelineEntry[] }) {
+  const { t } = useTranslation();
+  const [mode, setMode] = useState<"tx_count" | "total_amount">("tx_count");
+
   if (timeline.length === 0) return null;
+
+  const txLabel = t("customerDetail.chart.toggle.transactions");
+  const gtvLabel = t("customerDetail.chart.toggle.gtv");
+
   return (
-    <ResponsiveContainer width="100%" height={160}>
-      <LineChart data={timeline}>
-        <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-        <XAxis
-          dataKey="year_month"
-          tick={{ fontSize: 10 }}
-          interval="preserveStartEnd"
-        />
-        <YAxis tick={{ fontSize: 11 }} />
-        <Tooltip
-          contentStyle={{
-            background: "hsl(var(--card))",
-            border: "1px solid hsl(var(--border))",
-            borderRadius: 8,
-          }}
-        />
-        <Line
-          type="monotone"
-          dataKey="tx_count"
-          stroke="#6366f1"
-          strokeWidth={2}
-          dot={false}
-          name="Transactions"
-        />
-      </LineChart>
-    </ResponsiveContainer>
+    <div>
+      <div className="flex gap-1 mb-2">
+        <button
+          aria-pressed={mode === "tx_count"}
+          onClick={() => setMode("tx_count")}
+          className={`px-2 py-0.5 rounded text-xs font-medium border transition-colors ${
+            mode === "tx_count"
+              ? "bg-primary text-primary-foreground border-primary"
+              : "bg-transparent text-muted-foreground border-border hover:border-primary"
+          }`}
+        >
+          {txLabel}
+        </button>
+        <button
+          aria-pressed={mode === "total_amount"}
+          onClick={() => setMode("total_amount")}
+          className={`px-2 py-0.5 rounded text-xs font-medium border transition-colors ${
+            mode === "total_amount"
+              ? "bg-primary text-primary-foreground border-primary"
+              : "bg-transparent text-muted-foreground border-border hover:border-primary"
+          }`}
+        >
+          {gtvLabel}
+        </button>
+      </div>
+      <ResponsiveContainer width="100%" height={160}>
+        <LineChart data={timeline}>
+          <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+          <XAxis
+            dataKey="year_month"
+            tick={{ fontSize: 10 }}
+            interval="preserveStartEnd"
+          />
+          <YAxis tick={{ fontSize: 11 }} />
+          <Tooltip
+            contentStyle={{
+              background: "hsl(var(--card))",
+              border: "1px solid hsl(var(--border))",
+              borderRadius: 8,
+            }}
+            formatter={
+              mode === "total_amount"
+                ? (value: number) => [
+                    `R$ ${value.toLocaleString("pt-BR", { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`,
+                    gtvLabel,
+                  ]
+                : undefined
+            }
+          />
+          <Line
+            type="monotone"
+            dataKey={mode}
+            stroke="#6366f1"
+            strokeWidth={2}
+            dot={false}
+            name={mode === "tx_count" ? txLabel : gtvLabel}
+          />
+        </LineChart>
+      </ResponsiveContainer>
+    </div>
   );
 }
 
