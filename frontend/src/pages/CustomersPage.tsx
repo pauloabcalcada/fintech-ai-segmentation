@@ -25,13 +25,13 @@ const PAGE_SIZE = 50;
 const ACTIVE_LIFECYCLE = "active_clustered";
 
 
-type SortCol = "rfm_score" | "recency_days" | "monetary_total";
+type SortCol = "rfm_score" | "monetary_total";
 type SortOrder = "asc" | "desc";
 
 function SkeletonRows({ count }: { count: number }) {
   return Array.from({ length: count }).map((_, i) => (
     <TableRow key={i}>
-      {Array.from({ length: 5 }).map((_, j) => (
+      {Array.from({ length: 4 }).map((_, j) => (
         <TableCell key={j}>
           <Skeleton className="h-4 w-full" />
         </TableCell>
@@ -171,12 +171,6 @@ export function CustomersPage() {
               <TableHead>{t("customers.col.age")}</TableHead>
               <TableHead>{t("customers.col.state")}</TableHead>
               <TableHead>{t("customers.col.cluster")}</TableHead>
-              <TableHead
-                className="cursor-pointer select-none"
-                onClick={() => toggleSort("recency_days")}
-              >
-                {t("customers.col.recency")} <SortArrow col="recency_days" />
-              </TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -185,7 +179,7 @@ export function CustomersPage() {
             ) : customers.length === 0 ? (
               <TableRow>
                 <TableCell
-                  colSpan={5}
+                  colSpan={4}
                   className="text-center text-muted-foreground py-12"
                 >
                   {t("customers.noResults")}
@@ -203,11 +197,6 @@ export function CustomersPage() {
                   <TableCell>{c.state}</TableCell>
                   <TableCell>
                     <ClusterBadge cluster={c.cluster_name} />
-                  </TableCell>
-                  <TableCell>
-                    <span className="font-mono text-sm">
-                      {c.recency_days ?? "—"}
-                    </span>
                   </TableCell>
                 </TableRow>
               ))

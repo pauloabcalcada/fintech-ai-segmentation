@@ -63,7 +63,7 @@ describe("CustomersPage", () => {
     ).toBeNull();
   });
 
-  it("skeleton rows render 5 cells per row", () => {
+  it("skeleton rows render 4 cells per row", () => {
     mockFetchCustomers.mockImplementation(() => new Promise(() => {}));
     renderCustomers();
     const rows = screen.getAllByRole("row");
@@ -71,7 +71,7 @@ describe("CustomersPage", () => {
     expect(skeletonRows.length).toBeGreaterThan(0);
     for (const row of skeletonRows) {
       const cells = within(row).getAllByRole("cell");
-      expect(cells).toHaveLength(5);
+      expect(cells).toHaveLength(4);
     }
   });
 
@@ -90,7 +90,7 @@ describe("CustomersPage", () => {
     await screen.findByText("Ana Lima");
     expect(screen.getByRole("columnheader", { name: "Name" })).toBeInTheDocument();
     expect(screen.getByRole("columnheader", { name: "Age" })).toBeInTheDocument();
-    expect(screen.getByRole("columnheader", { name: /recency/i })).toBeInTheDocument();
+    expect(screen.queryByRole("columnheader", { name: /recency/i })).toBeNull();
   });
 
   it("renders Portuguese table headers when language is pt-BR", async () => {
@@ -98,6 +98,12 @@ describe("CustomersPage", () => {
     await screen.findByText("Ana Lima");
     expect(screen.getByRole("columnheader", { name: "Nome" })).toBeInTheDocument();
     expect(screen.getByRole("columnheader", { name: "Idade" })).toBeInTheDocument();
-    expect(screen.getByRole("columnheader", { name: /recência/i })).toBeInTheDocument();
+    expect(screen.queryByRole("columnheader", { name: /recência/i })).toBeNull();
+  });
+
+  it("does not render a Recency Days column header", async () => {
+    renderCustomers();
+    await screen.findByText("Ana Lima");
+    expect(screen.queryByRole("columnheader", { name: /recency/i })).toBeNull();
   });
 });

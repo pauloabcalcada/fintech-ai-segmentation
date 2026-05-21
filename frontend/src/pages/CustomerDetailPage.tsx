@@ -310,7 +310,6 @@ export function CustomerDetailPage() {
             ← Customers
           </button>
           <h1 className="text-xl font-semibold">{profile.name}</h1>
-          <p className="text-sm text-muted-foreground">{profile.email}</p>
         </div>
         <ClusterBadge cluster={profile.cluster_name} />
       </div>
