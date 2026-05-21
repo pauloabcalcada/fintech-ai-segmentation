@@ -75,7 +75,7 @@ _STRATEGY_BODIES: dict[str, str] = {
 
 def build_system_prompt(strategy: str, language: str = "en") -> str:
     body = _STRATEGY_BODIES[strategy]
-    lang_instruction = f"\nRespond entirely in {language}. All fields including notification_text must be in that language." if language != "en" else ""
+    lang_instruction = f"\nRespond entirely in {language}. All fields including notification_text must be in that language."
     return f"{body}\n\n{_PARAMETER_GLOSSARY}\n{_JSON_SCHEMA}{lang_instruction}"
 
 
