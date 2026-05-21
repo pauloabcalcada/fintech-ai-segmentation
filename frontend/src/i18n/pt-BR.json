@@ -19,8 +19,8 @@
     "clusters": {
       "title": "Grupos de Segmentação por IA",
       "highValueActiveTooltip": "Clientes com altas pontuações de recência, frequência e valor monetário. Engajadores de alto nível que transacionam regularmente e possuem produtos premium como investimentos e seguros.",
-      "lowValueDormantTooltip": "Clientes com baixas taxas de atividade e longos intervalos desde a última transação. Provavelmente desengajados, mas ainda não perdidos — campanhas de reativação podem recuperar uma parte deles.",
-      "atRiskChurnerTooltip": "Clientes com fortes sinais de churn: transações pouco frequentes e em queda, pouco tempo de conta e poucos produtos. Exigem ação imediata de retenção."
+      "lowValueDormantTooltip": "Usuários de baixo volume — menor frequência, intensidade monetária e profundidade de produtos. Geralmente caros de adquirir e lentos para começar, nunca criaram um hábito de uso. O perfil não é 'desengajaram depois de serem bons', mas 'nunca foram realmente ativados.' As ações devem focar em qualidade de aquisição, onboarding e testes baratos antes de investir pesado em retenção.",
+      "atRiskChurnerTooltip": "Clientes legados inativos — longo tempo de conta e histórico sólido de transações, mas atualmente dormentes. Alta recência, baixa atividade recente e longos intervalos de uso, mesmo possuindo múltiplos produtos. O foco é reativação e reuso dos produtos, não upsell VIP."
     },
     "cluster": {
       "customerCount": "Clientes",

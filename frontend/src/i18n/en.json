@@ -19,8 +19,8 @@
     "clusters": {
       "title": "AI Segmentation Groups",
       "highValueActiveTooltip": "Customers with high recency, frequency, and monetary scores. Top-tier engagers who transact regularly and hold premium products like investments and insurance.",
-      "lowValueDormantTooltip": "Customers with low activity rates and extended gaps since last transaction. Likely disengaged but not fully churned — reactivation campaigns may recover a subset.",
-      "atRiskChurnerTooltip": "Customers showing strong churn signals: infrequent and declining transactions, young tenure, and minimal product breadth. Require urgent retention action."
+      "lowValueDormantTooltip": "Shallow, low-economics users — lowest frequency, monetary intensity, and product depth. Often expensive to acquire and slow to start, they never built a habit. The story is not 'churned after being great' but 'never really activated.' Actions skew toward acquisition quality, onboarding, and cheap tests before heavy retention spend.",
+      "atRiskChurnerTooltip": "Lapsed legacy customers — long tenure and solid historical transaction depth, but currently dormant. High recency days, low recent activity, and large activation gaps despite often owning multiple products. The lever is reactivation and product re-use, not VIP upsell."
     },
     "cluster": {
       "customerCount": "Customers",
