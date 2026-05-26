@@ -4,6 +4,7 @@ import {
   BarChart,
   Bar,
   Cell,
+  LabelList,
   XAxis,
   YAxis,
   CartesianGrid,
@@ -367,26 +368,14 @@ function AcqCostChart({ data }: { data: DashboardSummaryResponse["acquisition_co
     key: r.acquisition_channel,
     cost: Math.round(r.avg_acquisition_cost),
     fill: CHANNEL_COLORS[r.acquisition_channel] ?? "#71717a",
+    trend: CAC_CHANNEL_TREND[r.acquisition_channel] ?? 0,
   }));
 
   return (
     <div className="rounded-lg border border-border bg-card px-5 py-4 flex flex-col gap-3">
-      <div className="flex items-center justify-between flex-wrap gap-2">
-        <span className="text-sm font-medium text-foreground">{t("dashboard.chart.acqCost")}</span>
-        <div className="flex flex-wrap gap-3">
-          {formatted.map((entry) => (
-            <div key={entry.key} className="flex items-center gap-1.5">
-              <span className="h-2 w-2 rounded-full shrink-0" style={{ backgroundColor: entry.fill }} />
-              <span className="text-xs text-muted-foreground">{entry.channel}</span>
-              {CAC_CHANNEL_TREND[entry.key] !== undefined && (
-                <TrendBadge delta={CAC_CHANNEL_TREND[entry.key]} inverse />
-              )}
-            </div>
-          ))}
-        </div>
-      </div>
+      <span className="text-sm font-medium text-foreground">{t("dashboard.chart.acqCost")}</span>
       <ResponsiveContainer width="100%" height={220}>
-        <BarChart data={formatted} layout="vertical" margin={{ left: 8, right: 24, top: 4, bottom: 4 }}>
+        <BarChart data={formatted} layout="vertical" margin={{ left: 8, right: 120, top: 4, bottom: 4 }}>
           <CartesianGrid strokeDasharray="3 3" stroke="#27272a" horizontal={false} />
           <XAxis type="number" tick={{ fontSize: 11, fill: "#a1a1aa" }} tickLine={false} axisLine={false} />
           <YAxis type="category" dataKey="channel" tick={{ fontSize: 11, fill: "#a1a1aa" }} tickLine={false} axisLine={false} width={80} />
@@ -400,6 +389,13 @@ function AcqCostChart({ data }: { data: DashboardSummaryResponse["acquisition_co
             {formatted.map((entry, i) => (
               <Cell key={i} fill={entry.fill} />
             ))}
+            <LabelList
+              dataKey="cost"
+              position="right"
+              formatter={(v) => `R$ ${(v as number).toLocaleString("pt-BR")}`}
+              style={{ fontSize: 11, fill: "#a1a1aa" }}
+            />
+            <LabelList dataKey="trend" content={TrendHBarLabel} />
           </Bar>
         </BarChart>
       </ResponsiveContainer>
@@ -411,13 +407,76 @@ function AcqCostChart({ data }: { data: DashboardSummaryResponse["acquisition_co
 // Chart 2: Population by products owned
 // ---------------------------------------------------------------------------
 
+// Placeholder M/M trend per products-owned bucket (shared with TenureChart)
+const PRODUCTS_OWNED_TREND: Record<number, number> = {
+  0: -3.2,
+  1: -1.5,
+  2: 2.8,
+  3: 4.1,
+  4: 1.9,
+  5: 0.7,
+};
+
+// SVG label rendered above each vertical bar
+function TrendBarLabel(props: any) {
+  const { x, y, width, value } = props;
+  if (value == null || x == null || y == null || width == null) return null;
+  const up = (value as number) >= 0;
+  const color = up ? "#22c55e" : "#f87171";
+  return (
+    <text
+      x={(x as number) + (width as number) / 2}
+      y={(y as number) - 5}
+      textAnchor="middle"
+      fontSize={11}
+      fill={color}
+      fontWeight={600}
+    >
+      {up ? "▲" : "▼"} {up ? "+" : ""}{(value as number).toFixed(1)}%
+    </text>
+  );
+}
+
+// SVG label rendered beside each scatter bubble
+function TrendDotLabel(props: any) {
+  const { x, y, value } = props;
+  if (value == null || x == null || y == null) return null;
+  const up = (value as number) >= 0;
+  const color = up ? "#22c55e" : "#f87171";
+  return (
+    <text x={(x as number) + 16} y={(y as number) + 4} fontSize={11} fill={color} fontWeight={600}>
+      {up ? "▲" : "▼"} {up ? "+" : ""}{(value as number).toFixed(1)}%
+    </text>
+  );
+}
+
+// SVG label rendered beside each horizontal bar — inverse-colored (lower = better, e.g. CAC)
+function TrendHBarLabel(props: any) {
+  const { x, y, width, height, value } = props;
+  if (value == null || x == null || y == null || width == null || height == null) return null;
+  const up = (value as number) >= 0;
+  const color = up ? "#f87171" : "#22c55e"; // inverse: CAC decrease is good
+  return (
+    <text
+      x={(x as number) + (width as number) + 54}
+      y={(y as number) + (height as number) / 2 + 4}
+      fontSize={11}
+      fill={color}
+      fontWeight={600}
+    >
+      {up ? "▲" : "▼"} {up ? "+" : ""}{(value as number).toFixed(1)}%
+    </text>
+  );
+}
+
 function ProductsOwnedChart({ data }: { data: DashboardSummaryResponse["population_by_products_owned"] }) {
   const { t } = useTranslation();
+  const enriched = data.map((d) => ({ ...d, trend: PRODUCTS_OWNED_TREND[d.products_owned_count] ?? 0 }));
   return (
     <div className="rounded-lg border border-border bg-card px-5 py-4 flex flex-col gap-3">
       <span className="text-sm font-medium text-foreground">{t("dashboard.chart.productsOwned")}</span>
       <ResponsiveContainer width="100%" height={220}>
-        <BarChart data={data} margin={{ left: 0, right: 8, top: 4, bottom: 4 }}>
+        <BarChart data={enriched} margin={{ left: 0, right: 8, top: 20, bottom: 4 }}>
           <CartesianGrid strokeDasharray="3 3" stroke="#27272a" vertical={false} />
           <XAxis dataKey="products_owned_count" tick={{ fontSize: 11, fill: "#a1a1aa" }} tickLine={false} axisLine={false} label={{ value: "products", position: "insideBottom", offset: -2, fontSize: 10, fill: "#71717a" }} />
           <YAxis tick={{ fontSize: 11, fill: "#a1a1aa" }} tickLine={false} axisLine={false} />
@@ -428,7 +487,9 @@ function ProductsOwnedChart({ data }: { data: DashboardSummaryResponse["populati
             formatter={(v) => [((v as number) ?? 0).toLocaleString(), t("dashboard.tooltip.customers")]}
             labelFormatter={(l) => `${l} product(s)`}
           />
-          <Bar dataKey="customer_count" fill="#60a5fa" radius={[4, 4, 0, 0]} />
+          <Bar dataKey="customer_count" fill="#60a5fa" radius={[4, 4, 0, 0]}>
+            <LabelList dataKey="trend" content={TrendBarLabel} />
+          </Bar>
         </BarChart>
       </ResponsiveContainer>
     </div>
@@ -449,13 +510,14 @@ function TenureChart({ data }: { data: DashboardSummaryResponse["product_ownersh
     y: d.avg_tenure_months,
     z: d.customer_count,
     n: d.customer_count,
+    trend: PRODUCTS_OWNED_TREND[d.products_owned_count] ?? 0,
   }));
 
   return (
     <div className="rounded-lg border border-border bg-card px-5 py-4 flex flex-col gap-3">
       <span className="text-sm font-medium text-foreground">{t("dashboard.chart.tenure")}</span>
       <ResponsiveContainer width="100%" height={220}>
-        <ScatterChart margin={{ left: 8, right: 24, top: 8, bottom: 8 }}>
+        <ScatterChart margin={{ left: 8, right: 56, top: 8, bottom: 8 }}>
           <CartesianGrid strokeDasharray="3 3" stroke="#27272a" />
           <XAxis
             type="number"
@@ -492,7 +554,9 @@ function TenureChart({ data }: { data: DashboardSummaryResponse["product_ownersh
               return [value, name];
             }}
           />
-          <Scatter data={points} fill="#60a5fa" fillOpacity={0.75} />
+          <Scatter data={points} fill="#60a5fa" fillOpacity={0.75}>
+            <LabelList dataKey="trend" content={TrendDotLabel} />
+          </Scatter>
         </ScatterChart>
       </ResponsiveContainer>
     </div>
@@ -503,19 +567,28 @@ function TenureChart({ data }: { data: DashboardSummaryResponse["product_ownersh
 // Chart 4: Most common products
 // ---------------------------------------------------------------------------
 
+const PRODUCT_TREND: Record<string, number> = {
+  wallet: 1.2,
+  credit_card: -0.8,
+  investment: 2.1,
+  insurance: -1.4,
+  loan: 0.6,
+};
+
 function CommonProductsChart({ data }: { data: DashboardSummaryResponse["most_common_products"] }) {
   const { t } = useTranslation();
   const formatted = data.map((r) => ({
     ...r,
     label: r.product_type.replace("_", " "),
     fill: PRODUCT_COLORS[r.product_type] ?? "#71717a",
+    trend: PRODUCT_TREND[r.product_type] ?? 0,
   }));
 
   return (
     <div className="rounded-lg border border-border bg-card px-5 py-4 flex flex-col gap-3">
       <span className="text-sm font-medium text-foreground">{t("dashboard.chart.commonProducts")}</span>
       <ResponsiveContainer width="100%" height={220}>
-        <BarChart data={formatted} margin={{ left: 0, right: 8, top: 4, bottom: 4 }}>
+        <BarChart data={formatted} margin={{ left: 0, right: 8, top: 22, bottom: 4 }}>
           <CartesianGrid strokeDasharray="3 3" stroke="#27272a" vertical={false} />
           <XAxis dataKey="label" tick={{ fontSize: 11, fill: "#a1a1aa" }} tickLine={false} axisLine={false} />
           <YAxis tick={{ fontSize: 11, fill: "#a1a1aa" }} tickLine={false} axisLine={false} />
@@ -529,6 +602,7 @@ function CommonProductsChart({ data }: { data: DashboardSummaryResponse["most_co
             {formatted.map((entry, i) => (
               <Cell key={i} fill={entry.fill} />
             ))}
+            <LabelList dataKey="trend" content={TrendBarLabel} />
           </Bar>
         </BarChart>
       </ResponsiveContainer>
