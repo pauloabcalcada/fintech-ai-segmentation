@@ -268,15 +268,51 @@
       "heading": "What this is",
       "body": "SynaptiqPay is a Brazilian fintech with 8,000 digital wallet customers. This system replaces manual, one-size-fits-all customer treatment with a segmentation and AI-driven workflow that identifies customer value, behaviour patterns, churn risk, and recommends next actions. Customer data is synthetic, generated with realistic Brazilian demographics and statistical behavioural models."
     },
-    "outOfScope": {
-      "heading": "Out of Scope",
-      "cacPayback": "CAC payback with real revenue margin — dataset only has GTV, no fee or margin column",
-      "churnModel": "Churn prediction model (logistic regression / random forest) — Phase 3",
-      "ltvHeatmap": "LTV/CAC heatmap — requires both revenue model and churn model",
-      "chatbot": "Text-to-SQL chatbot — Phase 2 roadmap"
+    "roadmap": {
+      "sectionLabel": "07 · Roadmap",
+      "heading": "What's shipped, what's next",
+      "phases": [
+        {
+          "phase": "Phase 1",
+          "title": "MVP",
+          "status": "SHIPPED",
+          "items": ["Faker dataset (4 segments)", "EDA + cohort analysis", "RFM + K-Means clustering", "LangGraph AI agent", "FastAPI REST API", "React dashboard", "Docker + Railway deploy"]
+        },
+        {
+          "phase": "Phase 2",
+          "title": "Intelligence Layer",
+          "status": "ACTIVE",
+          "items": ["Text-to-SQL chatbot (/chat endpoint)", "Auto-generated Recharts from query", "Read-only SQL guardrails", "Clarification loop for ambiguous queries"]
+        },
+        {
+          "phase": "Phase 3",
+          "title": "BI Expansion",
+          "status": "PLANNED",
+          "items": ["Unit economics deep-dive (LTV, CAC payback)", "Churn prediction model", "LTV/CAC heatmap"]
+        },
+        {
+          "phase": "Phase 4",
+          "title": "Documentation",
+          "status": "PLANNED",
+          "items": ["MkDocs + mkdocstrings site", "GitHub Pages deploy", "Architecture diagrams", "EDA notebooks as HTML"]
+        }
+      ]
+    },
+    "footer": {
+      "copyright": "© 2026 Paulo Calçada · Built with Python, FastAPI, LangGraph, React · MIT",
+      "projectCol": "Project",
+      "sectionsCol": "Sections",
+      "contactCol": "Contact",
+      "githubRepo": "GitHub Repository",
+      "liveDemo": "Live Demo",
+      "roadmapLink": "Roadmap",
+      "problem": "Problem",
+      "howItWorks": "How It Works",
+      "aiAgent": "AI Agent"
     },
     "github": {
       "label": "View on GitHub"
     }
   }
 }
+

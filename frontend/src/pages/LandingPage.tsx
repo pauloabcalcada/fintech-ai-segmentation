@@ -314,28 +314,122 @@ export function LandingPage() {
           <TechStackGrid />
         </section>
 
-        {/* Out of Scope */}
-        <section data-testid="out-of-scope" className="rounded-xl border border-border bg-card p-6">
-          <h2 className="mb-4 text-lg font-semibold text-foreground">
-            {t("landing.outOfScope.heading")}
-          </h2>
-          <ul className="space-y-2 text-sm text-muted-foreground">
-            {(
-              [
-                "cacPayback",
-                "churnModel",
-                "ltvHeatmap",
-                "chatbot",
-              ] as const
-            ).map((key) => (
-              <li key={key} className="flex gap-2">
-                <span className="mt-1.5 size-1.5 shrink-0 rounded-full bg-primary" />
-                {t(`landing.outOfScope.${key}`)}
-              </li>
-            ))}
-          </ul>
-        </section>
       </div>
+
+      {/* Roadmap — 07 */}
+      <section
+        id="roadmap"
+        className="mx-auto max-w-6xl scroll-mt-16 px-6 py-16"
+      >
+        <div className="mb-2 text-xs font-semibold uppercase tracking-widest text-primary">
+          {t("landing.roadmap.sectionLabel")}
+        </div>
+        <h2 className="mb-10 text-3xl font-bold tracking-tight text-foreground">
+          {t("landing.roadmap.heading")}
+        </h2>
+        <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
+          {(t("landing.roadmap.phases", { returnObjects: true }) as Array<{
+            phase: string; title: string; status: string; items: string[];
+          }>).map((phase) => (
+            <div
+              key={phase.phase}
+              data-testid="roadmap-card"
+              className="rounded-xl border border-border bg-card p-5"
+            >
+              <div className="mb-3 flex items-center justify-between">
+                <span className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">
+                  {phase.phase}
+                </span>
+                <span
+                  className={cn(
+                    "rounded-full px-2 py-0.5 text-xs font-bold",
+                    phase.status === "SHIPPED"
+                      ? "bg-green-500/10 text-green-400"
+                      : phase.status === "ACTIVE"
+                      ? "bg-blue-500/10 text-blue-400"
+                      : "bg-gray-500/10 text-gray-400"
+                  )}
+                >
+                  {phase.status}
+                </span>
+              </div>
+              <h3 className="mb-3 font-semibold text-foreground">{phase.title}</h3>
+              <ul className="space-y-1.5">
+                {phase.items.map((item) => (
+                  <li key={item} className="flex gap-2 text-sm text-muted-foreground">
+                    <span className="mt-1.5 size-1.5 shrink-0 rounded-full bg-primary" />
+                    {item}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      {/* Footer */}
+      <footer className="border-t border-border bg-gray-950/80 px-6 py-12">
+        <div className="mx-auto max-w-6xl">
+          <div className="grid grid-cols-1 gap-8 sm:grid-cols-3">
+            <div>
+              <h4 className="mb-3 text-sm font-semibold text-foreground">{t("landing.footer.projectCol")}</h4>
+              <ul className="space-y-2 text-sm text-muted-foreground">
+                <li>
+                  <a
+                    href="https://github.com/pauloabcalcada/fintech-ai-segmentation"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="hover:text-foreground transition-colors"
+                  >
+                    {t("landing.footer.githubRepo")}
+                  </a>
+                </li>
+                <li>
+                  <Link to="/dashboard" className="hover:text-foreground transition-colors">
+                    {t("landing.footer.liveDemo")}
+                  </Link>
+                </li>
+                <li>
+                  <a href="#roadmap" className="hover:text-foreground transition-colors">
+                    {t("landing.footer.roadmapLink")}
+                  </a>
+                </li>
+              </ul>
+            </div>
+            <div>
+              <h4 className="mb-3 text-sm font-semibold text-foreground">{t("landing.footer.sectionsCol")}</h4>
+              <ul className="space-y-2 text-sm text-muted-foreground">
+                <li><a href="#how-it-works" className="hover:text-foreground transition-colors">{t("landing.footer.howItWorks")}</a></li>
+                <li><a href="#dashboard" className="hover:text-foreground transition-colors">{t("landing.footer.problem")}</a></li>
+                <li><a href="#ai-agent" className="hover:text-foreground transition-colors">{t("landing.footer.aiAgent")}</a></li>
+              </ul>
+            </div>
+            <div>
+              <h4 className="mb-3 text-sm font-semibold text-foreground">{t("landing.footer.contactCol")}</h4>
+              <ul className="space-y-2 text-sm text-muted-foreground">
+                <li>
+                  <a href="mailto:pauloabcalcada@gmail.com" className="hover:text-foreground transition-colors">
+                    pauloabcalcada@gmail.com
+                  </a>
+                </li>
+                <li>
+                  <a href="https://github.com/pauloabcalcada" target="_blank" rel="noopener noreferrer" className="hover:text-foreground transition-colors">
+                    github.com/pauloabcalcada
+                  </a>
+                </li>
+                <li>
+                  <a href="https://linkedin.com/in/paulo-calcada" target="_blank" rel="noopener noreferrer" className="hover:text-foreground transition-colors">
+                    linkedin.com/in/paulo-calcada
+                  </a>
+                </li>
+              </ul>
+            </div>
+          </div>
+          <div className="mt-10 border-t border-border pt-6 text-center text-xs text-muted-foreground">
+            {t("landing.footer.copyright")}
+          </div>
+        </div>
+      </footer>
     </main>
     </div>
   );

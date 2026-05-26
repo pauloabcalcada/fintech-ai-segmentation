@@ -268,12 +268,47 @@
         { "name": "Railway", "category": "OPS", "why": "Deploy em um comando pelo GitHub com HTTPS automático — mais rápido de subir que o cold-start de 50s do Render." }
       ]
     },
-    "outOfScope": {
-      "heading": "Fora do Escopo",
-      "cacPayback": "Payback de CAC com margem real de receita — o dataset só tem GTV, sem coluna de taxa ou margem",
-      "churnModel": "Modelo de predição de churn (regressão logística / random forest) — Fase 3",
-      "ltvHeatmap": "Heatmap de LTV/CAC — requer modelo de receita e modelo de churn",
-      "chatbot": "Chatbot Text-to-SQL — roadmap da Fase 2"
+    "roadmap": {
+      "sectionLabel": "07 · Roadmap",
+      "heading": "O que foi entregue, o que vem a seguir",
+      "phases": [
+        {
+          "phase": "Fase 1",
+          "title": "MVP",
+          "status": "SHIPPED",
+          "items": ["Dataset Faker (4 segmentos)", "EDA + análise de coorte", "RFM + clustering K-Means", "Agente IA LangGraph", "API REST FastAPI", "Dashboard React", "Deploy Docker + Railway"]
+        },
+        {
+          "phase": "Fase 2",
+          "title": "Camada de Inteligência",
+          "status": "ACTIVE",
+          "items": ["Chatbot Text-to-SQL (endpoint /chat)", "Gráficos Recharts automáticos por query", "Guardas SQL somente leitura", "Loop de esclarecimento para queries ambíguas"]
+        },
+        {
+          "phase": "Fase 3",
+          "title": "Expansão de BI",
+          "status": "PLANNED",
+          "items": ["Deep-dive de economics unitários (LTV, payback CAC)", "Modelo de predição de churn", "Heatmap LTV/CAC"]
+        },
+        {
+          "phase": "Fase 4",
+          "title": "Documentação",
+          "status": "PLANNED",
+          "items": ["Site MkDocs + mkdocstrings", "Deploy no GitHub Pages", "Diagramas de arquitetura", "Notebooks EDA como HTML"]
+        }
+      ]
+    },
+    "footer": {
+      "copyright": "© 2026 Paulo Calçada · Construído com Python, FastAPI, LangGraph, React · MIT",
+      "projectCol": "Projeto",
+      "sectionsCol": "Seções",
+      "contactCol": "Contato",
+      "githubRepo": "Repositório GitHub",
+      "liveDemo": "Demo ao Vivo",
+      "roadmapLink": "Roadmap",
+      "problem": "Problema",
+      "howItWorks": "Como Funciona",
+      "aiAgent": "Agente IA"
     },
     "github": {
       "label": "Ver no GitHub"

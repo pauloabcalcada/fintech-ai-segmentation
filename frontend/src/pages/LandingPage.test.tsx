@@ -44,20 +44,10 @@ describe("LandingPage", () => {
     }
   });
 
-  it("out-of-scope section includes all 4 deferred items", () => {
-    renderLanding();
-    const section = screen.getByTestId("out-of-scope");
-    expect(section).toHaveTextContent(/cac payback/i);
-    expect(section).toHaveTextContent(/churn prediction/i);
-    expect(section).toHaveTextContent(/ltv\/cac heatmap/i);
-    expect(section).toHaveTextContent(/text-to-sql/i);
-  });
-
   it("renders pt-BR text when language is pt-BR", () => {
     renderLanding("pt-BR");
     expect(screen.getByRole("link", { name: /abrir painel/i })).toBeInTheDocument();
     expect(screen.getByRole("link", { name: /ver no github/i })).toBeInTheDocument();
-    expect(screen.getByTestId("out-of-scope")).toHaveTextContent(/payback de cac/i);
   });
 
   it("LandingPage wrapper element carries the dark CSS class", () => {
@@ -198,5 +188,45 @@ describe("LandingPage", () => {
     renderLanding("pt-BR");
     const section = document.getElementById("ai-agent")!;
     expect(section).not.toHaveTextContent("landing.agent");
+  });
+
+  // Issue #49 — Roadmap section
+  it("roadmap section has id='roadmap'", () => {
+    renderLanding();
+    expect(document.getElementById("roadmap")).toBeInTheDocument();
+  });
+
+  it("roadmap renders all 4 phase cards with correct status badges", () => {
+    renderLanding();
+    const section = document.getElementById("roadmap")!;
+    const cards = section.querySelectorAll("[data-testid='roadmap-card']");
+    expect(cards).toHaveLength(4);
+    expect(section).toHaveTextContent("SHIPPED");
+    expect(section).toHaveTextContent("ACTIVE");
+    // PLANNED appears twice
+    const plannedMatches = section.textContent?.match(/PLANNED/g);
+    expect(plannedMatches?.length).toBeGreaterThanOrEqual(2);
+  });
+
+  // Issue #49 — Footer
+  it("footer renders GitHub, email, and LinkedIn links", () => {
+    renderLanding();
+    const footer = screen.getByRole("contentinfo");
+    expect(footer).toHaveTextContent(/github/i);
+    expect(footer).toHaveTextContent(/pauloabcalcada@gmail.com/i);
+    expect(footer).toHaveTextContent(/linkedin/i);
+  });
+
+  it("footer has copyright line", () => {
+    renderLanding();
+    const footer = screen.getByRole("contentinfo");
+    expect(footer).toHaveTextContent(/paulo calçada/i);
+    expect(footer).toHaveTextContent(/mit/i);
+  });
+
+  // Issue #49 — outOfScope removed
+  it("Out of Scope section is removed from LandingPage", () => {
+    renderLanding();
+    expect(screen.queryByTestId("out-of-scope")).toBeNull();
   });
 });
