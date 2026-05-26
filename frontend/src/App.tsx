@@ -11,8 +11,8 @@ export default function App() {
     <ThemeProvider>
     <BrowserRouter>
       <Routes>
+        <Route index element={<LandingPage />} />
         <Route element={<AppShell />}>
-          <Route index element={<LandingPage />} />
           <Route path="dashboard" element={<DashboardPage />} />
           <Route path="customers" element={<CustomersPage />} />
           <Route path="customers/:id" element={<CustomerDetailPage />} />

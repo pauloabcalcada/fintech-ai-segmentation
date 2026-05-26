@@ -1,4 +1,4 @@
-import { render, screen } from "@testing-library/react";
+import { render, screen, within } from "@testing-library/react";
 import { describe, it, expect } from "vitest";
 import { MemoryRouter } from "react-router-dom";
 import { I18nextProvider } from "react-i18next";
@@ -56,5 +56,10 @@ describe("LandingPage", () => {
     expect(screen.getByRole("link", { name: /abrir painel/i })).toBeInTheDocument();
     expect(screen.getByRole("link", { name: /ver no github/i })).toBeInTheDocument();
     expect(screen.getByTestId("out-of-scope")).toHaveTextContent(/payback de cac/i);
+  });
+
+  it("LandingPage wrapper element carries the dark CSS class", () => {
+    const { container } = renderLanding();
+    expect(container.firstChild).toHaveClass("dark");
   });
 });

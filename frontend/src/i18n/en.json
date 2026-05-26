@@ -176,6 +176,14 @@
     }
   },
   "landing": {
+    "nav": {
+      "howItWorks": "How It Works",
+      "dashboard": "Dashboard",
+      "aiAgent": "AI Agent",
+      "roadmap": "Roadmap",
+      "ctaDashboard": "Dashboard",
+      "ctaCustomers": "Customers"
+    },
     "hero": {
       "heading": "SynaptiqPay AI Segmentation",
       "tagline": "Customer behaviour analysis for a Brazilian fintech — replacing manual, one-size-fits-all treatment with AI-driven segmentation and recommendations.",

@@ -4,6 +4,7 @@ import { ArrowRight, ExternalLink } from "lucide-react";
 import { buttonVariants } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
+import { LandingNavbar } from "@/components/LandingNavbar";
 
 const TECH_STACK = [
   "Faker", "Pandas", "Scikit-learn", "LangGraph",
@@ -14,6 +15,8 @@ export function LandingPage() {
   const { t } = useTranslation();
 
   return (
+    <div className="dark">
+    <LandingNavbar />
     <main className="min-h-screen bg-background">
       {/* Hero */}
       <section className="flex flex-col items-center justify-center px-6 pt-24 pb-16 text-center">
@@ -94,5 +97,6 @@ export function LandingPage() {
         </section>
       </div>
     </main>
+    </div>
   );
 }

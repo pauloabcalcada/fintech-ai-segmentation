@@ -176,6 +176,14 @@
     }
   },
   "landing": {
+    "nav": {
+      "howItWorks": "Como Funciona",
+      "dashboard": "Painel",
+      "aiAgent": "Agente IA",
+      "roadmap": "Roadmap",
+      "ctaDashboard": "Painel",
+      "ctaCustomers": "Clientes"
+    },
     "hero": {
       "heading": "SynaptiqPay AI Segmentation",
       "tagline": "Análise de comportamento de clientes para uma fintech brasileira — substituindo tratamento manual e uniforme por segmentação e recomendações com IA.",
