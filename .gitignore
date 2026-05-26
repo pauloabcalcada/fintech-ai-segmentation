@@ -34,6 +34,8 @@ docs/data-generation-summary.md
 docs/kpi-dashboard-ranking.md
 docs/redesign-roadmap.md
 
+new_landing_page/
+
 # Claude and Cursor
 CLAUDE.md
 .claude/
@@ -53,3 +55,4 @@ node_modules/
 frontend/node_modules/
 frontend/dist/
 frontend/.env
+
