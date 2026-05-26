@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
+import type { Formatter, ValueType, NameType } from "recharts/types/component/DefaultTooltipContent";
 import {
   LineChart,
   Line,
@@ -91,10 +92,10 @@ function ActivityTimeline({ timeline }: { timeline: ActivityTimelineEntry[] }) {
             }}
             formatter={
               mode === "total_amount"
-                ? (value: number) => [
-                    `R$ ${value.toLocaleString("pt-BR", { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`,
+                ? ((value: ValueType | undefined) => [
+                    `R$ ${Number(Array.isArray(value) ? value[0] : (value ?? 0)).toLocaleString("pt-BR", { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`,
                     gtvLabel,
-                  ]
+                  ]) as Formatter<ValueType, NameType>
                 : undefined
             }
           />
