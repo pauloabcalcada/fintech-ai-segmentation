@@ -86,6 +86,18 @@
   "customers": {
     "title": "Customers",
     "loading": "Loading…",
+    "loadingPhrases": [
+      "Reading transactions…",
+      "Calculating RFM score…",
+      "Checking churn signals…",
+      "Scoring recency…",
+      "Fetching product ownership…",
+      "Ranking vs. population…",
+      "Mapping activity trend…",
+      "Measuring frequency…",
+      "Loading customer profile…",
+      "Analysing monetary value…"
+    ],
     "results": "{{count}} results",
     "searchPlaceholder": "Search by name…",
     "allClusters": "All clusters",
