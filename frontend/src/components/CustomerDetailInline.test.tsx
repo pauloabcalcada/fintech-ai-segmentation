@@ -59,6 +59,13 @@ const FIXTURE = {
     population_averages: null,
     cluster_product_profile: null,
     cached_recommendation: null,
+    avg_ticket: 150.5,
+    avg_days_between_tx: 14.2,
+    activity_trend_percentile: 0.83,
+    acquisition_cost_percentile: 0.72,
+    recency_percentile: 0.91,
+    avg_ticket_percentile: 0.65,
+    avg_days_between_tx_percentile: 0.78,
   },
   activity_timeline: [
     { year_month: "2023-01", tx_count: 5, total_amount: 300 },
@@ -270,6 +277,85 @@ describe("CustomerDetailInline", () => {
       await screen.findByText("Ana Lima");
       expect(screen.getByRole("button", { name: "Transações" })).toBeInTheDocument();
       expect(screen.getByRole("button", { name: "VBT" })).toBeInTheDocument();
+    });
+  });
+
+  // ---------------------------------------------------------------------------
+  // Task 4 — KpiBadge subvalue prop
+  // ---------------------------------------------------------------------------
+
+  describe("KpiBadge subvalue", () => {
+    it("renders subvalue text below the badge value when percentile data is present", async () => {
+      mockFetchCustomerProfile.mockResolvedValueOnce({
+        ...FIXTURE,
+        data: {
+          ...FIXTURE.data,
+          activity_trend_percentile: 0.72,
+        },
+      });
+      renderInline();
+      await screen.findByText("Ana Lima");
+      // activity_trend_percentile 0.72 → "p72 vs pop."
+      expect(screen.getByText("p72 vs pop.")).toBeInTheDocument();
+    });
+  });
+
+  // ---------------------------------------------------------------------------
+  // Cycle 1 — KpiBadge tooltip trigger rendered when tooltip prop provided
+  // ---------------------------------------------------------------------------
+
+  describe("KPI badge InfoTooltip", () => {
+    it("renders a tooltip trigger on the RFM Score badge", async () => {
+      renderInline();
+      await screen.findByText("Ana Lima");
+      const rfmBadge = screen.getByText("RFM Score").closest("div")!;
+      expect(rfmBadge.querySelector("[data-testid='info-tooltip-trigger']")).toBeInTheDocument();
+    });
+
+    it("renders exactly 6 tooltip triggers — one per KPI badge", async () => {
+      renderInline();
+      await screen.findByText("Ana Lima");
+      expect(screen.getAllByTestId("info-tooltip-trigger")).toHaveLength(6);
+    });
+
+    it("hovering the RFM Score tooltip trigger shows tooltip text", async () => {
+      renderInline();
+      await screen.findByText("Ana Lima");
+      const rfmBadge = screen.getByText("RFM Score").closest("div")!;
+      const trigger = rfmBadge.querySelector("[data-testid='info-tooltip-trigger']")!;
+      expect(screen.queryByRole("tooltip")).not.toBeInTheDocument();
+      fireEvent.mouseEnter(trigger);
+      expect(screen.getByRole("tooltip")).toBeInTheDocument();
+      fireEvent.mouseLeave(trigger);
+      expect(screen.queryByRole("tooltip")).not.toBeInTheDocument();
+    });
+
+    it("renders Portuguese tooltip text on hover when language is pt-BR", async () => {
+      renderInline("pt-BR");
+      await screen.findByText("Ana Lima");
+      const rfmBadge = screen.getByText("RFM Score").closest("div")!;
+      const trigger = rfmBadge.querySelector("[data-testid='info-tooltip-trigger']")!;
+      fireEvent.mouseEnter(trigger);
+      const tooltip = screen.getByRole("tooltip");
+      expect(tooltip.textContent).toMatch(/pontuação comportamental/i);
+      fireEvent.mouseLeave(trigger);
+    });
+
+    it("all 6 KPI badges render a tooltip trigger", async () => {
+      renderInline();
+      await screen.findByText("Ana Lima");
+      const labels = [
+        "RFM Score",
+        "Cluster Rank",
+        "Tenure",
+        "Acq. Cost",
+        "Activity Trend",
+        "Early Freq. Ratio",
+      ];
+      for (const label of labels) {
+        const badge = screen.getByText(label).closest("div")!;
+        expect(badge.querySelector("[data-testid='info-tooltip-trigger']"), `${label} missing tooltip trigger`).toBeInTheDocument();
+      }
     });
   });
 });

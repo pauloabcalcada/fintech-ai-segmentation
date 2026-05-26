@@ -11,6 +11,7 @@ import {
 } from "recharts";
 import { Skeleton } from "@/components/ui/skeleton";
 import { AiRecommendationPanel } from "@/components/AiRecommendationPanel";
+import { InfoTooltip } from "@/components/ui/InfoTooltip";
 import {
   fetchCustomerProfile,
   NotFoundError,
@@ -19,13 +20,21 @@ import {
   type CustomerProfileResponse,
 } from "@/lib/api";
 
-function KpiBadge({ label, value }: { label: string; value: string }) {
+function KpiBadge({ label, value, tooltip, subvalue }: {
+  label: string;
+  value: string;
+  tooltip?: string;
+  subvalue?: string;
+}) {
   return (
     <div className="flex flex-col gap-1 rounded-lg border border-border bg-card px-4 py-3 min-w-[120px]">
       <span className="text-xs text-muted-foreground uppercase tracking-wide">
-        {label}
+        {label}{tooltip && <InfoTooltip text={tooltip} />}
       </span>
       <span className="text-xl font-semibold text-foreground">{value}</span>
+      {subvalue && (
+        <span className="text-xs text-muted-foreground">{subvalue}</span>
+      )}
     </div>
   );
 }
@@ -187,26 +196,41 @@ export function CustomerDetailInline({
         <KpiBadge
           label={t("customerDetail.kpi.rfmScore")}
           value={profile.rfm_score?.toFixed(2) ?? "—"}
+          tooltip={t("customerDetail.kpi.rfmScoreTooltip")}
         />
         <KpiBadge
           label={t("customerDetail.kpi.clusterRank")}
           value={clusterPositionLabel(profile.cluster_position)}
+          tooltip={t("customerDetail.kpi.clusterRankTooltip")}
         />
         <KpiBadge
           label={t("customerDetail.kpi.tenure")}
           value={t("customerDetail.kpi.tenureValue", { months: profile.tenure_months })}
+          tooltip={t("customerDetail.kpi.tenureTooltip")}
         />
         <KpiBadge
           label={t("customerDetail.kpi.acquisitionCost")}
           value={profile.acquisition_cost != null ? `R$ ${Math.round(profile.acquisition_cost)}` : "—"}
+          tooltip={t("customerDetail.kpi.acquisitionCostTooltip")}
         />
         <KpiBadge
           label={t("customerDetail.kpi.activityTrend")}
-          value={profile.activity_trend_ratio?.toFixed(2) ?? "—"}
+          value={
+            profile.activity_trend_ratio != null
+              ? ((profile.activity_trend_ratio - 1) / (profile.activity_trend_ratio + 1)).toFixed(2)
+              : "—"
+          }
+          tooltip={t("customerDetail.kpi.activityTrendTooltip")}
+          subvalue={
+            profile.activity_trend_percentile != null
+              ? t("customerDetail.kpi.percentileVsPop", { n: Math.round(profile.activity_trend_percentile * 100) })
+              : undefined
+          }
         />
         <KpiBadge
           label={t("customerDetail.kpi.earlyWindowFreq")}
           value={profile.early_window_freq_ratio?.toFixed(2) ?? "—"}
+          tooltip={t("customerDetail.kpi.earlyWindowFreqTooltip")}
         />
       </div>
 
