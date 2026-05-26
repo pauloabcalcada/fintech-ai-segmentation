@@ -323,6 +323,8 @@ def build_trajectory_features(
     df_tx: pd.DataFrame,
     as_of_date: pd.Timestamp | str,
     window_start: pd.Timestamp | str,
+    *,
+    reg_dates: pd.Series | None = None,
 ) -> pd.DataFrame:
     """Compute activity trajectory features that capture how engagement changed over time.
 
@@ -365,28 +367,54 @@ def build_trajectory_features(
     as_of_date :
         End of the analysis window (inclusive).
     window_start :
-        Start of the analysis window.  The midpoint for ``activity_trend_ratio``
-        is computed as ``window_start + (as_of_date - window_start) / 2``.
+        Start of the analysis window.  Used as the midpoint anchor when
+        ``reg_dates`` is not provided: midpoint = ``window_start + (as_of - window_start) / 2``.
+    reg_dates :
+        Optional Series mapping ``customer_id`` → ``registration_date``.  When
+        supplied each customer's history is split at their own midpoint
+        (``reg_date + (as_of - reg_date) / 2``), eliminating the timing
+        artefact that inflates ``activity_trend_ratio`` for customers whose
+        entire tenure falls in the recent half of the global window.
     """
     as_of = _as_timestamp(as_of_date)
     w_start = _as_timestamp(window_start)
-    midpoint = w_start + (as_of - w_start) / 2
 
     df = df_tx.copy()
     df["transaction_datetime"] = pd.to_datetime(df["transaction_datetime"])
     if getattr(df["transaction_datetime"].dt, "tz", None) is not None:
         df["transaction_datetime"] = df["transaction_datetime"].dt.tz_localize(None)
 
-    nr = df.loc[_non_refund_mask(df)]
+    nr = df.loc[_non_refund_mask(df)].copy()
 
     # --- activity_trend_ratio ---
-    early = nr.loc[nr["transaction_datetime"] < midpoint]
-    recent = nr.loc[nr["transaction_datetime"] >= midpoint]
+    # Split each customer's history at their personal midpoint when reg_dates is
+    # provided, otherwise fall back to the global midpoint derived from window_start.
+    if reg_dates is not None:
+        rd = pd.to_datetime(reg_dates).rename("_reg_date")
+        if getattr(rd.dt, "tz", None) is not None:
+            rd = rd.dt.tz_localize(None)
+        rd.index.name = "customer_id"
+        nr = nr.join(rd, on="customer_id")
+        nr["_midpoint"] = nr["_reg_date"] + (as_of - nr["_reg_date"]) / 2
+        is_recent = nr["transaction_datetime"] >= nr["_midpoint"]
+        nr = nr.drop(columns=["_reg_date", "_midpoint"])
+    else:
+        midpoint = w_start + (as_of - w_start) / 2
+        is_recent = nr["transaction_datetime"] >= midpoint
 
-    early_counts = early.groupby("customer_id", sort=False).size().rename("early_count")
-    recent_counts = (
-        recent.groupby("customer_id", sort=False).size().rename("recent_count")
+    early_counts = (
+        nr.loc[~is_recent]
+        .groupby("customer_id", sort=False)
+        .size()
+        .rename("early_count")
     )
+    recent_counts = (
+        nr.loc[is_recent]
+        .groupby("customer_id", sort=False)
+        .size()
+        .rename("recent_count")
+    )
+
     all_customers = nr["customer_id"].unique()
     trend_df = pd.DataFrame(index=all_customers)
     trend_df.index.name = "customer_id"
@@ -597,13 +625,18 @@ def build_customer_feature_matrix(
     customer_num["tenure_days"] = (
         as_of - customer_num["registration_date"]
     ).dt.days.astype("float64")
+
+    # Extract before dropping so build_trajectory_features can use per-customer midpoints.
+    reg_dates_series = customer_num.set_index("customer_id")["registration_date"]
     customer_num = customer_num.drop(columns=["registration_date"])
 
     merged = customer_num.merge(beh, on="customer_id", how="left")
     merged = add_monetary_type_shares(merged)
 
     # Merge trajectory features (activity decay / continuity signals)
-    traj = build_trajectory_features(df_tx, as_of_date, w_start)
+    traj = build_trajectory_features(
+        df_tx, as_of_date, w_start, reg_dates=reg_dates_series
+    )
     merged = merged.merge(traj, on="customer_id", how="left")
     # Customers with no transactions in the window get neutral trajectory values
     merged["activity_trend_ratio"] = merged["activity_trend_ratio"].fillna(1.0)
