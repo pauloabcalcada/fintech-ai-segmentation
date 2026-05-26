@@ -128,6 +128,46 @@ export function LandingPage() {
         </div>
       </section>
 
+      {/* Pipeline — 03 */}
+      <section
+        data-testid="pipeline-section"
+        className="mx-auto max-w-2xl px-6 py-16"
+      >
+        <div className="mb-2 text-xs font-semibold uppercase tracking-widest text-primary">
+          {t("landing.pipeline.sectionLabel")}
+        </div>
+        <h2 className="mb-10 text-3xl font-bold tracking-tight text-foreground">
+          {t("landing.pipeline.heading")}
+        </h2>
+        <div className="flex flex-col items-center">
+          {(t("landing.pipeline.steps", { returnObjects: true }) as Array<{
+            title: string; tools: string[];
+          }>).map((step, idx, arr) => (
+            <div key={step.title} className="flex w-full flex-col items-center">
+              <div
+                data-testid="pipeline-step"
+                className="w-full rounded-xl border border-border bg-card p-4"
+              >
+                <p className="mb-2 font-semibold text-foreground">{step.title}</p>
+                <div className="flex flex-wrap gap-1.5">
+                  {step.tools.map((tool) => (
+                    <span
+                      key={tool}
+                      className="rounded-full border border-primary/20 bg-primary/10 px-2 py-0.5 text-xs text-primary"
+                    >
+                      {tool}
+                    </span>
+                  ))}
+                </div>
+              </div>
+              {idx < arr.length - 1 && (
+                <div className="h-8 w-px border-l-2 border-dashed border-border" />
+              )}
+            </div>
+          ))}
+        </div>
+      </section>
+
       <div className="mx-auto max-w-3xl space-y-10 px-6 pb-24">
         {/* What this is */}
         <section className="rounded-xl border border-border bg-card p-6">

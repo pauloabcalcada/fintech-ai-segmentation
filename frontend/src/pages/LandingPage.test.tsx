@@ -116,4 +116,27 @@ describe("LandingPage", () => {
     const section = document.getElementById("how-it-works")!;
     expect(section).not.toHaveTextContent("landing.howItWorks");
   });
+
+  // Issue #45 — Pipeline section
+  it("pipeline section renders all 6 steps in order", () => {
+    renderLanding();
+    const section = screen.getByTestId("pipeline-section");
+    const steps = section.querySelectorAll("[data-testid='pipeline-step']");
+    expect(steps).toHaveLength(6);
+  });
+
+  it("pipeline step nodes show tool tag chips", () => {
+    renderLanding();
+    const section = screen.getByTestId("pipeline-section");
+    expect(section).toHaveTextContent("Faker");
+    expect(section).toHaveTextContent("FastAPI");
+    expect(section).toHaveTextContent("LangGraph");
+    expect(section).toHaveTextContent("React");
+  });
+
+  it("pipeline renders in PT-BR without missing-key fallbacks", () => {
+    renderLanding("pt-BR");
+    const section = screen.getByTestId("pipeline-section");
+    expect(section).not.toHaveTextContent("landing.pipeline");
+  });
 });

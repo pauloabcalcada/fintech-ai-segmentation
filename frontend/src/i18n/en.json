@@ -222,6 +222,18 @@
         }
       ]
     },
+    "pipeline": {
+      "sectionLabel": "03 · Pipeline",
+      "heading": "End-to-end data flow",
+      "steps": [
+        { "title": "Data Generation", "tools": ["Faker (pt_BR)", "Python"] },
+        { "title": "EDA → Cohort → RFM Analysis", "tools": ["Pandas", "3 Notebooks"] },
+        { "title": "Segment Storage", "tools": ["Supabase", "Postgres", "customer_analysis mart"] },
+        { "title": "REST API", "tools": ["FastAPI", "SQLAlchemy", "GET /customers", "POST /analyze"] },
+        { "title": "AI Agent", "tools": ["LangGraph", "OpenRouter", "Pydantic", "4 routes"] },
+        { "title": "Business Dashboard", "tools": ["React", "Vite", "Tailwind", "Recharts", "Railway"] }
+      ]
+    },
     "about": {
       "heading": "What this is",
       "body": "SynaptiqPay is a Brazilian fintech with 8,000 digital wallet customers. This system replaces manual, one-size-fits-all customer treatment with a segmentation and AI-driven workflow that identifies customer value, behaviour patterns, churn risk, and recommends next actions. Customer data is synthetic, generated with realistic Brazilian demographics and statistical behavioural models."

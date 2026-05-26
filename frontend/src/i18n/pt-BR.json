@@ -222,6 +222,18 @@
         }
       ]
     },
+    "pipeline": {
+      "sectionLabel": "03 · Pipeline",
+      "heading": "Fluxo de dados de ponta a ponta",
+      "steps": [
+        { "title": "Geração de Dados", "tools": ["Faker (pt_BR)", "Python"] },
+        { "title": "EDA → Coorte → Análise RFM", "tools": ["Pandas", "3 Notebooks"] },
+        { "title": "Armazenamento de Segmentos", "tools": ["Supabase", "Postgres", "mart customer_analysis"] },
+        { "title": "API REST", "tools": ["FastAPI", "SQLAlchemy", "GET /customers", "POST /analyze"] },
+        { "title": "Agente IA", "tools": ["LangGraph", "OpenRouter", "Pydantic", "4 rotas"] },
+        { "title": "Painel de Negócios", "tools": ["React", "Vite", "Tailwind", "Recharts", "Railway"] }
+      ]
+    },
     "about": {
       "heading": "O que é isso",
       "body": "A SynaptiqPay é uma fintech brasileira com 8.000 clientes de carteira digital. Este sistema substitui o tratamento manual e uniforme por um fluxo de segmentação e IA que identifica o valor do cliente, padrões de comportamento, risco de churn e recomenda próximas ações. Os dados dos clientes são sintéticos, gerados com demografia brasileira realista e modelos estatísticos de comportamento."
