@@ -198,6 +198,36 @@ export function CustomerDetailInline({
           tooltip={t("customerDetail.kpi.tenureTooltip")}
         />
         <KpiBadge
+          label={t("customerDetail.kpi.recencyDays")}
+          value={profile.recency_days != null ? `${profile.recency_days} days` : "—"}
+          tooltip={t("customerDetail.kpi.recencyDaysTooltip")}
+          subvalue={
+            profile.recency_percentile != null
+              ? t("customerDetail.kpi.percentileVsPop", { n: Math.round(profile.recency_percentile * 100) })
+              : undefined
+          }
+        />
+        <KpiBadge
+          label={t("customerDetail.kpi.avgTicket")}
+          value={profile.avg_ticket != null ? `R$ ${Math.round(profile.avg_ticket)}` : "—"}
+          tooltip={t("customerDetail.kpi.avgTicketTooltip")}
+          subvalue={
+            profile.avg_ticket_percentile != null
+              ? t("customerDetail.kpi.percentileVsPop", { n: Math.round(profile.avg_ticket_percentile * 100) })
+              : undefined
+          }
+        />
+        <KpiBadge
+          label={t("customerDetail.kpi.avgDaysBetweenTx")}
+          value={profile.avg_days_between_tx != null ? `${profile.avg_days_between_tx.toFixed(1)} days` : "—"}
+          tooltip={t("customerDetail.kpi.avgDaysBetweenTxTooltip")}
+          subvalue={
+            profile.avg_days_between_tx_percentile != null
+              ? t("customerDetail.kpi.percentileVsPop", { n: Math.round(profile.avg_days_between_tx_percentile * 100) })
+              : undefined
+          }
+        />
+        <KpiBadge
           label={t("customerDetail.kpi.acquisitionCost")}
           value={profile.acquisition_cost != null ? `R$ ${Math.round(profile.acquisition_cost)}` : "—"}
           tooltip={t("customerDetail.kpi.acquisitionCostTooltip")}

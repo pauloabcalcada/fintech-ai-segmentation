@@ -309,6 +309,33 @@ describe("CustomerDetailInline", () => {
   });
 
   // ---------------------------------------------------------------------------
+  // Cycle 5-C — New metric badges
+  // ---------------------------------------------------------------------------
+
+  describe("new metric badges", () => {
+    it("renders Recency badge with value and percentile subvalue", async () => {
+      renderInline();
+      await screen.findByText("Ana Lima");
+      expect(screen.getByText("7 days")).toBeInTheDocument();
+      expect(screen.getByText("p91 vs pop.")).toBeInTheDocument();
+    });
+
+    it("renders Avg Ticket badge with value and percentile subvalue", async () => {
+      renderInline();
+      await screen.findByText("Ana Lima");
+      expect(screen.getByText("R$ 151")).toBeInTheDocument();
+      expect(screen.getByText("p65 vs pop.")).toBeInTheDocument();
+    });
+
+    it("renders Tx Frequency badge with value and percentile subvalue", async () => {
+      renderInline();
+      await screen.findByText("Ana Lima");
+      expect(screen.getByText("14.2 days")).toBeInTheDocument();
+      expect(screen.getByText("p78 vs pop.")).toBeInTheDocument();
+    });
+  });
+
+  // ---------------------------------------------------------------------------
   // Task 4 — KpiBadge subvalue prop
   // ---------------------------------------------------------------------------
 
@@ -340,10 +367,10 @@ describe("CustomerDetailInline", () => {
       expect(rfmBadge.querySelector("[data-testid='info-tooltip-trigger']")).toBeInTheDocument();
     });
 
-    it("renders exactly 4 tooltip triggers after dropping 2 badges", async () => {
+    it("renders exactly 7 tooltip triggers — one per KPI badge", async () => {
       renderInline();
       await screen.findByText("Ana Lima");
-      expect(screen.getAllByTestId("info-tooltip-trigger")).toHaveLength(4);
+      expect(screen.getAllByTestId("info-tooltip-trigger")).toHaveLength(7);
     });
 
     it("hovering the RFM Score tooltip trigger shows tooltip text", async () => {
@@ -369,12 +396,15 @@ describe("CustomerDetailInline", () => {
       fireEvent.mouseLeave(trigger);
     });
 
-    it("all 4 remaining KPI badges render a tooltip trigger", async () => {
+    it("all 7 KPI badges render a tooltip trigger", async () => {
       renderInline();
       await screen.findByText("Ana Lima");
       const labels = [
         "RFM Score",
         "Tenure",
+        "Recency",
+        "Avg Ticket",
+        "Tx Frequency",
         "Acq. Cost",
         "Activity Trend",
       ];
