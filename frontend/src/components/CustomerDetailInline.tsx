@@ -112,12 +112,6 @@ function ActivityTimeline({ timeline }: { timeline: ActivityTimelineEntry[] }) {
   );
 }
 
-function clusterPositionLabel(pos: CustomerProfile["cluster_position"]) {
-  if (pos === "top_20") return "Top 20%";
-  if (pos === "bottom_20") return "Bottom 20%";
-  if (pos === "mid_60") return "Mid 60%";
-  return "—";
-}
 
 const PRODUCTS: { hasKey: keyof CustomerProfile; i18nKey: string }[] = [
   { hasKey: "has_wallet", i18nKey: "customerDetail.products.wallet" },
@@ -199,11 +193,6 @@ export function CustomerDetailInline({
           tooltip={t("customerDetail.kpi.rfmScoreTooltip")}
         />
         <KpiBadge
-          label={t("customerDetail.kpi.clusterRank")}
-          value={clusterPositionLabel(profile.cluster_position)}
-          tooltip={t("customerDetail.kpi.clusterRankTooltip")}
-        />
-        <KpiBadge
           label={t("customerDetail.kpi.tenure")}
           value={t("customerDetail.kpi.tenureValue", { months: profile.tenure_months })}
           tooltip={t("customerDetail.kpi.tenureTooltip")}
@@ -226,11 +215,6 @@ export function CustomerDetailInline({
               ? t("customerDetail.kpi.percentileVsPop", { n: Math.round(profile.activity_trend_percentile * 100) })
               : undefined
           }
-        />
-        <KpiBadge
-          label={t("customerDetail.kpi.earlyWindowFreq")}
-          value={profile.early_window_freq_ratio?.toFixed(2) ?? "—"}
-          tooltip={t("customerDetail.kpi.earlyWindowFreqTooltip")}
         />
       </div>
 

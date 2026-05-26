@@ -154,11 +154,10 @@ describe("CustomerDetailInline", () => {
     expect(screen.getByText("Ana Lima")).toBeInTheDocument();
   });
 
-  it("renders KPI badges for rfm_score, cluster_rank, and tenure", async () => {
+  it("renders KPI badges for rfm_score and tenure", async () => {
     renderInline();
     await screen.findByText("Ana Lima");
     expect(screen.getByText("4.50")).toBeInTheDocument();
-    expect(screen.getByText("Top 20%")).toBeInTheDocument();
     expect(screen.getByText("28 months")).toBeInTheDocument();
   });
 
@@ -168,27 +167,22 @@ describe("CustomerDetailInline", () => {
     expect(screen.getByText("R$ 240")).toBeInTheDocument();
   });
 
-  it("renders Activity Trend Ratio badge as '1.23'", async () => {
+  it("renders Activity Trend badge with transformed [-1,1] value", async () => {
+    // FIXTURE has activity_trend_ratio: 1.23 → (1.23-1)/(1.23+1) ≈ 0.10
     renderInline();
     await screen.findByText("Ana Lima");
-    expect(screen.getByText("1.23")).toBeInTheDocument();
+    expect(screen.getByText("0.10")).toBeInTheDocument();
   });
 
-  it("renders Early Window Freq. Ratio badge as '0.87'", async () => {
-    renderInline();
-    await screen.findByText("Ana Lima");
-    expect(screen.getByText("0.87")).toBeInTheDocument();
-  });
-
-  it("renders em-dash for null activity_trend_ratio and early_window_freq_ratio", async () => {
+  it("renders em-dash for null activity_trend_ratio", async () => {
     mockFetchCustomerProfile.mockResolvedValueOnce({
       ...FIXTURE,
-      data: { ...FIXTURE.data, activity_trend_ratio: null, early_window_freq_ratio: null },
+      data: { ...FIXTURE.data, activity_trend_ratio: null },
     });
     renderInline();
     await screen.findByText("Ana Lima");
     const dashes = screen.getAllByText("—");
-    expect(dashes.length).toBeGreaterThanOrEqual(2);
+    expect(dashes.length).toBeGreaterThanOrEqual(1);
   });
 
   it("does not render a lifecycle KPI badge", async () => {
@@ -227,11 +221,9 @@ describe("CustomerDetailInline", () => {
   it("renders Portuguese KPI badge labels when language is pt-BR", async () => {
     renderInline("pt-BR");
     await screen.findByText("Ana Lima");
-    expect(screen.getByText("Posição no Segmento")).toBeInTheDocument();
     expect(screen.getByText("Tempo de Conta")).toBeInTheDocument();
     expect(screen.getByText("Custo de Aquisição")).toBeInTheDocument();
     expect(screen.getByText("Tendência de Atividade")).toBeInTheDocument();
-    expect(screen.getByText("Freq. Janela Inicial")).toBeInTheDocument();
   });
 
   it("renders Portuguese products section header when language is pt-BR", async () => {
@@ -281,6 +273,42 @@ describe("CustomerDetailInline", () => {
   });
 
   // ---------------------------------------------------------------------------
+  // Cycle 5-A — Activity trend transformation
+  // ---------------------------------------------------------------------------
+
+  describe("activity trend transformation", () => {
+    it("displays activity_trend_ratio transformed to [-1,1] scale, not the raw ratio", async () => {
+      mockFetchCustomerProfile.mockResolvedValueOnce({
+        ...FIXTURE,
+        data: { ...FIXTURE.data, activity_trend_ratio: 3.0 },
+      });
+      renderInline();
+      await screen.findByText("Ana Lima");
+      // (3 - 1) / (3 + 1) = 0.50
+      expect(screen.getByText("0.50")).toBeInTheDocument();
+      expect(screen.queryByText("3.00")).not.toBeInTheDocument();
+    });
+  });
+
+  // ---------------------------------------------------------------------------
+  // Cycle 5-B — Dropped badges
+  // ---------------------------------------------------------------------------
+
+  describe("dropped badges", () => {
+    it("does not render a Cluster Rank badge", async () => {
+      renderInline();
+      await screen.findByText("Ana Lima");
+      expect(screen.queryByText("Cluster Rank")).not.toBeInTheDocument();
+    });
+
+    it("does not render an Early Freq. Ratio badge", async () => {
+      renderInline();
+      await screen.findByText("Ana Lima");
+      expect(screen.queryByText("Early Freq. Ratio")).not.toBeInTheDocument();
+    });
+  });
+
+  // ---------------------------------------------------------------------------
   // Task 4 — KpiBadge subvalue prop
   // ---------------------------------------------------------------------------
 
@@ -312,10 +340,10 @@ describe("CustomerDetailInline", () => {
       expect(rfmBadge.querySelector("[data-testid='info-tooltip-trigger']")).toBeInTheDocument();
     });
 
-    it("renders exactly 6 tooltip triggers — one per KPI badge", async () => {
+    it("renders exactly 4 tooltip triggers after dropping 2 badges", async () => {
       renderInline();
       await screen.findByText("Ana Lima");
-      expect(screen.getAllByTestId("info-tooltip-trigger")).toHaveLength(6);
+      expect(screen.getAllByTestId("info-tooltip-trigger")).toHaveLength(4);
     });
 
     it("hovering the RFM Score tooltip trigger shows tooltip text", async () => {
@@ -341,16 +369,14 @@ describe("CustomerDetailInline", () => {
       fireEvent.mouseLeave(trigger);
     });
 
-    it("all 6 KPI badges render a tooltip trigger", async () => {
+    it("all 4 remaining KPI badges render a tooltip trigger", async () => {
       renderInline();
       await screen.findByText("Ana Lima");
       const labels = [
         "RFM Score",
-        "Cluster Rank",
         "Tenure",
         "Acq. Cost",
         "Activity Trend",
-        "Early Freq. Ratio",
       ];
       for (const label of labels) {
         const badge = screen.getByText(label).closest("div")!;
