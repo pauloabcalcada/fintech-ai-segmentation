@@ -75,7 +75,6 @@ class CustomerProfile(BaseModel):
     cluster_product_profile: ClusterProductProfile | None
     cached_recommendation: dict | None = None
     activity_trend_ratio: float | None = None
-    early_window_freq_ratio: float | None = None
     avg_ticket: float | None = None
     avg_days_between_tx: float | None = None
     activity_trend_percentile: float | None = None

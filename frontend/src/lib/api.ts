@@ -90,7 +90,6 @@ export interface CustomerProfile {
   cluster_product_profile: ClusterProductProfile | null;
   cached_recommendation: CachedRecommendation | null;
   activity_trend_ratio: number | null;
-  early_window_freq_ratio: number | null;
   avg_ticket: number | null;
   avg_days_between_tx: number | null;
   activity_trend_percentile: number | null;

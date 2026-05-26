@@ -48,7 +48,6 @@ _PROFILE_SQL = text("""
             ca.has_insurance,
             ca.has_loan,
             ca.activity_trend_ratio,
-            ca.early_window_freq_ratio,
             ca.avg_ticket,
             ca.avg_days_between_tx,
             (
@@ -333,11 +332,6 @@ class CustomerRepository:
             activity_trend_ratio=(
                 float(row["activity_trend_ratio"])
                 if row["activity_trend_ratio"] is not None
-                else None
-            ),
-            early_window_freq_ratio=(
-                float(row["early_window_freq_ratio"])
-                if row["early_window_freq_ratio"] is not None
                 else None
             ),
             avg_ticket=(

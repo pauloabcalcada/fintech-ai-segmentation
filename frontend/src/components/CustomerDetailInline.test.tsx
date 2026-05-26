@@ -38,7 +38,6 @@ const FIXTURE = {
     acquisition_channel: "organic",
     acquisition_cost: 240,
     activity_trend_ratio: 1.23,
-    early_window_freq_ratio: 0.87,
     registration_date: "2023-01-15",
     tenure_months: 28,
     cluster_name: "high_value_active",
