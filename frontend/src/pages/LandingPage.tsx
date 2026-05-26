@@ -94,6 +94,40 @@ export function LandingPage() {
         </div>
       </section>
 
+      {/* How It Works — 02 */}
+      <section
+        id="how-it-works"
+        className="mx-auto max-w-6xl scroll-mt-16 px-6 py-16"
+      >
+        <div className="mb-2 text-xs font-semibold uppercase tracking-widest text-primary">
+          {t("landing.howItWorks.sectionLabel")}
+        </div>
+        <h2 className="mb-10 text-3xl font-bold tracking-tight text-foreground">
+          {t("landing.howItWorks.heading")}
+        </h2>
+        <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
+          {(t("landing.howItWorks.cards", { returnObjects: true }) as Array<{
+            badge: string; category: string; title: string; why: string;
+          }>).map((card) => (
+            <div
+              key={card.badge}
+              className="rounded-xl border border-border bg-card p-5"
+            >
+              <div className="mb-3 flex items-center gap-2">
+                <span className="flex size-7 items-center justify-center rounded-full bg-primary/10 text-xs font-bold text-primary">
+                  {card.badge}
+                </span>
+                <span className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">
+                  {card.category}
+                </span>
+              </div>
+              <h3 className="mb-2 font-semibold text-foreground">{card.title}</h3>
+              <p className="text-sm leading-relaxed text-muted-foreground">{card.why}</p>
+            </div>
+          ))}
+        </div>
+      </section>
+
       <div className="mx-auto max-w-3xl space-y-10 px-6 pb-24">
         {/* What this is */}
         <section className="rounded-xl border border-border bg-card p-6">

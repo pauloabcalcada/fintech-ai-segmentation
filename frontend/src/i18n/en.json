@@ -192,6 +192,36 @@
       "cta": "Open Dashboard →",
       "ctaCustomers": "Browse Customers"
     },
+    "howItWorks": {
+      "sectionLabel": "02 · How It Works",
+      "heading": "Four layers, one coherent system",
+      "cards": [
+        {
+          "badge": "01",
+          "category": "DATA",
+          "title": "Synthetic Generation",
+          "why": "Faker pt_BR produces 8,000 customers with behaviorally distinct segments — because uniform random noise hides the segments we want to find."
+        },
+        {
+          "badge": "02",
+          "category": "FEATURES",
+          "title": "RFM + Cohort Analysis",
+          "why": "Pandas and Scikit-learn turn raw transactions into recency, frequency, and monetary scores — the three dimensions that predict customer lifetime value."
+        },
+        {
+          "badge": "03",
+          "category": "AGENT",
+          "title": "LangGraph Conditional Routing",
+          "why": "LangGraph with OpenRouter routes each customer through a 4-node conditional graph — so recommendations are grounded in structured data, not generic LLM hallucinations."
+        },
+        {
+          "badge": "04",
+          "category": "SURFACE",
+          "title": "Business Dashboard",
+          "why": "React + Vite + Tailwind + shadcn/ui gives the commercial manager a zero-SQL interface — no spreadsheets, no SQL, no engineering dependency."
+        }
+      ]
+    },
     "about": {
       "heading": "What this is",
       "body": "SynaptiqPay is a Brazilian fintech with 8,000 digital wallet customers. This system replaces manual, one-size-fits-all customer treatment with a segmentation and AI-driven workflow that identifies customer value, behaviour patterns, churn risk, and recommends next actions. Customer data is synthetic, generated with realistic Brazilian demographics and statistical behavioural models."

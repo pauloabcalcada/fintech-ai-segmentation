@@ -62,4 +62,58 @@ describe("LandingPage", () => {
     const { container } = renderLanding();
     expect(container.firstChild).toHaveClass("dark");
   });
+
+  // Issue #43 — Hero section
+  it("hero metrics panel displays all 6 hardcoded values", () => {
+    renderLanding();
+    const panel = screen.getByTestId("hero-metrics");
+    expect(panel).toHaveTextContent("8,000");
+    expect(panel).toHaveTextContent("4");
+    expect(panel).toHaveTextContent("3");
+    expect(panel).toHaveTextContent("50");
+    expect(panel).toHaveTextContent("1.4s");
+    expect(panel).toHaveTextContent("4");
+  });
+
+  it("hero secondary CTA links to /customers", () => {
+    renderLanding();
+    const links = screen.getAllByRole("link");
+    const customersLink = links.find((l) => l.getAttribute("href") === "/customers");
+    expect(customersLink).toBeTruthy();
+  });
+
+  it("hero heading renders correctly in PT-BR", () => {
+    renderLanding("pt-BR");
+    expect(screen.getByRole("heading", { name: /synaptiqpay ai segmentation/i })).toBeInTheDocument();
+  });
+
+  // Issue #44 — How It Works section
+  it("how-it-works section has id='how-it-works'", () => {
+    renderLanding();
+    expect(document.getElementById("how-it-works")).toBeInTheDocument();
+  });
+
+  it("how-it-works section renders 4 cards with badges 01–04", () => {
+    renderLanding();
+    const section = document.getElementById("how-it-works")!;
+    expect(section).toHaveTextContent("01");
+    expect(section).toHaveTextContent("02");
+    expect(section).toHaveTextContent("03");
+    expect(section).toHaveTextContent("04");
+  });
+
+  it("how-it-works section renders category labels DATA, FEATURES, AGENT, SURFACE", () => {
+    renderLanding();
+    const section = document.getElementById("how-it-works")!;
+    expect(section).toHaveTextContent("DATA");
+    expect(section).toHaveTextContent("FEATURES");
+    expect(section).toHaveTextContent("AGENT");
+    expect(section).toHaveTextContent("SURFACE");
+  });
+
+  it("how-it-works renders in PT-BR without missing-key fallbacks", () => {
+    renderLanding("pt-BR");
+    const section = document.getElementById("how-it-works")!;
+    expect(section).not.toHaveTextContent("landing.howItWorks");
+  });
 });

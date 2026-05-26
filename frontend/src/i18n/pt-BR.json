@@ -192,6 +192,36 @@
       "cta": "Abrir Painel →",
       "ctaCustomers": "Ver Clientes"
     },
+    "howItWorks": {
+      "sectionLabel": "02 · Como Funciona",
+      "heading": "Quatro camadas, um sistema coerente",
+      "cards": [
+        {
+          "badge": "01",
+          "category": "DATA",
+          "title": "Geração Sintética",
+          "why": "Faker pt_BR produz 8.000 clientes com segmentos comportamentalmente distintos — porque ruído aleatório uniforme esconde os segmentos que queremos encontrar."
+        },
+        {
+          "badge": "02",
+          "category": "FEATURES",
+          "title": "RFM + Análise de Coorte",
+          "why": "Pandas e Scikit-learn transformam transações brutas em pontuações de recência, frequência e valor monetário — as três dimensões que preveem o valor vitalício do cliente."
+        },
+        {
+          "badge": "03",
+          "category": "AGENT",
+          "title": "Roteamento Condicional LangGraph",
+          "why": "LangGraph com OpenRouter roteia cada cliente por um grafo condicional de 4 nós — para que as recomendações sejam baseadas em dados estruturados, não em alucinações genéricas de LLM."
+        },
+        {
+          "badge": "04",
+          "category": "SURFACE",
+          "title": "Painel de Negócios",
+          "why": "React + Vite + Tailwind + shadcn/ui oferece ao gerente comercial uma interface sem SQL — sem planilhas, sem SQL, sem dependência de engenharia."
+        }
+      ]
+    },
     "about": {
       "heading": "O que é isso",
       "body": "A SynaptiqPay é uma fintech brasileira com 8.000 clientes de carteira digital. Este sistema substitui o tratamento manual e uniforme por um fluxo de segmentação e IA que identifica o valor do cliente, padrões de comportamento, risco de churn e recomenda próximas ações. Os dados dos clientes são sintéticos, gerados com demografia brasileira realista e modelos estatísticos de comportamento."
