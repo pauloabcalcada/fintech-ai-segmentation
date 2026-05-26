@@ -10,7 +10,7 @@ import {
   Tooltip,
   ResponsiveContainer,
 } from "recharts";
-import { Skeleton } from "@/components/ui/skeleton";
+import { SpinnerWords } from "@/components/SpinnerWords";
 import { AiRecommendationPanel } from "@/components/AiRecommendationPanel";
 import { InfoTooltip } from "@/components/ui/InfoTooltip";
 import {
@@ -158,19 +158,7 @@ export function CustomerDetailInline({
   }, [customerId, cachedData, onLoaded]);
 
   if (loading) {
-    return (
-      <div
-        className="p-6 flex flex-col gap-4"
-        data-testid="customer-detail-inline-loading"
-      >
-        <Skeleton className="h-24 rounded-lg" />
-        <div className="flex gap-3">
-          {Array.from({ length: 3 }).map((_, i) => (
-            <Skeleton key={i} className="h-16 w-32 rounded-lg" />
-          ))}
-        </div>
-      </div>
-    );
+    return <SpinnerWords />;
   }
 
   if (error || !profile) return null;
