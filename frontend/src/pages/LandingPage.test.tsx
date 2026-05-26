@@ -139,4 +139,28 @@ describe("LandingPage", () => {
     const section = screen.getByTestId("pipeline-section");
     expect(section).not.toHaveTextContent("landing.pipeline");
   });
+
+  // Issue #46 — Dashboard preview section
+  it("dashboard section has id='dashboard'", () => {
+    renderLanding();
+    expect(document.getElementById("dashboard")).toBeInTheDocument();
+  });
+
+  it("dashboard section renders an img element for the preview screenshot", () => {
+    renderLanding();
+    const section = document.getElementById("dashboard")!;
+    expect(section.querySelector("img")).toBeInTheDocument();
+  });
+
+  it("dashboard section has a browser-chrome frame wrapper with a mock URL bar", () => {
+    renderLanding();
+    const section = document.getElementById("dashboard")!;
+    expect(section.querySelector("[data-testid='browser-chrome']")).toBeInTheDocument();
+  });
+
+  it("dashboard renders in PT-BR without missing-key fallbacks", () => {
+    renderLanding("pt-BR");
+    const section = document.getElementById("dashboard")!;
+    expect(section).not.toHaveTextContent("landing.dashboard");
+  });
 });

@@ -5,6 +5,7 @@ import { buttonVariants } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import { LandingNavbar } from "@/components/LandingNavbar";
+import dashboardPreview from "@/assets/dashboard-preview.png";
 
 const TECH_STACK = [
   "Faker", "Pandas", "Scikit-learn", "LangGraph",
@@ -125,6 +126,46 @@ export function LandingPage() {
               <p className="text-sm leading-relaxed text-muted-foreground">{card.why}</p>
             </div>
           ))}
+        </div>
+      </section>
+
+      {/* Dashboard Preview — 04 */}
+      <section
+        id="dashboard"
+        className="mx-auto max-w-6xl scroll-mt-16 px-6 py-16"
+      >
+        <div className="grid grid-cols-1 gap-10 lg:grid-cols-2 lg:items-center">
+          <div>
+            <div className="mb-2 text-xs font-semibold uppercase tracking-widest text-primary">
+              {t("landing.dashboard.sectionLabel")}
+            </div>
+            <h2 className="mb-4 text-3xl font-bold tracking-tight text-foreground">
+              {t("landing.dashboard.heading")}
+            </h2>
+            <p className="text-base leading-relaxed text-muted-foreground">
+              {t("landing.dashboard.body")}
+            </p>
+          </div>
+          <div>
+            <div
+              data-testid="browser-chrome"
+              className="overflow-hidden rounded-xl border border-border bg-gray-900 shadow-2xl"
+            >
+              <div className="flex items-center gap-2 border-b border-border px-4 py-2.5">
+                <span className="size-3 rounded-full bg-red-500" />
+                <span className="size-3 rounded-full bg-yellow-500" />
+                <span className="size-3 rounded-full bg-green-500" />
+                <span className="ml-3 flex-1 rounded bg-gray-800 px-3 py-1 text-xs text-gray-400">
+                  {t("landing.dashboard.urlBar")}
+                </span>
+              </div>
+              <img
+                src={dashboardPreview}
+                alt="SynaptiqPay dashboard preview"
+                className="w-full"
+              />
+            </div>
+          </div>
         </div>
       </section>
 

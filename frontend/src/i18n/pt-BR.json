@@ -222,6 +222,12 @@
         }
       ]
     },
+    "dashboard": {
+      "sectionLabel": "04 · Prévia do Painel",
+      "heading": "Sem SQL. Sem planilhas.",
+      "body": "O gerente comercial interage com um painel React — filtra por segmento, expande um cliente, aciona o agente de IA, copia a notificação push.",
+      "urlBar": "fintech-ai-segmentation.up.railway.app/dashboard"
+    },
     "pipeline": {
       "sectionLabel": "03 · Pipeline",
       "heading": "Fluxo de dados de ponta a ponta",

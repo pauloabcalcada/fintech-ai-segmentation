@@ -222,6 +222,12 @@
         }
       ]
     },
+    "dashboard": {
+      "sectionLabel": "04 · Dashboard Preview",
+      "heading": "No SQL. No spreadsheets.",
+      "body": "The commercial manager interacts with a React dashboard — filter by segment, expand a customer, trigger the AI agent, copy the push notification.",
+      "urlBar": "fintech-ai-segmentation.up.railway.app/dashboard"
+    },
     "pipeline": {
       "sectionLabel": "03 · Pipeline",
       "heading": "End-to-end data flow",
