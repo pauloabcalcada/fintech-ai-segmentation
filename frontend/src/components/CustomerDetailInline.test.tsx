@@ -336,6 +336,20 @@ describe("CustomerDetailInline", () => {
   });
 
   // ---------------------------------------------------------------------------
+  // Cycle 5-D — Acquisition cost percentile
+  // ---------------------------------------------------------------------------
+
+  describe("acquisition cost percentile", () => {
+    it("renders acquisition cost with percentile subvalue", async () => {
+      renderInline();
+      await screen.findByText("Ana Lima");
+      expect(screen.getByText("R$ 240")).toBeInTheDocument();
+      // FIXTURE has acquisition_cost_percentile: 0.72 → p72
+      expect(screen.getByText("p72 vs pop.")).toBeInTheDocument();
+    });
+  });
+
+  // ---------------------------------------------------------------------------
   // Task 4 — KpiBadge subvalue prop
   // ---------------------------------------------------------------------------
 
@@ -345,13 +359,13 @@ describe("CustomerDetailInline", () => {
         ...FIXTURE,
         data: {
           ...FIXTURE.data,
-          activity_trend_percentile: 0.72,
+          activity_trend_percentile: 0.57,
         },
       });
       renderInline();
       await screen.findByText("Ana Lima");
-      // activity_trend_percentile 0.72 → "p72 vs pop."
-      expect(screen.getByText("p72 vs pop.")).toBeInTheDocument();
+      // activity_trend_percentile 0.57 → "p57 vs pop." (unique value)
+      expect(screen.getByText("p57 vs pop.")).toBeInTheDocument();
     });
   });
 

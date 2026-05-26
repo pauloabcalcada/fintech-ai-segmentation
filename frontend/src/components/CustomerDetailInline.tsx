@@ -231,6 +231,11 @@ export function CustomerDetailInline({
           label={t("customerDetail.kpi.acquisitionCost")}
           value={profile.acquisition_cost != null ? `R$ ${Math.round(profile.acquisition_cost)}` : "—"}
           tooltip={t("customerDetail.kpi.acquisitionCostTooltip")}
+          subvalue={
+            profile.acquisition_cost_percentile != null
+              ? t("customerDetail.kpi.percentileVsPop", { n: Math.round(profile.acquisition_cost_percentile * 100) })
+              : undefined
+          }
         />
         <KpiBadge
           label={t("customerDetail.kpi.activityTrend")}
