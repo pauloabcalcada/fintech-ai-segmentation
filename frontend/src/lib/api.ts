@@ -91,6 +91,13 @@ export interface CustomerProfile {
   cached_recommendation: CachedRecommendation | null;
   activity_trend_ratio: number | null;
   early_window_freq_ratio: number | null;
+  avg_ticket: number | null;
+  avg_days_between_tx: number | null;
+  activity_trend_percentile: number | null;
+  acquisition_cost_percentile: number | null;
+  recency_percentile: number | null;
+  avg_ticket_percentile: number | null;
+  avg_days_between_tx_percentile: number | null;
 }
 
 export interface ActivityTimelineEntry {

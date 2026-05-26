@@ -127,13 +127,22 @@
     },
     "kpi": {
       "rfmScore": "RFM Score",
-      "clusterRank": "Cluster Rank",
+      "rfmScoreTooltip": "Composite behavioral score (1–5) combining recency, frequency, and monetary signals. ≥ 4.0 = strong · 2.5–3.9 = moderate · < 2.5 = at risk.",
       "tenure": "Tenure",
+      "tenureTooltip": "Months since registration. Longer tenure means deeper relationship history. No universal threshold.",
       "tenureValue": "{{months}} months",
       "lifecycle": "Lifecycle",
+      "recencyDays": "Recency",
+      "recencyDaysTooltip": "Days since last transaction. Lower is better — a customer active yesterday scores lower than one inactive for 90 days. Percentile is inverted: p95 means more recent than 95% of the population.",
+      "avgTicket": "Avg Ticket",
+      "avgTicketTooltip": "Average transaction value in BRL. Higher tickets indicate greater spending power. p95 means higher than 95% of the population.",
+      "avgDaysBetweenTx": "Tx Frequency",
+      "avgDaysBetweenTxTooltip": "Average days between transactions. Lower means more frequent engagement. Percentile is inverted: p95 means more frequent than 95% of the population.",
       "acquisitionCost": "Acq. Cost",
+      "acquisitionCostTooltip": "R$ invested to acquire this customer. Lower is better for unit economics. High cost + low RFM = poor ROI. Percentile is inverted: p95 means lower cost than 95% of the population.",
       "activityTrend": "Activity Trend",
-      "earlyWindowFreq": "Early Freq. Ratio"
+      "activityTrendTooltip": "Direction of engagement over the analysis window, scaled to [−1, +1]. +1 = strongly growing, 0 = stable, −1 = strongly declining. Percentile ranks this customer's trend vs the full population.",
+      "percentileVsPop": "p{{n}} vs pop."
     },
     "chart": {
       "toggle": {

@@ -127,13 +127,22 @@
     },
     "kpi": {
       "rfmScore": "RFM Score",
-      "clusterRank": "Posição no Segmento",
+      "rfmScoreTooltip": "Pontuação comportamental composta (1–5) combinando recência, frequência e valor monetário. ≥ 4,0 = forte · 2,5–3,9 = moderado · < 2,5 = em risco.",
       "tenure": "Tempo de Conta",
+      "tenureTooltip": "Meses desde o cadastro. Maior tempo indica histórico de relacionamento mais profundo. Sem limite universal.",
       "tenureValue": "{{months}} meses",
       "lifecycle": "Ciclo de Vida",
+      "recencyDays": "Recência",
+      "recencyDaysTooltip": "Dias desde a última transação. Menor é melhor — cliente ativo ontem tem recência mais baixa que um inativo há 90 dias. Percentil invertido: p95 significa mais recente que 95% da população.",
+      "avgTicket": "Ticket Médio",
+      "avgTicketTooltip": "Valor médio por transação em BRL. Tickets maiores indicam maior poder de compra. p95 significa maior que 95% da população.",
+      "avgDaysBetweenTx": "Freq. Transações",
+      "avgDaysBetweenTxTooltip": "Média de dias entre transações. Menor significa engajamento mais frequente. Percentil invertido: p95 significa mais frequente que 95% da população.",
       "acquisitionCost": "Custo de Aquisição",
+      "acquisitionCostTooltip": "R$ investido para adquirir este cliente. Menor é melhor para economia unitária. Custo alto + RFM baixo = ROI ruim. Percentil invertido: p95 significa custo menor que 95% da população.",
       "activityTrend": "Tendência de Atividade",
-      "earlyWindowFreq": "Freq. Janela Inicial"
+      "activityTrendTooltip": "Direção do engajamento na janela de análise, escalonada para [−1, +1]. +1 = crescendo fortemente, 0 = estável, −1 = declinando fortemente. O percentil compara a tendência deste cliente com toda a população.",
+      "percentileVsPop": "p{{n}} vs pop."
     },
     "chart": {
       "toggle": {
