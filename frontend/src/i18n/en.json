@@ -222,6 +222,25 @@
         }
       ]
     },
+    "stack": {
+      "sectionLabel": "06 · Tech Stack",
+      "heading": "Tools chosen for reasons, not trends",
+      "filterAll": "ALL",
+      "tools": [
+        { "name": "Faker", "category": "DATA", "why": "Generates realistic Brazilian customer data with built-in pt_BR locale support — no real PII needed." },
+        { "name": "Pandas", "category": "DATA", "why": "Vectorised transforms for RFM scoring and cohort pivots — fast enough for 8,000 customers without a data warehouse." },
+        { "name": "Supabase / Postgres", "category": "DATA", "why": "Managed Postgres with a free tier — zero ops overhead, direct psql COPY for bulk loads." },
+        { "name": "SQLAlchemy", "category": "DATA", "why": "Bound-parameter queries as the only SQL interface — eliminates injection risk at the API layer." },
+        { "name": "Scikit-learn", "category": "ML & AI", "why": "K-Means clustering on RFM features produces three interpretable operational segments without label noise." },
+        { "name": "LangGraph", "category": "ML & AI", "why": "Conditional graph routing ties structured customer data to the LLM call — prevents hallucinations on generic prompts." },
+        { "name": "OpenRouter", "category": "ML & AI", "why": "Single API key for free-tier LLMs (Gemini Flash, LLaMA 70B) — no billing commitment during development." },
+        { "name": "FastAPI", "category": "API", "why": "Auto-generated OpenAPI docs and async support with minimal boilerplate — ideal for a small, typed Python API." },
+        { "name": "React + Vite", "category": "FRONTEND", "why": "Sub-second HMR during development and a tiny production bundle — no Create React App overhead." },
+        { "name": "Tailwind + shadcn/ui", "category": "FRONTEND", "why": "Unstyled component primitives + utility classes give full design control without a heavy component library." },
+        { "name": "Recharts", "category": "FRONTEND", "why": "Composable SVG charts with a React-native API — cohort heatmap and segment breakdown without D3 complexity." },
+        { "name": "Railway", "category": "OPS", "why": "One-command deploys from GitHub with automatic HTTPS — faster to ship than Render's 50s cold-start free tier." }
+      ]
+    },
     "agent": {
       "sectionLabel": "05 · AI Agent",
       "heading": "Watch a customer profile become a retention action",
@@ -248,10 +267,6 @@
     "about": {
       "heading": "What this is",
       "body": "SynaptiqPay is a Brazilian fintech with 8,000 digital wallet customers. This system replaces manual, one-size-fits-all customer treatment with a segmentation and AI-driven workflow that identifies customer value, behaviour patterns, churn risk, and recommends next actions. Customer data is synthetic, generated with realistic Brazilian demographics and statistical behavioural models."
-    },
-    "stack": {
-      "heading": "Tech Stack",
-      "items": "Faker · Pandas · Scikit-learn · LangGraph · FastAPI · React · Supabase · Vercel · Fly.io"
     },
     "outOfScope": {
       "heading": "Out of Scope",

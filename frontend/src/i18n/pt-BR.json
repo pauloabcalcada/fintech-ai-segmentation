@@ -250,8 +250,23 @@
       "body": "A SynaptiqPay é uma fintech brasileira com 8.000 clientes de carteira digital. Este sistema substitui o tratamento manual e uniforme por um fluxo de segmentação e IA que identifica o valor do cliente, padrões de comportamento, risco de churn e recomenda próximas ações. Os dados dos clientes são sintéticos, gerados com demografia brasileira realista e modelos estatísticos de comportamento."
     },
     "stack": {
-      "heading": "Stack Tecnológica",
-      "items": "Faker · Pandas · Scikit-learn · LangGraph · FastAPI · React · Supabase · Vercel · Fly.io"
+      "sectionLabel": "06 · Stack Tecnológica",
+      "heading": "Ferramentas escolhidas por razões, não por modas",
+      "filterAll": "TODOS",
+      "tools": [
+        { "name": "Faker", "category": "DATA", "why": "Gera dados de clientes brasileiros realistas com suporte nativo ao locale pt_BR — sem PII real necessária." },
+        { "name": "Pandas", "category": "DATA", "why": "Transformações vetorizadas para pontuação RFM e pivôs de coorte — rápido o suficiente para 8.000 clientes sem data warehouse." },
+        { "name": "Supabase / Postgres", "category": "DATA", "why": "Postgres gerenciado com tier gratuito — zero overhead de ops, COPY direto via psql para cargas em massa." },
+        { "name": "SQLAlchemy", "category": "DATA", "why": "Queries com parâmetros ligados como única interface SQL — elimina risco de injeção na camada da API." },
+        { "name": "Scikit-learn", "category": "ML & AI", "why": "Clustering K-Means em features RFM produz três segmentos operacionais interpretáveis sem ruído de rótulos." },
+        { "name": "LangGraph", "category": "ML & AI", "why": "Roteamento condicional em grafo conecta dados estruturados do cliente à chamada LLM — previne alucinações." },
+        { "name": "OpenRouter", "category": "ML & AI", "why": "Chave de API única para LLMs de tier gratuito (Gemini Flash, LLaMA 70B) — sem compromisso de cobrança no desenvolvimento." },
+        { "name": "FastAPI", "category": "API", "why": "Docs OpenAPI gerados automaticamente e suporte async com mínimo boilerplate — ideal para API Python pequena e tipada." },
+        { "name": "React + Vite", "category": "FRONTEND", "why": "HMR em menos de um segundo no desenvolvimento e bundle de produção enxuto — sem overhead do Create React App." },
+        { "name": "Tailwind + shadcn/ui", "category": "FRONTEND", "why": "Primitivos de componentes sem estilo + classes utilitárias dão controle total de design sem biblioteca pesada." },
+        { "name": "Recharts", "category": "FRONTEND", "why": "Gráficos SVG combináveis com API nativa React — heatmap de coorte e breakdown de segmento sem complexidade D3." },
+        { "name": "Railway", "category": "OPS", "why": "Deploy em um comando pelo GitHub com HTTPS automático — mais rápido de subir que o cold-start de 50s do Render." }
+      ]
     },
     "outOfScope": {
       "heading": "Fora do Escopo",

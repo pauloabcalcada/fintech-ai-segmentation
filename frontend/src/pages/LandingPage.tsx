@@ -2,15 +2,11 @@ import { useTranslation } from "react-i18next";
 import { Link } from "react-router-dom";
 import { ArrowRight, ExternalLink } from "lucide-react";
 import { buttonVariants } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import { LandingNavbar } from "@/components/LandingNavbar";
+import { TechStackGrid } from "@/components/TechStackGrid";
 import dashboardPreview from "@/assets/dashboard-preview.png";
 
-const TECH_STACK = [
-  "Faker", "Pandas", "Scikit-learn", "LangGraph",
-  "FastAPI", "React", "Supabase", "Vercel", "Fly.io",
-];
 
 const HERO_METRICS = [
   { label: "customers_generated", value: "8,000" },
@@ -307,18 +303,15 @@ export function LandingPage() {
           </p>
         </section>
 
-        {/* Tech Stack */}
+        {/* Tech Stack — 06 */}
         <section data-testid="tech-stack" className="rounded-xl border border-border bg-card p-6">
-          <h2 className="mb-4 text-lg font-semibold text-foreground">
+          <div className="mb-2 text-xs font-semibold uppercase tracking-widest text-primary">
+            {t("landing.stack.sectionLabel")}
+          </div>
+          <h2 className="mb-6 text-lg font-semibold text-foreground">
             {t("landing.stack.heading")}
           </h2>
-          <div className="flex flex-wrap gap-2">
-            {TECH_STACK.map((tech) => (
-              <Badge key={tech} variant="secondary" className="text-sm">
-                {tech}
-              </Badge>
-            ))}
-          </div>
+          <TechStackGrid />
         </section>
 
         {/* Out of Scope */}

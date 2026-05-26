@@ -34,10 +34,12 @@ describe("LandingPage", () => {
     expect(githubLink).toHaveAttribute("href", "https://github.com/pauloabcalcada/fintech-ai-segmentation");
   });
 
-  it("tech stack section lists all 9 technologies", () => {
+  it("tech stack section renders TechStackGrid with 12 tool cards", () => {
     renderLanding();
     const section = screen.getByTestId("tech-stack");
-    for (const tech of ["Faker", "Pandas", "Scikit-learn", "LangGraph", "FastAPI", "React", "Supabase", "Vercel", "Fly.io"]) {
+    const cards = section.querySelectorAll("[data-testid='stack-card']");
+    expect(cards).toHaveLength(12);
+    for (const tech of ["Faker", "Pandas", "Scikit-learn", "LangGraph", "FastAPI"]) {
       expect(section).toHaveTextContent(tech);
     }
   });
