@@ -224,6 +224,9 @@ describe("CustomerDetailInline", () => {
     expect(screen.getByText("Tempo de Conta")).toBeInTheDocument();
     expect(screen.getByText("Custo de Aquisição")).toBeInTheDocument();
     expect(screen.getByText("Tendência de Atividade")).toBeInTheDocument();
+    expect(screen.getByText("Recência")).toBeInTheDocument();
+    expect(screen.getByText("Ticket Médio")).toBeInTheDocument();
+    expect(screen.getByText("Freq. Transações")).toBeInTheDocument();
   });
 
   it("renders Portuguese products section header when language is pt-BR", async () => {
@@ -346,6 +349,20 @@ describe("CustomerDetailInline", () => {
       expect(screen.getByText("R$ 240")).toBeInTheDocument();
       // FIXTURE has acquisition_cost_percentile: 0.72 → p72
       expect(screen.getByText("p72 vs pop.")).toBeInTheDocument();
+    });
+  });
+
+  // ---------------------------------------------------------------------------
+  // Cycle 5-E — pt-BR labels for new badges
+  // ---------------------------------------------------------------------------
+
+  describe("pt-BR new badge labels", () => {
+    it("renders Portuguese labels for the three new badges", async () => {
+      renderInline("pt-BR");
+      await screen.findByText("Ana Lima");
+      expect(screen.getByText("Recência")).toBeInTheDocument();
+      expect(screen.getByText("Ticket Médio")).toBeInTheDocument();
+      expect(screen.getByText("Freq. Transações")).toBeInTheDocument();
     });
   });
 

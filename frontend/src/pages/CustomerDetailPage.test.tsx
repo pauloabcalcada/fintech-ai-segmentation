@@ -113,8 +113,8 @@ describe("CustomerDetailPage", () => {
     it("renders translated KPI badge labels", async () => {
       renderDetailPage("pt-BR");
       await screen.findByText("Ana Lima");
-      expect(screen.getByText("Posição no Segmento")).toBeTruthy();
       expect(screen.getByText("Tempo de Conta")).toBeTruthy();
+      expect(screen.getByText("Recência")).toBeTruthy();
     });
 
     it("does not render a lifecycle KPI badge", async () => {
