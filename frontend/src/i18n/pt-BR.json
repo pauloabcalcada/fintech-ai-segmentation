@@ -222,6 +222,11 @@
         }
       ]
     },
+    "agent": {
+      "sectionLabel": "05 · Agente IA",
+      "heading": "Veja um perfil de cliente se tornar uma ação de retenção",
+      "body": "Um grafo condicional LangGraph com 4 rotas monta o perfil RFM do cliente, saúde de coorte e carteira de produtos em uma recomendação estruturada validada por Pydantic — sem alucinação, sem cópia genérica."
+    },
     "dashboard": {
       "sectionLabel": "04 · Prévia do Painel",
       "heading": "Sem SQL. Sem planilhas.",

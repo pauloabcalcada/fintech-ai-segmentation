@@ -129,6 +129,93 @@ export function LandingPage() {
         </div>
       </section>
 
+      {/* AI Agent — 05 */}
+      <section
+        id="ai-agent"
+        className="mx-auto max-w-6xl scroll-mt-16 px-6 py-16"
+      >
+        <div className="grid grid-cols-1 gap-10 lg:grid-cols-2 lg:items-start">
+          <div>
+            <div className="mb-2 text-xs font-semibold uppercase tracking-widest text-primary">
+              {t("landing.agent.sectionLabel")}
+            </div>
+            <h2 className="mb-4 text-3xl font-bold tracking-tight text-foreground">
+              {t("landing.agent.heading")}
+            </h2>
+            <p className="text-base leading-relaxed text-muted-foreground">
+              {t("landing.agent.body")}
+            </p>
+          </div>
+          <div className="space-y-4">
+            {/* Terminal panels */}
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+              <div className="rounded-xl border border-border bg-gray-950 p-4 font-mono text-xs">
+                <div className="mb-2 text-gray-500">// input</div>
+                {[
+                  ["segment", '"at_risk_churner"'],
+                  ["rfm_score", "1.4"],
+                  ["recency_days", "92"],
+                  ["frequency_score", "1"],
+                  ["monetary_score", "1"],
+                  ["cohort_health", '"weak — 38%"'],
+                  ["products_owned", '["wallet"]'],
+                  ["acquisition_channel", '"paid_ads"'],
+                  ["acquisition_cost", "280.0"],
+                  ["tenure_months", "8"],
+                ].map(([k, v]) => (
+                  <div key={k} className="flex gap-1">
+                    <span className="text-blue-400">{k}</span>
+                    <span className="text-gray-500">:</span>
+                    <span className="text-green-300">{v}</span>
+                  </div>
+                ))}
+              </div>
+              <div className="rounded-xl border border-border bg-gray-950 p-4 font-mono text-xs">
+                <div className="mb-2 text-gray-500">// output</div>
+                {[
+                  ["risk_level", '"critical"'],
+                  ["recommended_action", '"retention offer"'],
+                  ["suggested_product", '"cashback card"'],
+                  ["message_tone", '"urgent, empathetic"'],
+                  ["reasoning", '"8mo tenure, R$280…"'],
+                ].map(([k, v]) => (
+                  <div key={k} className="flex gap-1">
+                    <span className="text-blue-400">{k}</span>
+                    <span className="text-gray-500">:</span>
+                    <span className="text-green-300">{v}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+            {/* Node flow */}
+            <div
+              data-testid="agent-node-flow"
+              className="flex flex-wrap items-center gap-2 rounded-xl border border-border bg-card p-4"
+            >
+              {[
+                "fetch_customer_profile",
+                "analyze_segment",
+                "assess_products",
+                "generate_recommendation",
+                "validate_output",
+              ].map((node, idx, arr) => (
+                <div key={node} className="flex items-center gap-2">
+                  <span
+                    data-testid="agent-node"
+                    className="rounded-lg border border-primary/30 bg-primary/10 px-2 py-1 text-xs font-mono text-primary"
+                  >
+                    {node}
+                  </span>
+                  {idx < arr.length - 1 && (
+                    <span className="text-muted-foreground">→</span>
+                  )}
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </section>
+
       {/* Dashboard Preview — 04 */}
       <section
         id="dashboard"

@@ -222,6 +222,11 @@
         }
       ]
     },
+    "agent": {
+      "sectionLabel": "05 · AI Agent",
+      "heading": "Watch a customer profile become a retention action",
+      "body": "A LangGraph conditional graph with 4 routes assembles the customer's RFM profile, cohort health, and product ownership into a structured Pydantic-validated recommendation — no hallucination, no generic copy."
+    },
     "dashboard": {
       "sectionLabel": "04 · Dashboard Preview",
       "heading": "No SQL. No spreadsheets.",

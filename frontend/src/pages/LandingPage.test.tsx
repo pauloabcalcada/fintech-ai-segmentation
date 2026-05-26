@@ -163,4 +163,38 @@ describe("LandingPage", () => {
     const section = document.getElementById("dashboard")!;
     expect(section).not.toHaveTextContent("landing.dashboard");
   });
+
+  // Issue #47 — AI Agent section
+  it("ai-agent section has id='ai-agent'", () => {
+    renderLanding();
+    expect(document.getElementById("ai-agent")).toBeInTheDocument();
+  });
+
+  it("ai-agent terminal panels render input and output JSON field names", () => {
+    renderLanding();
+    const section = document.getElementById("ai-agent")!;
+    // input fields
+    expect(section).toHaveTextContent("segment");
+    expect(section).toHaveTextContent("rfm_score");
+    expect(section).toHaveTextContent("recency_days");
+    // output fields
+    expect(section).toHaveTextContent("risk_level");
+    expect(section).toHaveTextContent("recommended_action");
+    expect(section).toHaveTextContent("reasoning");
+  });
+
+  it("ai-agent node-flow shows all 5 node labels in correct order", () => {
+    renderLanding();
+    const flow = screen.getByTestId("agent-node-flow");
+    const nodes = flow.querySelectorAll("[data-testid='agent-node']");
+    expect(nodes).toHaveLength(5);
+    expect(nodes[0]).toHaveTextContent(/fetch_customer_profile/i);
+    expect(nodes[4]).toHaveTextContent(/validate_output/i);
+  });
+
+  it("ai-agent renders in PT-BR without missing-key fallbacks", () => {
+    renderLanding("pt-BR");
+    const section = document.getElementById("ai-agent")!;
+    expect(section).not.toHaveTextContent("landing.agent");
+  });
 });
