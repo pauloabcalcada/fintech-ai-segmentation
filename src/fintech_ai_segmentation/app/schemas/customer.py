@@ -76,6 +76,13 @@ class CustomerProfile(BaseModel):
     cached_recommendation: dict | None = None
     activity_trend_ratio: float | None = None
     early_window_freq_ratio: float | None = None
+    avg_ticket: float | None = None
+    avg_days_between_tx: float | None = None
+    activity_trend_percentile: float | None = None
+    acquisition_cost_percentile: float | None = None
+    recency_percentile: float | None = None
+    avg_ticket_percentile: float | None = None
+    avg_days_between_tx_percentile: float | None = None
 
 
 class CustomerProfileResponse(BaseModel):
