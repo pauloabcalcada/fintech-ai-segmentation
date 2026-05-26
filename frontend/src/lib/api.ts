@@ -232,8 +232,9 @@ export interface PopulationByProductsOwned {
 }
 
 export interface ProductOwnershipVsTenure {
-  tenure_bucket: string;
-  avg_products_owned: number;
+  products_owned_count: number;
+  avg_tenure_months: number;
+  customer_count: number;
 }
 
 export interface MostCommonProduct {

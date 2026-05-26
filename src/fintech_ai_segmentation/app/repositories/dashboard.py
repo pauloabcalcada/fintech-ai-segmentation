@@ -18,17 +18,6 @@ from fintech_ai_segmentation.app.schemas.dashboard import (
     ProductOwnershipVsTenure,
 )
 
-_TENURE_CASE = """
-    CASE
-        WHEN tenure_months < 6   THEN '0-6m'
-        WHEN tenure_months < 12  THEN '6-12m'
-        WHEN tenure_months < 24  THEN '12-24m'
-        ELSE '24m+'
-    END
-"""
-
-_TENURE_ORDER = {"0-6m": 0, "6-12m": 1, "12-24m": 2, "24m+": 3}
-
 
 class DashboardRepository:
     def __init__(self, engine: AsyncEngine) -> None:
@@ -86,17 +75,18 @@ class DashboardRepository:
                 ORDER BY products_owned_count
             """))).mappings().all()
 
-            # Product ownership vs tenure bucket
-            tenure_rows = (await conn.execute(text(f"""
+            # Product ownership bubble: group by products_owned_count, compute mean tenure and count
+            tenure_rows = (await conn.execute(text("""
                 SELECT
-                    {_TENURE_CASE} AS tenure_bucket,
-                    AVG(
+                    (
                         has_wallet::int + has_credit_card::int + has_investment::int
                         + has_insurance::int + has_loan::int
-                    )::float AS avg_products_owned
+                    )                          AS products_owned_count,
+                    AVG(tenure_months)::float  AS avg_tenure_months,
+                    COUNT(*)::int              AS customer_count
                 FROM customer_analysis
-                GROUP BY tenure_bucket
-                ORDER BY MIN(tenure_months)
+                GROUP BY products_owned_count
+                ORDER BY products_owned_count
             """))).mappings().all()
 
             # Most common products (active ownership count per product type)
@@ -130,11 +120,14 @@ class DashboardRepository:
 
         return DashboardSummaryResponse(
             kpi_cards=kpi,
-            acquisition_cost_by_channel=[AcquisitionCostByChannel(**dict(r)) for r in acq_rows],
-            population_by_products_owned=[PopulationByProductsOwned(**dict(r)) for r in pop_rows],
+            acquisition_cost_by_channel=[
+                AcquisitionCostByChannel(**dict(r)) for r in acq_rows
+            ],
+            population_by_products_owned=[
+                PopulationByProductsOwned(**dict(r)) for r in pop_rows
+            ],
             product_ownership_vs_tenure=[
-                ProductOwnershipVsTenure(**dict(r))
-                for r in sorted(tenure_rows, key=lambda r: _TENURE_ORDER.get(r["tenure_bucket"], 99))
+                ProductOwnershipVsTenure(**dict(r)) for r in tenure_rows
             ],
             most_common_products=[MostCommonProduct(**dict(r)) for r in product_rows],
         )
@@ -162,10 +155,16 @@ class DashboardRepository:
             """))).mappings().all()
 
         return DashboardAggregatesResponse(
-            cohort_activity_matrix=[CohortActivityEntry(**dict(r)) for r in cohort_rows],
-            channel_m6_retention=[ChannelM6RetentionEntry(**dict(r)) for r in retention_rows],
+            cohort_activity_matrix=[
+                CohortActivityEntry(**dict(r)) for r in cohort_rows
+            ],
+            channel_m6_retention=[
+                ChannelM6RetentionEntry(**dict(r)) for r in retention_rows
+            ],
         )
 
 
-def get_dashboard_repository(engine: AsyncEngine = Depends(get_engine)) -> DashboardRepository:
+def get_dashboard_repository(
+    engine: AsyncEngine = Depends(get_engine),
+) -> DashboardRepository:
     return DashboardRepository(engine)

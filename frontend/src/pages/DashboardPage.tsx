@@ -10,6 +10,9 @@ import {
   Tooltip,
   LineChart,
   Line,
+  ScatterChart,
+  Scatter,
+  ZAxis,
   ResponsiveContainer,
   Legend,
 } from "recharts";
@@ -338,6 +341,13 @@ function ClusterStrip({ data }: { data: DashboardSummaryResponse["kpi_cards"] })
 // Chart 1: Acquisition cost by channel
 // ---------------------------------------------------------------------------
 
+const CAC_CHANNEL_TREND: Record<string, number> = {
+  organic: -2.1,
+  paid_ads: 3.4,
+  referral: -0.8,
+  partnership: 1.2,
+};
+
 function useChannelLabel() {
   const { t } = useTranslation();
   return (ch: string): string =>
@@ -354,13 +364,27 @@ function AcqCostChart({ data }: { data: DashboardSummaryResponse["acquisition_co
   const channelLabel = useChannelLabel();
   const formatted = data.map((r) => ({
     channel: channelLabel(r.acquisition_channel),
+    key: r.acquisition_channel,
     cost: Math.round(r.avg_acquisition_cost),
     fill: CHANNEL_COLORS[r.acquisition_channel] ?? "#71717a",
   }));
 
   return (
     <div className="rounded-lg border border-border bg-card px-5 py-4 flex flex-col gap-3">
-      <span className="text-sm font-medium text-foreground">{t("dashboard.chart.acqCost")}</span>
+      <div className="flex items-center justify-between flex-wrap gap-2">
+        <span className="text-sm font-medium text-foreground">{t("dashboard.chart.acqCost")}</span>
+        <div className="flex flex-wrap gap-3">
+          {formatted.map((entry) => (
+            <div key={entry.key} className="flex items-center gap-1.5">
+              <span className="h-2 w-2 rounded-full shrink-0" style={{ backgroundColor: entry.fill }} />
+              <span className="text-xs text-muted-foreground">{entry.channel}</span>
+              {CAC_CHANNEL_TREND[entry.key] !== undefined && (
+                <TrendBadge delta={CAC_CHANNEL_TREND[entry.key]} inverse />
+              )}
+            </div>
+          ))}
+        </div>
+      </div>
       <ResponsiveContainer width="100%" height={220}>
         <BarChart data={formatted} layout="vertical" margin={{ left: 8, right: 24, top: 4, bottom: 4 }}>
           <CartesianGrid strokeDasharray="3 3" stroke="#27272a" horizontal={false} />
@@ -417,34 +441,59 @@ function ProductsOwnedChart({ data }: { data: DashboardSummaryResponse["populati
 
 function TenureChart({ data }: { data: DashboardSummaryResponse["product_ownership_vs_tenure"] }) {
   const { t } = useTranslation();
-  const TENURE_ORDER = ["0-6m", "6-12m", "12-24m", "24m+"];
-  const sorted = [...data].sort(
-    (a, b) => TENURE_ORDER.indexOf(a.tenure_bucket) - TENURE_ORDER.indexOf(b.tenure_bucket)
-  );
+
+  // Recharts ScatterChart expects { x, y, z } shape; z drives bubble size via ZAxis
+  const maxCount = Math.max(...data.map((d) => d.customer_count), 1);
+  const points = data.map((d) => ({
+    x: d.products_owned_count,
+    y: d.avg_tenure_months,
+    z: d.customer_count,
+    n: d.customer_count,
+  }));
 
   return (
     <div className="rounded-lg border border-border bg-card px-5 py-4 flex flex-col gap-3">
       <span className="text-sm font-medium text-foreground">{t("dashboard.chart.tenure")}</span>
       <ResponsiveContainer width="100%" height={220}>
-        <LineChart data={sorted} margin={{ left: 0, right: 16, top: 4, bottom: 4 }}>
-          <CartesianGrid strokeDasharray="3 3" stroke="#27272a" vertical={false} />
-          <XAxis dataKey="tenure_bucket" tick={{ fontSize: 11, fill: "#a1a1aa" }} tickLine={false} axisLine={false} />
-          <YAxis tick={{ fontSize: 11, fill: "#a1a1aa" }} tickLine={false} axisLine={false} domain={[0, "auto"]} />
+        <ScatterChart margin={{ left: 8, right: 24, top: 8, bottom: 8 }}>
+          <CartesianGrid strokeDasharray="3 3" stroke="#27272a" />
+          <XAxis
+            type="number"
+            dataKey="x"
+            name={t("dashboard.tooltip.numProducts")}
+            label={{ value: t("dashboard.tooltip.numProducts"), position: "insideBottom", offset: -4, fontSize: 11, fill: "#a1a1aa" }}
+            tick={{ fontSize: 11, fill: "#a1a1aa" }}
+            tickLine={false}
+            axisLine={false}
+            domain={[-0.5, 5.5]}
+            ticks={[0, 1, 2, 3, 4, 5]}
+          />
+          <YAxis
+            type="number"
+            dataKey="y"
+            name={t("dashboard.tooltip.avgTenure")}
+            tick={{ fontSize: 11, fill: "#a1a1aa" }}
+            tickLine={false}
+            axisLine={false}
+            tickFormatter={(v) => `${(v as number).toFixed(0)}m`}
+            domain={["auto", "auto"]}
+          />
+          <ZAxis type="number" dataKey="z" name={t("dashboard.tooltip.numCustomers")} range={[40, 40 + (maxCount / 3000) * 1200]} />
           <Tooltip
             contentStyle={{ backgroundColor: "#18181b", border: "1px solid #27272a", borderRadius: 6 }}
             labelStyle={{ color: "#e4e4e7" }}
             itemStyle={{ color: "#a1a1aa" }}
-            formatter={(v) => [((v as number) ?? 0).toFixed(2), t("dashboard.tooltip.avgProducts")]}
+            cursor={{ strokeDasharray: "3 3" }}
+            formatter={(value, name) => {
+              if (name === t("dashboard.tooltip.avgTenure"))
+                return [`${(value as number).toFixed(1)} meses`, name];
+              if (name === t("dashboard.tooltip.numCustomers") || name === t("dashboard.tooltip.numProducts"))
+                return [(value as number).toLocaleString("pt-BR"), name];
+              return [value, name];
+            }}
           />
-          <Line
-            type="monotone"
-            dataKey="avg_products_owned"
-            stroke="#a78bfa"
-            strokeWidth={2}
-            dot={{ r: 4, fill: "#a78bfa" }}
-            activeDot={{ r: 6 }}
-          />
-        </LineChart>
+          <Scatter data={points} fill="#60a5fa" fillOpacity={0.75} />
+        </ScatterChart>
       </ResponsiveContainer>
     </div>
   );

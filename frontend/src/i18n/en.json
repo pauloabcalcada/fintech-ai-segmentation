@@ -36,7 +36,7 @@
       "segmentBreakdown": "Segment Breakdown",
       "acqCost": "Avg Acquisition Cost by Channel (R$)",
       "productsOwned": "Customers by Products Owned",
-      "tenure": "Avg Products Owned vs Tenure",
+      "tenure": "Product Ownership vs Customer Tenure",
       "commonProducts": "Active Product Ownership",
       "cohortHeatmap": "Cohort Activity Heatmap",
       "cohortHeatmapDesc": "Each row = acquisition cohort. Columns = months since registration (M0…). Colour = % active that month.",
@@ -47,6 +47,9 @@
       "avgCost": "Avg cost",
       "customers": "customers",
       "avgProducts": "avg products",
+      "avgTenure": "avg tenure (months)",
+      "numProducts": "products owned",
+      "numCustomers": "customers",
       "activeOwners": "active owners"
     }
   },

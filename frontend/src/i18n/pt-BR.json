@@ -36,7 +36,7 @@
       "segmentBreakdown": "Distribuição por Segmento",
       "acqCost": "CAC Médio por Canal (R$)",
       "productsOwned": "Total de Clientes por Produtos adquiridos",
-      "tenure": "Média de Produtos Adquiridos vs Tempo de casa",
+      "tenure": "Produtos adquiridos vs Tempo de Casa",
       "commonProducts": "Posse Ativa de Produtos",
       "cohortHeatmap": "Mapa de Calor de Atividade por Cohort",
       "cohortHeatmapDesc": "Cada linha = cohort de aquisição. Colunas = meses desde o cadastro (M0…). Cor = % ativo naquele mês.",
@@ -47,6 +47,9 @@
       "avgCost": "Custo médio",
       "customers": "clientes",
       "avgProducts": "produtos médios",
+      "avgTenure": "tempo médio (meses)",
+      "numProducts": "produtos adquiridos",
+      "numCustomers": "clientes",
       "activeOwners": "proprietários ativos"
     }
   },

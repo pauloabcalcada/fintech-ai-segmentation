@@ -29,8 +29,9 @@ class PopulationByProductsOwned(BaseModel):
 
 
 class ProductOwnershipVsTenure(BaseModel):
-    tenure_bucket: str
-    avg_products_owned: float
+    products_owned_count: int
+    avg_tenure_months: float
+    customer_count: int
 
 
 class MostCommonProduct(BaseModel):
