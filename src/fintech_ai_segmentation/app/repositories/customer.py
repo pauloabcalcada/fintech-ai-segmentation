@@ -24,46 +24,65 @@ _BASE_FROM = """
 """
 
 _PROFILE_SQL = text("""
-    SELECT
-        cr.customer_id,
-        cr.name,
-        cr.email,
-        cr.age,
-        cr.state,
-        cr.acquisition_channel,
-        cr.acquisition_cost,
-        cr.registration_date,
-        ca.tenure_months,
-        ca.cluster_name,
-        ca.lifecycle_stage,
-        ca.rfm_score,
-        ca.recency_score,
-        ca.frequency_score,
-        ca.monetary_score,
-        ca.recency_days,
-        ca.has_wallet,
-        ca.has_credit_card,
-        ca.has_investment,
-        ca.has_insurance,
-        ca.has_loan,
-        ca.activity_trend_ratio,
-        ca.early_window_freq_ratio,
-        (
-            ca.has_wallet::int + ca.has_credit_card::int + ca.has_investment::int
-            + ca.has_insurance::int + ca.has_loan::int
-        ) AS products_owned_count,
-        CASE
-            WHEN PERCENT_RANK() OVER (
-                PARTITION BY ca.cluster_name ORDER BY ca.rfm_score
-            ) <= 0.20 THEN 'bottom_20'
-            WHEN PERCENT_RANK() OVER (
-                PARTITION BY ca.cluster_name ORDER BY ca.rfm_score
-            ) >= 0.80 THEN 'top_20'
-            ELSE 'mid_60'
-        END AS cluster_position
-    FROM customer_analysis ca
-    JOIN customers_raw cr ON cr.customer_id = ca.customer_id::uuid
-    WHERE ca.customer_id = :customer_id
+    WITH full_pop AS (
+        SELECT
+            cr.customer_id,
+            cr.name,
+            cr.email,
+            cr.age,
+            cr.state,
+            cr.acquisition_channel,
+            cr.acquisition_cost,
+            cr.registration_date,
+            ca.tenure_months,
+            ca.cluster_name,
+            ca.lifecycle_stage,
+            ca.rfm_score,
+            ca.recency_score,
+            ca.frequency_score,
+            ca.monetary_score,
+            ca.recency_days,
+            ca.has_wallet,
+            ca.has_credit_card,
+            ca.has_investment,
+            ca.has_insurance,
+            ca.has_loan,
+            ca.activity_trend_ratio,
+            ca.early_window_freq_ratio,
+            ca.avg_ticket,
+            ca.avg_days_between_tx,
+            (
+                ca.has_wallet::int + ca.has_credit_card::int + ca.has_investment::int
+                + ca.has_insurance::int + ca.has_loan::int
+            ) AS products_owned_count,
+            CASE
+                WHEN PERCENT_RANK() OVER (
+                    PARTITION BY ca.cluster_name ORDER BY ca.rfm_score
+                ) <= 0.20 THEN 'bottom_20'
+                WHEN PERCENT_RANK() OVER (
+                    PARTITION BY ca.cluster_name ORDER BY ca.rfm_score
+                ) >= 0.80 THEN 'top_20'
+                ELSE 'mid_60'
+            END AS cluster_position,
+            PERCENT_RANK() OVER (
+                ORDER BY ca.activity_trend_ratio ASC NULLS FIRST
+            ) AS activity_trend_percentile,
+            1.0 - PERCENT_RANK() OVER (
+                ORDER BY ca.acquisition_cost ASC NULLS LAST
+            ) AS acquisition_cost_percentile,
+            1.0 - PERCENT_RANK() OVER (
+                ORDER BY ca.recency_days ASC NULLS LAST
+            ) AS recency_percentile,
+            PERCENT_RANK() OVER (
+                ORDER BY ca.avg_ticket ASC NULLS FIRST
+            ) AS avg_ticket_percentile,
+            1.0 - PERCENT_RANK() OVER (
+                ORDER BY ca.avg_days_between_tx ASC NULLS LAST
+            ) AS avg_days_between_tx_percentile
+        FROM customer_analysis ca
+        JOIN customers_raw cr ON cr.customer_id = ca.customer_id::uuid
+    )
+    SELECT * FROM full_pop WHERE customer_id = :customer_id
 """)
 
 
@@ -153,13 +172,44 @@ class AggregateCache:
             return None
 
         cluster_averages = {
-            row["cluster_name"]: RFMAverages(**{k: float(row[k]) for k in ("recency_score", "frequency_score", "monetary_score", "rfm_score")})
+            row["cluster_name"]: RFMAverages(
+                **{
+                    k: float(row[k])
+                    for k in (
+                        "recency_score",
+                        "frequency_score",
+                        "monetary_score",
+                        "rfm_score",
+                    )
+                }
+            )
             for row in cluster_rows
             if row["cluster_name"]
         }
-        population_averages = RFMAverages(**{k: float(pop_row[k]) for k in ("recency_score", "frequency_score", "monetary_score", "rfm_score")})
+        population_averages = RFMAverages(
+            **{
+                k: float(pop_row[k])
+                for k in (
+                    "recency_score",
+                    "frequency_score",
+                    "monetary_score",
+                    "rfm_score",
+                )
+            }
+        )
         cluster_product_profiles = {
-            row["cluster_name"]: ClusterProductProfile(**{k: float(row[k]) for k in ("wallet_pct", "credit_card_pct", "investment_pct", "insurance_pct", "loan_pct")})
+            row["cluster_name"]: ClusterProductProfile(
+                **{
+                    k: float(row[k])
+                    for k in (
+                        "wallet_pct",
+                        "credit_card_pct",
+                        "investment_pct",
+                        "insurance_pct",
+                        "loan_pct",
+                    )
+                }
+            )
             for row in product_rows
             if row["cluster_name"]
         }
@@ -168,7 +218,9 @@ class AggregateCache:
 
 
 class CustomerRepository:
-    def __init__(self, engine: AsyncEngine, cache: AggregateCache | None = None) -> None:
+    def __init__(
+        self, engine: AsyncEngine, cache: AggregateCache | None = None
+    ) -> None:
         self._engine = engine
         self._cache = cache
 
@@ -231,9 +283,13 @@ class CustomerRepository:
 
         cluster = row["cluster_name"]
         cache = self._cache
-        cluster_averages = cache.cluster_averages.get(cluster) if cache and cluster else None
+        cluster_averages = (
+            cache.cluster_averages.get(cluster) if cache and cluster else None
+        )
         population_averages = cache.population_averages if cache else None
-        cluster_product_profile = cache.cluster_product_profiles.get(cluster) if cache and cluster else None
+        cluster_product_profile = (
+            cache.cluster_product_profiles.get(cluster) if cache and cluster else None
+        )
 
         return CustomerProfile(
             customer_id=row["customer_id"],
@@ -248,9 +304,21 @@ class CustomerRepository:
             cluster_name=cluster,
             lifecycle_stage=row["lifecycle_stage"],
             rfm_score=float(row["rfm_score"]) if row["rfm_score"] is not None else None,
-            recency_score=float(row["recency_score"]) if row["recency_score"] is not None else None,
-            frequency_score=float(row["frequency_score"]) if row["frequency_score"] is not None else None,
-            monetary_score=float(row["monetary_score"]) if row["monetary_score"] is not None else None,
+            recency_score=(
+                float(row["recency_score"])
+                if row["recency_score"] is not None
+                else None
+            ),
+            frequency_score=(
+                float(row["frequency_score"])
+                if row["frequency_score"] is not None
+                else None
+            ),
+            monetary_score=(
+                float(row["monetary_score"])
+                if row["monetary_score"] is not None
+                else None
+            ),
             recency_days=row["recency_days"],
             products_owned_count=row["products_owned_count"],
             has_wallet=row["has_wallet"],
@@ -262,8 +330,49 @@ class CustomerRepository:
             cluster_averages=cluster_averages,
             population_averages=population_averages,
             cluster_product_profile=cluster_product_profile,
-            activity_trend_ratio=float(row["activity_trend_ratio"]) if row["activity_trend_ratio"] is not None else None,
-            early_window_freq_ratio=float(row["early_window_freq_ratio"]) if row["early_window_freq_ratio"] is not None else None,
+            activity_trend_ratio=(
+                float(row["activity_trend_ratio"])
+                if row["activity_trend_ratio"] is not None
+                else None
+            ),
+            early_window_freq_ratio=(
+                float(row["early_window_freq_ratio"])
+                if row["early_window_freq_ratio"] is not None
+                else None
+            ),
+            avg_ticket=(
+                float(row["avg_ticket"]) if row["avg_ticket"] is not None else None
+            ),
+            avg_days_between_tx=(
+                float(row["avg_days_between_tx"])
+                if row["avg_days_between_tx"] is not None
+                else None
+            ),
+            activity_trend_percentile=(
+                float(row["activity_trend_percentile"])
+                if row["activity_trend_percentile"] is not None
+                else None
+            ),
+            acquisition_cost_percentile=(
+                float(row["acquisition_cost_percentile"])
+                if row["acquisition_cost_percentile"] is not None
+                else None
+            ),
+            recency_percentile=(
+                float(row["recency_percentile"])
+                if row["recency_percentile"] is not None
+                else None
+            ),
+            avg_ticket_percentile=(
+                float(row["avg_ticket_percentile"])
+                if row["avg_ticket_percentile"] is not None
+                else None
+            ),
+            avg_days_between_tx_percentile=(
+                float(row["avg_days_between_tx_percentile"])
+                if row["avg_days_between_tx_percentile"] is not None
+                else None
+            ),
         )
 
     async def sample_customers(self, per_cluster: int) -> list[CustomerSummary]:
@@ -317,6 +426,9 @@ class CustomerRepository:
             return [ActivityTimelineEntry(**dict(row._mapping)) for row in result]
 
 
-def get_customer_repository(engine: AsyncEngine = Depends(get_engine)) -> CustomerRepository:
+def get_customer_repository(
+    engine: AsyncEngine = Depends(get_engine),
+) -> CustomerRepository:
     from fintech_ai_segmentation.app.main import get_aggregate_cache
+
     return CustomerRepository(engine, get_aggregate_cache())
