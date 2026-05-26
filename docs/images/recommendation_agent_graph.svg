@@ -1,0 +1,158 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1020" height="720" viewBox="0 0 1020 720">
+  <defs>
+    <marker id="arr" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+      <polygon points="0 0, 10 3.5, 0 7" fill="#64748b"/>
+    </marker>
+    <marker id="arr-cond" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+      <polygon points="0 0, 10 3.5, 0 7" fill="#f59e0b"/>
+    </marker>
+    <marker id="arr-solid" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+      <polygon points="0 0, 10 3.5, 0 7" fill="#94a3b8"/>
+    </marker>
+  </defs>
+
+  <!-- Background -->
+  <rect width="1020" height="720" fill="#0f172a" rx="14"/>
+
+  <!-- Title -->
+  <text x="510" y="34" font-family="'Courier New', monospace" font-size="15" fill="#e2e8f0"
+        text-anchor="middle" font-weight="bold" letter-spacing="0.5">LangGraph Recommendation Agent — Nodes &amp; Edges</text>
+
+  <!-- ── START ── -->
+  <circle cx="510" cy="72" r="26" fill="#1e293b" stroke="#475569" stroke-width="2"/>
+  <text x="510" y="77" font-family="'Courier New', monospace" font-size="11" fill="#94a3b8"
+        text-anchor="middle">START</text>
+
+  <!-- START → build_context -->
+  <line x1="510" y1="98" x2="510" y2="120" stroke="#64748b" stroke-width="2" marker-end="url(#arr)"/>
+
+  <!-- ── build_context ── -->
+  <rect x="370" y="124" width="280" height="52" fill="#0e7490" rx="9" stroke="#22d3ee" stroke-width="1.5"/>
+  <text x="510" y="145" font-family="'Courier New', monospace" font-size="13" fill="#ffffff"
+        text-anchor="middle" font-weight="bold">build_context</text>
+  <text x="510" y="163" font-family="Arial, sans-serif" font-size="10" fill="rgba(255,255,255,0.65)"
+        text-anchor="middle">fetch profile + activity timeline</text>
+
+  <!-- ── _route diamond ── -->
+  <polygon points="510,192 558,218 510,244 462,218" fill="#1c1917" stroke="#f59e0b" stroke-width="2"/>
+  <text x="510" y="222" font-family="'Courier New', monospace" font-size="10" fill="#fbbf24"
+        text-anchor="middle">_route()</text>
+
+  <!-- build_context → diamond -->
+  <line x1="510" y1="176" x2="510" y2="192" stroke="#64748b" stroke-width="2" marker-end="url(#arr)"/>
+
+  <!-- ── Conditional edges (dashed, amber) ── -->
+  <!-- diamond left vertex (462,218) → generate_retention top-center (115,306) -->
+  <path d="M 462,218 C 380,218 115,240 115,306"
+        fill="none" stroke="#f59e0b" stroke-width="1.5" stroke-dasharray="6,3" marker-end="url(#arr-cond)"/>
+  <!-- diamond bottom-left (494,244) → generate_upsell top-center (365,306) -->
+  <path d="M 494,244 C 494,278 365,278 365,306"
+        fill="none" stroke="#f59e0b" stroke-width="1.5" stroke-dasharray="6,3" marker-end="url(#arr-cond)"/>
+  <!-- diamond bottom-right (526,244) → generate_reactivation top-center (655,306) -->
+  <path d="M 526,244 C 526,278 655,278 655,306"
+        fill="none" stroke="#f59e0b" stroke-width="1.5" stroke-dasharray="6,3" marker-end="url(#arr-cond)"/>
+  <!-- diamond right vertex (558,218) → generate_activation top-center (905,306) -->
+  <path d="M 558,218 C 640,218 905,240 905,306"
+        fill="none" stroke="#f59e0b" stroke-width="1.5" stroke-dasharray="6,3" marker-end="url(#arr-cond)"/>
+
+  <!-- Condition labels -->
+  <text x="200" y="248" font-family="Arial, sans-serif" font-size="9" fill="#fbbf24" text-anchor="middle">at_risk_churner</text>
+  <text x="400" y="262" font-family="Arial, sans-serif" font-size="9" fill="#fbbf24" text-anchor="middle">high_value_active</text>
+  <text x="620" y="262" font-family="Arial, sans-serif" font-size="9" fill="#fbbf24" text-anchor="middle">low_value_dormant</text>
+  <text x="820" y="248" font-family="Arial, sans-serif" font-size="9" fill="#fbbf24" text-anchor="middle">None (default)</text>
+
+  <!-- ── Strategy nodes (y=308..364) ── -->
+
+  <!-- generate_retention: center x=115 -->
+  <rect x="15" y="308" width="200" height="56" fill="#581c87" rx="9" stroke="#a855f7" stroke-width="1.5"/>
+  <text x="115" y="330" font-family="'Courier New', monospace" font-size="11.5" fill="#ffffff"
+        text-anchor="middle" font-weight="bold">generate_retention</text>
+  <text x="115" y="348" font-family="Arial, sans-serif" font-size="9.5" fill="rgba(255,255,255,0.65)"
+        text-anchor="middle">strategy: retention</text>
+  <text x="115" y="360" font-family="Arial, sans-serif" font-size="9" fill="rgba(255,255,255,0.5)"
+        text-anchor="middle">LLM call via OpenRouter</text>
+
+  <!-- generate_upsell: center x=365 -->
+  <rect x="265" y="308" width="200" height="56" fill="#581c87" rx="9" stroke="#a855f7" stroke-width="1.5"/>
+  <text x="365" y="330" font-family="'Courier New', monospace" font-size="11.5" fill="#ffffff"
+        text-anchor="middle" font-weight="bold">generate_upsell</text>
+  <text x="365" y="348" font-family="Arial, sans-serif" font-size="9.5" fill="rgba(255,255,255,0.65)"
+        text-anchor="middle">strategy: upsell</text>
+  <text x="365" y="360" font-family="Arial, sans-serif" font-size="9" fill="rgba(255,255,255,0.5)"
+        text-anchor="middle">LLM call via OpenRouter</text>
+
+  <!-- generate_reactivation: center x=655 -->
+  <rect x="555" y="308" width="200" height="56" fill="#581c87" rx="9" stroke="#a855f7" stroke-width="1.5"/>
+  <text x="655" y="330" font-family="'Courier New', monospace" font-size="11.5" fill="#ffffff"
+        text-anchor="middle" font-weight="bold">generate_reactivation</text>
+  <text x="655" y="348" font-family="Arial, sans-serif" font-size="9.5" fill="rgba(255,255,255,0.65)"
+        text-anchor="middle">strategy: reactivation</text>
+  <text x="655" y="360" font-family="Arial, sans-serif" font-size="9" fill="rgba(255,255,255,0.5)"
+        text-anchor="middle">LLM call via OpenRouter</text>
+
+  <!-- generate_activation: center x=905 -->
+  <rect x="805" y="308" width="200" height="56" fill="#581c87" rx="9" stroke="#a855f7" stroke-width="1.5"/>
+  <text x="905" y="330" font-family="'Courier New', monospace" font-size="11.5" fill="#ffffff"
+        text-anchor="middle" font-weight="bold">generate_activation</text>
+  <text x="905" y="348" font-family="Arial, sans-serif" font-size="9.5" fill="rgba(255,255,255,0.65)"
+        text-anchor="middle">strategy: activation</text>
+  <text x="905" y="360" font-family="Arial, sans-serif" font-size="9" fill="rgba(255,255,255,0.5)"
+        text-anchor="middle">LLM call via OpenRouter</text>
+
+  <!-- ── Converging edges → validate_output (center x=510, top y=448) ── -->
+  <path d="M 115,364 C 115,420 510,420 510,448"
+        fill="none" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#arr-solid)"/>
+  <path d="M 365,364 C 365,420 510,420 510,448"
+        fill="none" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#arr-solid)"/>
+  <path d="M 655,364 C 655,420 510,420 510,448"
+        fill="none" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#arr-solid)"/>
+  <path d="M 905,364 C 905,420 510,420 510,448"
+        fill="none" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#arr-solid)"/>
+
+  <!-- ── validate_output ── -->
+  <rect x="370" y="450" width="280" height="52" fill="#9f1239" rx="9" stroke="#fb7185" stroke-width="1.5"/>
+  <text x="510" y="471" font-family="'Courier New', monospace" font-size="13" fill="#ffffff"
+        text-anchor="middle" font-weight="bold">validate_output</text>
+  <text x="510" y="489" font-family="Arial, sans-serif" font-size="10" fill="rgba(255,255,255,0.65)"
+        text-anchor="middle">parse JSON · normalize · Pydantic → RecommendationOutput</text>
+
+  <!-- validate_output → END -->
+  <line x1="510" y1="502" x2="510" y2="550" stroke="#64748b" stroke-width="2" marker-end="url(#arr)"/>
+
+  <!-- ── END ── -->
+  <circle cx="510" cy="574" r="26" fill="#1e293b" stroke="#475569" stroke-width="2"/>
+  <circle cx="510" cy="574" r="17" fill="#334155"/>
+  <text x="510" y="578" font-family="'Courier New', monospace" font-size="11" fill="#94a3b8"
+        text-anchor="middle">END</text>
+
+  <!-- ── AgentState label ── -->
+  <rect x="30" y="618" width="960" height="28" fill="#1e293b" rx="6"/>
+  <text x="510" y="636" font-family="'Courier New', monospace" font-size="10" fill="#64748b"
+        text-anchor="middle">AgentState: customer_id · model_id · language · profile · timeline · strategy · llm_response · recommendation</text>
+
+  <!-- ── Legend ── -->
+  <rect x="30" y="656" width="960" height="50" fill="#1e293b" rx="6"/>
+
+  <rect x="50" y="670" width="14" height="14" fill="#0e7490" rx="2"/>
+  <text x="70" y="681" font-family="Arial, sans-serif" font-size="10" fill="#94a3b8">Data fetch</text>
+
+  <polygon points="170,677 188,684 170,691 152,684" fill="none" stroke="#f59e0b" stroke-width="1.5"/>
+  <text x="196" y="681" font-family="Arial, sans-serif" font-size="10" fill="#94a3b8">Router (_route)</text>
+
+  <rect x="310" y="670" width="14" height="14" fill="#581c87" rx="2"/>
+  <text x="330" y="681" font-family="Arial, sans-serif" font-size="10" fill="#94a3b8">LLM strategy node</text>
+
+  <rect x="470" y="670" width="14" height="14" fill="#9f1239" rx="2"/>
+  <text x="490" y="681" font-family="Arial, sans-serif" font-size="10" fill="#94a3b8">Validation node</text>
+
+  <line x1="620" y1="677" x2="655" y2="677" stroke="#f59e0b" stroke-width="2" stroke-dasharray="6,3"/>
+  <text x="662" y="681" font-family="Arial, sans-serif" font-size="10" fill="#94a3b8">Conditional edge</text>
+
+  <line x1="790" y1="677" x2="825" y2="677" stroke="#94a3b8" stroke-width="2"/>
+  <text x="832" y="681" font-family="Arial, sans-serif" font-size="10" fill="#94a3b8">Unconditional edge</text>
+
+  <!-- Legend row 2 -->
+  <text x="50" y="697" font-family="Arial, sans-serif" font-size="10" fill="#475569">
+    Source: src/fintech_ai_segmentation/agent/recommendation_agent.py · Tests: tests/unit/test_recommendation_agent.py
+  </text>
+</svg>

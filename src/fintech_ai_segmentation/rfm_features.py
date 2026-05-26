@@ -128,7 +128,9 @@ def _as_timestamp(x: pd.Timestamp | str) -> pd.Timestamp:
     """
     ts = pd.Timestamp(x)
     if ts.tzinfo is not None:
-        ts = ts.tz_convert(None)  # tz_localize(None) raises TypeError on aware Timestamps
+        ts = ts.tz_convert(
+            None
+        )  # tz_localize(None) raises TypeError on aware Timestamps
     return ts
 
 
