@@ -187,7 +187,10 @@
     "hero": {
       "heading": "SynaptiqPay AI Segmentation",
       "tagline": "Customer behaviour analysis for a Brazilian fintech — replacing manual, one-size-fits-all treatment with AI-driven segmentation and recommendations.",
-      "cta": "Open Dashboard →"
+      "situation": "SynaptiqPay's commercial manager was spending 3+ hours on spreadsheets every week to analyse 8,000 digital wallet customers — with no consistent segmentation and no actionable next steps.",
+      "result": "This system delivers a full customer picture in under 5 minutes and generates one AI recommendation per customer, replacing gut-feel decisions with data-driven actions.",
+      "cta": "Open Dashboard →",
+      "ctaCustomers": "Browse Customers"
     },
     "about": {
       "heading": "What this is",

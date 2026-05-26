@@ -187,7 +187,10 @@
     "hero": {
       "heading": "SynaptiqPay AI Segmentation",
       "tagline": "Análise de comportamento de clientes para uma fintech brasileira — substituindo tratamento manual e uniforme por segmentação e recomendações com IA.",
-      "cta": "Abrir Painel →"
+      "situation": "O gerente comercial da SynaptiqPay gastava mais de 3 horas por semana em planilhas para analisar 8.000 clientes de carteira digital — sem segmentação consistente e sem próximos passos claros.",
+      "result": "Este sistema entrega uma visão completa do cliente em menos de 5 minutos e gera uma recomendação de IA por cliente, substituindo decisões intuitivas por ações baseadas em dados.",
+      "cta": "Abrir Painel →",
+      "ctaCustomers": "Ver Clientes"
     },
     "about": {
       "heading": "O que é isso",

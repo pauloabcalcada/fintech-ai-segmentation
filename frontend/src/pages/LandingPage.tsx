@@ -11,6 +11,15 @@ const TECH_STACK = [
   "FastAPI", "React", "Supabase", "Vercel", "Fly.io",
 ];
 
+const HERO_METRICS = [
+  { label: "customers_generated", value: "8,000" },
+  { label: "planted_segments", value: "4" },
+  { label: "operational_clusters_k", value: "3" },
+  { label: "months_of_history", value: "50" },
+  { label: "avg_recommendation_latency", value: "1.4s" },
+  { label: "agent_routes", value: "4" },
+];
+
 export function LandingPage() {
   const { t } = useTranslation();
 
@@ -18,34 +27,70 @@ export function LandingPage() {
     <div className="dark">
     <LandingNavbar />
     <main className="min-h-screen bg-background">
-      {/* Hero */}
-      <section className="flex flex-col items-center justify-center px-6 pt-24 pb-16 text-center">
-        <div className="mb-3 inline-flex items-center gap-2 rounded-full border border-primary/20 bg-primary/10 px-3 py-1 text-xs font-medium text-primary">
-          SynaptiqPay · AI Segmentation
-        </div>
-        <h1 className="max-w-2xl text-4xl font-bold tracking-tight text-foreground sm:text-5xl lg:text-6xl">
-          {t("landing.hero.heading")}
-        </h1>
-        <p className="mt-4 max-w-xl text-base leading-relaxed text-muted-foreground sm:text-lg">
-          {t("landing.hero.tagline")}
-        </p>
-        <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
-          <Link
-            to="/dashboard"
-            className={cn(buttonVariants({ size: "lg" }), "cursor-pointer gap-2 px-6 text-base")}
+      {/* Hero — 01 */}
+      <section className="mx-auto max-w-6xl px-6 pt-20 pb-16">
+        <div className="grid grid-cols-1 gap-12 lg:grid-cols-2 lg:items-center">
+          {/* Left — STAR narrative */}
+          <div>
+            <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-primary/20 bg-primary/10 px-3 py-1 text-xs font-medium text-primary">
+              01 · SynaptiqPay · AI Segmentation
+            </div>
+            <h1 className="text-4xl font-bold tracking-tight text-foreground sm:text-5xl">
+              {t("landing.hero.heading")}
+            </h1>
+            <p className="mt-4 text-base leading-relaxed text-muted-foreground sm:text-lg">
+              {t("landing.hero.situation")}
+            </p>
+            <p className="mt-3 text-base leading-relaxed text-muted-foreground sm:text-lg">
+              {t("landing.hero.result")}
+            </p>
+            <div className="mt-8 flex flex-wrap gap-3">
+              <Link
+                to="/dashboard"
+                className={cn(buttonVariants({ size: "lg" }), "cursor-pointer gap-2")}
+              >
+                {t("landing.hero.cta")}
+                <ArrowRight className="size-4" />
+              </Link>
+              <Link
+                to="/customers"
+                className={cn(buttonVariants({ variant: "outline", size: "lg" }), "cursor-pointer gap-2")}
+              >
+                {t("landing.hero.ctaCustomers")}
+              </Link>
+              <a
+                href="https://github.com/pauloabcalcada/fintech-ai-segmentation"
+                target="_blank"
+                rel="noopener noreferrer"
+                className={cn(buttonVariants({ variant: "ghost", size: "lg" }), "cursor-pointer gap-2")}
+              >
+                <ExternalLink className="size-4" />
+                {t("landing.github.label")}
+              </a>
+            </div>
+          </div>
+
+          {/* Right — terminal metrics panel */}
+          <div
+            data-testid="hero-metrics"
+            className="rounded-xl border border-border bg-gray-950 p-5 font-mono text-sm"
           >
-            {t("landing.hero.cta")}
-            <ArrowRight className="size-4" />
-          </Link>
-          <a
-            href="https://github.com/pauloabcalcada/fintech-ai-segmentation"
-            target="_blank"
-            rel="noopener noreferrer"
-            className={cn(buttonVariants({ variant: "outline", size: "lg" }), "cursor-pointer gap-2 px-6 text-base")}
-          >
-            <ExternalLink className="size-4" />
-            {t("landing.github.label")}
-          </a>
+            <div className="mb-3 flex items-center gap-2">
+              <span className="size-3 rounded-full bg-red-500" />
+              <span className="size-3 rounded-full bg-yellow-500" />
+              <span className="size-3 rounded-full bg-green-500" />
+              <span className="ml-2 text-xs text-gray-500">synaptiqpay_ai_seg — dataset stats</span>
+            </div>
+            <div className="space-y-1.5">
+              {HERO_METRICS.map(({ label, value }) => (
+                <div key={label} className="flex items-center gap-2">
+                  <span className="text-green-400">›</span>
+                  <span className="text-gray-400">{label}:</span>
+                  <span className="font-semibold text-white">{value}</span>
+                </div>
+              ))}
+            </div>
+          </div>
         </div>
       </section>
 
