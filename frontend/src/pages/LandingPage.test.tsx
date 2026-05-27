@@ -3,16 +3,19 @@ import { describe, it, expect } from "vitest";
 import { MemoryRouter } from "react-router-dom";
 import { I18nextProvider } from "react-i18next";
 import { createTestI18n } from "@/i18n/test-utils";
+import { ThemeProvider } from "@/context/ThemeContext";
 import { LandingPage } from "./LandingPage";
 
 function renderLanding(lng = "en") {
   const i18n = createTestI18n(lng);
   return render(
-    <I18nextProvider i18n={i18n}>
-      <MemoryRouter>
-        <LandingPage />
-      </MemoryRouter>
-    </I18nextProvider>
+    <ThemeProvider>
+      <I18nextProvider i18n={i18n}>
+        <MemoryRouter>
+          <LandingPage />
+        </MemoryRouter>
+      </I18nextProvider>
+    </ThemeProvider>
   );
 }
 
@@ -50,9 +53,9 @@ describe("LandingPage", () => {
     expect(screen.getByRole("link", { name: /ver no github/i })).toBeInTheDocument();
   });
 
-  it("LandingPage wrapper element carries the dark CSS class", () => {
-    const { container } = renderLanding();
-    expect(container.firstChild).toHaveClass("dark");
+  it("LandingPage renders the theme toggle in the navbar", () => {
+    renderLanding();
+    expect(screen.getByTestId("theme-toggle")).toBeInTheDocument();
   });
 
   // Issue #43 — Hero section

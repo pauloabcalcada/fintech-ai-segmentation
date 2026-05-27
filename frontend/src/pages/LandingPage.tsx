@@ -21,7 +21,7 @@ export function LandingPage() {
   const { t } = useTranslation();
 
   return (
-    <div className="dark">
+    <div>
     <LandingNavbar />
     <main className="min-h-screen bg-background">
       {/* Hero — 01 */}

@@ -1,6 +1,7 @@
 import { Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { LanguageToggle } from "./LanguageToggle";
+import { ThemeToggle } from "./ThemeToggle";
 import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
@@ -31,6 +32,7 @@ export function LandingNavbar() {
           </a>
         </div>
         <div className="ml-auto flex items-center gap-2">
+          <ThemeToggle />
           <LanguageToggle />
           <Link
             to="/dashboard"
