@@ -70,20 +70,20 @@ export function LandingPage() {
           {/* Right — terminal metrics panel */}
           <div
             data-testid="hero-metrics"
-            className="rounded-xl border border-border bg-gray-950 p-5 font-mono text-sm"
+            className="rounded-xl border border-border bg-gray-950 dark:bg-white p-5 font-mono text-sm"
           >
             <div className="mb-3 flex items-center gap-2">
               <span className="size-3 rounded-full bg-red-500" />
               <span className="size-3 rounded-full bg-yellow-500" />
               <span className="size-3 rounded-full bg-green-500" />
-              <span className="ml-2 text-xs text-gray-500">synaptiqpay_ai_seg — dataset stats</span>
+              <span className="ml-2 text-xs text-gray-500 dark:text-gray-600">synaptiqpay_ai_seg — dataset stats</span>
             </div>
             <div className="space-y-1.5">
               {HERO_METRICS.map(({ label, value }) => (
                 <div key={label} className="flex items-center gap-2">
-                  <span className="text-green-400">›</span>
-                  <span className="text-gray-400">{label}:</span>
-                  <span className="font-semibold text-white">{value}</span>
+                  <span className="text-green-400 dark:text-green-600">›</span>
+                  <span className="text-gray-400 dark:text-gray-700">{label}:</span>
+                  <span className="font-semibold text-white dark:text-gray-900">{value}</span>
                 </div>
               ))}
             </div>
@@ -145,8 +145,8 @@ export function LandingPage() {
           <div className="space-y-4">
             {/* Terminal panels */}
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-              <div className="rounded-xl border border-border bg-gray-950 p-4 font-mono text-xs">
-                <div className="mb-2 text-gray-500">// input</div>
+              <div className="rounded-xl border border-border bg-gray-950 dark:bg-white p-4 font-mono text-xs">
+                <div className="mb-2 text-gray-500 dark:text-gray-600">// input</div>
                 {[
                   ["segment", '"at_risk_churner"'],
                   ["rfm_score", "1.4"],
@@ -160,14 +160,14 @@ export function LandingPage() {
                   ["tenure_months", "8"],
                 ].map(([k, v]) => (
                   <div key={k} className="flex gap-1">
-                    <span className="text-blue-400">{k}</span>
-                    <span className="text-gray-500">:</span>
-                    <span className="text-green-300">{v}</span>
+                    <span className="text-blue-400 dark:text-blue-600">{k}</span>
+                    <span className="text-gray-500 dark:text-gray-600">:</span>
+                    <span className="text-green-300 dark:text-green-700">{v}</span>
                   </div>
                 ))}
               </div>
-              <div className="rounded-xl border border-border bg-gray-950 p-4 font-mono text-xs">
-                <div className="mb-2 text-gray-500">// output</div>
+              <div className="rounded-xl border border-border bg-gray-950 dark:bg-white p-4 font-mono text-xs">
+                <div className="mb-2 text-gray-500 dark:text-gray-600">// output</div>
                 {[
                   ["risk_level", '"critical"'],
                   ["recommended_action", '"retention offer"'],
@@ -176,9 +176,9 @@ export function LandingPage() {
                   ["reasoning", '"8mo tenure, R$280…"'],
                 ].map(([k, v]) => (
                   <div key={k} className="flex gap-1">
-                    <span className="text-blue-400">{k}</span>
-                    <span className="text-gray-500">:</span>
-                    <span className="text-green-300">{v}</span>
+                    <span className="text-blue-400 dark:text-blue-600">{k}</span>
+                    <span className="text-gray-500 dark:text-gray-600">:</span>
+                    <span className="text-green-300 dark:text-green-700">{v}</span>
                   </div>
                 ))}
               </div>
@@ -372,60 +372,60 @@ export function LandingPage() {
         <div className="mx-auto max-w-6xl">
           <div className="grid grid-cols-1 gap-8 sm:grid-cols-3">
             <div>
-              <h4 className="mb-3 text-sm font-semibold text-foreground">{t("landing.footer.projectCol")}</h4>
-              <ul className="space-y-2 text-sm text-muted-foreground">
+              <h4 className="mb-3 text-sm font-bold text-white">{t("landing.footer.projectCol")}</h4>
+              <ul className="space-y-2 text-sm text-white/70">
                 <li>
                   <a
                     href="https://github.com/pauloabcalcada/fintech-ai-segmentation"
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="hover:text-foreground transition-colors"
+                    className="hover:text-white transition-colors"
                   >
                     {t("landing.footer.githubRepo")}
                   </a>
                 </li>
                 <li>
-                  <Link to="/dashboard" className="hover:text-foreground transition-colors">
+                  <Link to="/dashboard" className="hover:text-white transition-colors">
                     {t("landing.footer.liveDemo")}
                   </Link>
                 </li>
                 <li>
-                  <a href="#roadmap" className="hover:text-foreground transition-colors">
+                  <a href="#roadmap" className="hover:text-white transition-colors">
                     {t("landing.footer.roadmapLink")}
                   </a>
                 </li>
               </ul>
             </div>
             <div>
-              <h4 className="mb-3 text-sm font-semibold text-foreground">{t("landing.footer.sectionsCol")}</h4>
-              <ul className="space-y-2 text-sm text-muted-foreground">
-                <li><a href="#how-it-works" className="hover:text-foreground transition-colors">{t("landing.footer.howItWorks")}</a></li>
-                <li><a href="#dashboard" className="hover:text-foreground transition-colors">{t("landing.footer.problem")}</a></li>
-                <li><a href="#ai-agent" className="hover:text-foreground transition-colors">{t("landing.footer.aiAgent")}</a></li>
+              <h4 className="mb-3 text-sm font-bold text-white">{t("landing.footer.sectionsCol")}</h4>
+              <ul className="space-y-2 text-sm text-white/70">
+                <li><a href="#how-it-works" className="hover:text-white transition-colors">{t("landing.footer.howItWorks")}</a></li>
+                <li><a href="#dashboard" className="hover:text-white transition-colors">{t("landing.footer.problem")}</a></li>
+                <li><a href="#ai-agent" className="hover:text-white transition-colors">{t("landing.footer.aiAgent")}</a></li>
               </ul>
             </div>
             <div>
-              <h4 className="mb-3 text-sm font-semibold text-foreground">{t("landing.footer.contactCol")}</h4>
-              <ul className="space-y-2 text-sm text-muted-foreground">
+              <h4 className="mb-3 text-sm font-bold text-white">{t("landing.footer.contactCol")}</h4>
+              <ul className="space-y-2 text-sm text-white/70">
                 <li>
-                  <a href="mailto:pauloabcalcada@gmail.com" className="hover:text-foreground transition-colors">
+                  <a href="mailto:pauloabcalcada@gmail.com" className="hover:text-white transition-colors">
                     pauloabcalcada@gmail.com
                   </a>
                 </li>
                 <li>
-                  <a href="https://github.com/pauloabcalcada" target="_blank" rel="noopener noreferrer" className="hover:text-foreground transition-colors">
+                  <a href="https://github.com/pauloabcalcada" target="_blank" rel="noopener noreferrer" className="hover:text-white transition-colors">
                     github.com/pauloabcalcada
                   </a>
                 </li>
                 <li>
-                  <a href="https://linkedin.com/in/paulo-calcada" target="_blank" rel="noopener noreferrer" className="hover:text-foreground transition-colors">
+                  <a href="https://linkedin.com/in/paulo-calcada" target="_blank" rel="noopener noreferrer" className="hover:text-white transition-colors">
                     linkedin.com/in/paulo-calcada
                   </a>
                 </li>
               </ul>
             </div>
           </div>
-          <div className="mt-10 border-t border-border pt-6 text-center text-xs text-muted-foreground">
+          <div className="mt-10 border-t border-white/10 pt-6 text-center text-xs text-white/50">
             {t("landing.footer.copyright")}
           </div>
         </div>
