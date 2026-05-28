@@ -1,5 +1,5 @@
 # fintech-ai-segmentation
-## Definitive Project Summary
+## Project Summary
 
 ---
 
@@ -7,115 +7,78 @@
 
 SynaptiqPay is a Brazilian fintech with 8,000 digital wallet customers. Their commercial manager treats every customer identically — same offers, same communication, same retention strategy. This is inefficient because customers behave very differently from each other. Some are highly engaged and profitable. Others are dormant and about to leave.
 
-Every Monday morning, the commercial manager spends 3+ hours manually analyzing spreadsheets to answer basic questions. This project replaces that workflow with an intelligent, automated dashboard — giving the manager a complete picture of the customer base in under 5 minutes, with AI-powered recommendations on what action to take for each customer.
+Every Monday morning, the commercial manager spends 3+ hours manually analyzing spreadsheets to answer basic questions. This project replaces that manual workflow by leveraging deep analytical work to uncover customer behavioral profiles. We built a customized dashboard and an AI recommendation system to drive value through personalized actions—specifically, reactivating dormant or at-risk customers and upselling the most engaged ones, ultimately increasing overall ROI.
 
 ---
 
-## End User
-
-**Primary:** Commercial manager / business manager at SynaptiqPay
-**Interface:** Web dashboard — no code, no spreadsheets
-**Core need:** Understand customers, identify risk, know what action to take
-
----
-
-## The Real-World Analytical Path
+## The Analytical Path
 
 The analysis follows a discovery-first narrative — each step builds on the previous one.
 
 ```
+STEP 0: Synthetic data generation/validation (fake dataset)
+        → 0.Data_Generation notebook generates the four main datasets
+        → EDA_Validation_Fake_Dataset notebook:
+                → Primary ground-truth validation notebook
+                → Confirms generator planted the right patterns
+
 STEP 1: Who do we have?
         → EDA demographic (notebook 1)
-        → Discovery-first: no segment labels used
         → Demographics, acquisition channels, CAC by channel
         → Product ownership as first behavioral signal
 
 STEP 2: How do they behave over time?
         → Cohort + behavioral analysis (notebook 2)
-        → Discovery-first: no segment labels used
         → Cohort retention (M3/M6), channel quality ranking
         → Behavioral heterogeneity, recency risk tiers,
           activation quality, product adoption curves,
           cohort revenue curves, churn proxies
 
-STEP 3: What do we know about each customer?
+STEP 3: What do we know about each customer? (notebook 3)
         → RFM Scoring (Recency, Frequency, Monetary)
         → K-Means Clustering (k=3 operational segments)
         → Uploading clustering in a new customer_analysis mart table
 
 STEP 4: What should we do about it?
-        → LangGraph AI Agent
+        → LangGraph AI Agent is the main product
         → Receives segment, RFM profile, cohort health, product ownership
         → Generates personalized recommendation per customer
-
-STEP V: Synthetic data validation (fake dataset only)
-        → EDA_Validation_Fake_Dataset.ipynb
-        → Primary ground-truth validation notebook
-        → Confirms generator planted the right patterns
-          before clustering is attempted
-        → Note: Notebook 3 also loads true_segment for mart
-          context but does not use it as a clustering input
+        → Dashboard provides an overview
 ```
-
----
-
-## Notebook Files (Repository)
-
-The [notebook roadmap](notebooks-roadmap.md) describes the full pipeline.
-
-| File | Scope |
-|---|---|
-| `notebooks/0.Data_Generation.ipynb` | Raw tables only (`customers_raw`, `transactions_raw`, etc.) |
-| `notebooks/1.EDA_demographic_analysis.ipynb` | STEP 1 — Demographics, acquisition, CAC, product ownership. No `true_segment`. |
-| `notebooks/2.EDA_cohort_analysis.ipynb` | STEP 2 — Cohort retention, channel quality, 8 behavioral discovery analyses. No `true_segment`. |
-| `notebooks/EDA_Validation_Fake_Dataset.ipynb` | STEP V — Ground-truth validation. Primary notebook for `true_segment` analysis. |
-| `notebooks/3.EDA_RFM_Clustering.ipynb` | STEP 3 — RFM scoring, K-Means (k=3), cluster profiling, `customer_analysis` mart upload to Supabase |
 
 ---
 
 ## Business Questions To Answer
 
-### Discovery (EDA + Cohort — no segment labels)
+### Discovery (EDA + Cohort)
+
+*(Notebook 1, Q1-Q2 in notebook flow)*
 1. How is our customer base distributed by age, state, and acquisition channel?
 2. Which acquisition channel brings customers with the broadest product portfolios?
+2.1 Does broader product ownership correlate with longer tenure?
+
+*(Notebook 2, Q3–Q9 in notebook flow)*
 3. Which acquisition month produces the most retained customers?
 4. At what month do most customers disengage? (tenure retention curve)
-5. Which acquisition channel brings the highest quality customers? (M6 retention + CAC payback)
-6. Is the customer base behaviorally homogeneous or are there natural fault lines? (activity rate distribution, Pareto revenue)
-7. Does early activation (M0 vs M1–M3 vs never) predict M6 retention?
-8. What does the recency distribution look like — where are the natural churn risk breaks?
-9. Does broader product ownership correlate with longer tenure?
-
-### Synthetic Data Validation (EDA_Validation_Fake_Dataset.ipynb only)
-10. Do segment counts match the planted 20/30/30/20 design?
-11. Do age distributions by segment match generator parameters?
-12. Does MAU by segment confirm expected lifecycle patterns (high_value stable, at_risk declining)?
-13. Do M0–M6 retention curves separate cleanly by planted segment?
-14. Does channel × segment composition explain the channel quality differences observed in STEP 2?
+5. Are recent cohorts healthier than older ones?
+6. Which acquisition channel brings the highest quality customers? (M6 retention + CAC payback)
+7. Is the customer base behaviorally homogeneous or are there natural fault lines? (activity rate distribution, Pareto revenue)
+8. Does early activation (M0 vs M1–M3 vs never) predict M6 retention?
+9. What does the recency distribution look like — where are the natural churn risk breaks?
+10. Does broader product ownership drive retention?
 
 ### Behavioral Intelligence (RFM + Clustering)
-*(Notebook 3, Q6–Q10 in notebook flow)*
-1. Who are our most valuable customers right now?
-2. What behavioral patterns define each customer segment?
-3. What is the RFM profile of each segment?
-4. Do high-engagement customers own more products?
-5. How does credit and investment utilization vary across segments?
+*(Notebook 3, Q11–Q15 in notebook flow)*
+11. Who are our most valuable customers right now?
+12. What behavioral patterns define each customer segment?
+13. What is the RFM profile of each segment?
+14. Do high-engagement customers own more products?
+15. How does credit and investment utilization vary across segments?
 
 ### AI Intelligence (LangGraph Agent)
-12. Given this customer's full profile, what product should we offer?
-13. What is the best retention strategy for this specific customer?
-14. What message tone and approach fits this customer's segment?
-
----
-
-## Customer Segments (Ground Truth — Planted In Dataset)
-
-| Segment | Size | Profile |
-|---|---|---|
-| `high_value_active` | 1,600 (20%) | High transaction frequency (~40/month), high ticket (~R$220), 95% monthly activity rate |
-| `mid_value_regular` | 2,400 (30%) | Moderate frequency (~18/month), moderate ticket (~R$160), 85% monthly activity rate |
-| `low_value_dormant` | 2,400 (30%) | Low frequency (~4/month), low ticket (~R$100), 40% monthly activity rate |
-| `at_risk_churner` | 1,600 (20%) | Very low frequency (~2/month), very low ticket (~R$45), 15% monthly activity rate |
+16. Given this customer's full profile, what product should we offer?
+17. What is the best retention strategy for this specific customer?
+18. What message tone and approach fits this customer's segment?
 
 ---
 
@@ -124,9 +87,9 @@ The [notebook roadmap](notebooks-roadmap.md) describes the full pipeline.
 | File | Rows |
 |---|---:|
 | `customers_raw.csv` | 8,000 |
-| `transactions_raw.csv` | ~2,180,000 |
+| `transactions_raw.csv` | 2,180,224 |
 | `products_raw.csv` | 5 |
-| `customer_products_raw.csv` | ~19,900 |
+| `customer_products_raw.csv` | 19,902 |
 
 ---
 
@@ -138,7 +101,7 @@ The [notebook roadmap](notebooks-roadmap.md) describes the full pipeline.
 - `customer_id` (UUID), `name`, `email`, `age`, `state`, `registration_date`
 - `acquisition_channel` — paid_ads, organic, referral, partnership
 - `acquisition_cost` — R$ spent to acquire this customer (channel-specific distribution)
-- `true_segment` — ground-truth label planted at generation time (for model validation only)
+- `true_segment` — ground-truth label planted at generation time (for model validation only, never used as clustering input)
 
 **`transactions_raw`** — one row per transaction
 - `transaction_id`, `customer_id`, `transaction_datetime`, `amount`
@@ -153,67 +116,35 @@ The [notebook roadmap](notebooks-roadmap.md) describes the full pipeline.
 **`customer_products_raw`** — bridge table: what products each customer owns
 - `customer_id`, `product_id`, `start_date`, `is_active`
 
-### Derived Features (Computed in Notebooks)
+### Derived Features (Analytical Mart — Written by Notebooks)
 
-From Notebook 2 (Cohort Analysis):
-- `tenure_months`, `cohort_month`, `cohort_retention_rate`
+**`customer_analysis`** — single source of truth for the agent and dashboard; written by Notebook 3 after K-Means clustering
 
-From Notebook 3 (RFM + Clustering → `customer_analysis` mart):
-- `recency_days`, `frequency_total`, `monetary_total`, `avg_ticket`
-- `recency_score`, `frequency_score`, `monetary_score`, `rfm_score` (1–5 scale)
-- `active_months_ratio`, `activity_trend_ratio`, `tx_per_active_month`
-- `has_wallet`, `has_credit_card`, `has_investment`, `has_insurance`, `has_loan`
+*From Notebook 2 (Cohort Analysis):*
+- `tenure_months` — months since registration at snapshot date
+- `cohort_month` — YYYY-MM of customer registration (cohort key)
+- `cohort_retention_rate` — M6 retention rate for the customer's cohort
+
+*From Notebook 3 (RFM + Clustering):*
+- `recency_days` — days since last completed transaction
+- `frequency_total` — total count of completed transactions
+- `monetary_total` — total R$ spent (completed transactions)
+- `avg_ticket` — `monetary_total / frequency_total`
+- `recency_score`, `frequency_score`, `monetary_score` — 1–5 quintile scores
+- `rfm_score` — composite score (average of the three, 1–5 scale)
+- `active_months_ratio` — share of tenure months with ≥1 transaction
+- `activity_trend_ratio` — recent 3-month activity rate ÷ lifetime rate (>1 = improving)
+- `tx_per_active_month` — average transactions per month when active
+- `has_wallet`, `has_credit_card`, `has_investment`, `has_insurance`, `has_loan` — boolean product ownership flags
 - `lifecycle_stage` — active / new_no_tx / churned
-- `cluster_km` (int, k=3), `cluster_name` — K-Means segment label
+- `cluster_km` (int, k=3) — K-Means cluster index
+- `cluster_name` — human-readable segment label derived from cluster centroid profile
 
 ---
 
 ## Synthetic Data Design
 
-### Observation Window
-- Registration period: Jan 2022 – Feb 2026 (50 months)
-- Gamma(2, 360) acquisition curve: peaks around Jan 2023 (hyper-growth), decays gracefully into 2026
-
-### Behavioral Separation (What Makes Segments Separable)
-The key to meaningful RFM/clustering is **realistic inactivity** — not noise:
-- `p_active_per_month` controls whether a customer transacts at all in a given month (Bernoulli)
-- `avg_tx_per_active_month` controls volume when active (Poisson)
-- `at_risk_churner` additionally has exponential decay: `p(active)` shrinks month-over-month
-- Permanent churn is drawn from a Geometric survival model per segment
-
-| Segment | Monthly Activity Rate | 12-Month Churn Rate |
-|---|---|---|
-| `high_value_active` | 95% | ~11% |
-| `mid_value_regular` | 85% | ~38% |
-| `low_value_dormant` | 40% | ~62% |
-| `at_risk_churner` | 15% (with decay) | ~90% |
-
-### Product-Specific Transaction Amounts
-Amounts are conditioned on both segment (avg ticket) and product type:
-- **Wallet**: small, frequent (~30% of segment avg ticket, R$5 minimum)
-- **Credit card**: baseline (100% of avg ticket)
-- **Investment**: large deposits (6× avg ticket, R$100 minimum)
-- **Insurance**: fixed premium-like (60% of avg ticket)
-- **Loan**: large, periodic disbursements (8× avg ticket, R$200 minimum)
-
-### Product Ownership Signals
-Product ownership encodes behavioral signals by design:
-- `high_value_active`: high investment (65%) and insurance (45%) ownership
-- `at_risk_churner`: high loan rate (25%) and low investment rate (10%) — financial stress signal
-- Cancellation rates escalate by segment (5% → 40%), reflecting lifecycle disengagement
-
-### Demographic Correlations
-Age is mildly correlated with segment to add realism:
-- `high_value_active`: mean 38 — slightly older, more affluent
-- `mid_value_regular`: mean 33 — young professional
-- `low_value_dormant`: mean 42 — broader range
-- `at_risk_churner`: mean 27 — youngest, less financially committed
-
-### Seasonality
-Brazilian calendar effects are modeled with segment-specific sensitivity:
-- November (+20%) and December (+30%): 13th salary + Black Friday
-- January (−20%) and February (−15%): post-holiday hangover + Carnival
-- `high_value_active`: full seasonal response; `at_risk_churner`: minimal (20% sensitivity)
+For a full breakdown of the statistical distributions used — registration timing, activity rates, churn models, product ownership signals, demographic correlations, and seasonality — see [Data Generation Distributions Summary](data-generation-summary.md).
 
 ---
 
@@ -227,6 +158,7 @@ Brazilian calendar effects are modeled with segment-specific sensitivity:
 | Machine learning | Scikit-learn | K-Means clustering (k=3 operational segments) |
 | AI Agent | LangGraph + Pydantic | Personalized recommendations |
 | LLM | OpenRouter (OpenAI-compatible client) | Routes to free/smart-auto models (gemini-flash, llama-70b, mistral-7b) |
+| Observability | LangSmith | LLM tracing, run inspection, and latency monitoring |
 | Backend | FastAPI | REST API connecting data to frontend |
 | Frontend | React + Vite + Tailwind CSS + shadcn/ui + Recharts | Business dashboard |
 | Database | Supabase (PostgreSQL) | Data persistence |
@@ -254,9 +186,12 @@ FastAPI (deployed on Render/Fly.io)
   → serves data to frontend
   → triggers LangGraph AI agent
         ↓
-LangGraph Agent
+LangGraph Agent (+ OpenRouter LLM)
   → receives customer segment, RFM profile, cohort health, product ownership
-  → generates personalized recommendation
+  → routes to strategy node (retention / upsell / reactivation / activation)
+  → calls OpenRouter (gemini-flash, llama-70b, or smart-auto)
+  → every LLM call traced in LangSmith (latency, tokens, run inspection)
+  → returns structured Pydantic-validated recommendation
         ↓
 React + Vite Dashboard (deployed on Vercel)
   → business manager interacts via browser
@@ -270,15 +205,18 @@ Docker Compose
 ## LangGraph Agent Flow
 
 ```
-fetch_customer_profile
+build_context  (fetch profile + activity timeline from Supabase)
         ↓
-analyze_segment + cohort_context
+[conditional router]
+  → at_risk_churner     → generate_retention
+  → high_value_active   → generate_upsell
+  → low_value_dormant   → generate_reactivation
+  → mid_value_regular   → generate_activation
         ↓
-assess_product_ownership + behavioral_profile
+[strategy node]  call OpenRouter LLM (gemini-flash / llama-70b / smart-auto)
+  LangSmith traces every call (model, latency, tokens, prompt/response)
         ↓
-generate_recommendation
-        ↓
-validate_output (Pydantic)
+validate_output  (repair JSON → Pydantic RecommendationOutput)
         ↓
 return structured response
 ```
@@ -286,29 +224,39 @@ return structured response
 ### Agent Input (per customer)
 ```json
 {
-  "segment": "at_risk_churner",
-  "rfm_score": 1.4,
-  "recency_days": 92,
-  "frequency_score": 1,
-  "monetary_score": 1,
-  "cohort_health": "weak — 38% retention at month 6",
-  "products_owned": ["wallet"],
-  "acquisition_channel": "paid_ads",
-  "acquisition_cost": 280.0,
-  "tenure_months": 8
+  "customer_name": "Ana Souza",          // used to personalise notification_text
+  "cluster_name": "at_risk_churner",     // K-Means segment — drives which strategy node fires
+  "cluster_position": "bottom_20",       // rank within segment by RFM: bottom_20 | mid_60 | top_20
+  "lifecycle_stage": "dormant",          // derived from activity: active | dormant | churned
+  "rfm_score": 1.4,                      // composite 1–5 score (higher is better)
+  "cluster_avg_rfm": 1.61,              // segment benchmark — LLM uses this to judge above/below peers
+  "recency_score": 1,                    // 1–5; how recently the customer transacted (1 = very long ago)
+  "frequency_score": 1,                  // 1–5; how often the customer transacts (1 = rarely)
+  "monetary_score": 2,                   // 1–5; how much the customer spends (1 = very low)
+  "recency_days": 92,                    // days since the last transaction — higher = more disengaged
+  "products_owned": "wallet",            // active products in the customer's portfolio
+  "acquisition_channel": "paid_ads",     // organic | referral | paid_ads | partnership
+  "acquisition_cost": 280.0,             // BRL spent to acquire this customer — used for ROI reasoning
+  "tenure_months": 8,                    // months since registration
+  "cohort_health": "n/a",               // M6 retention rate of the acquisition cohort (not yet wired)
+  "activity_trend": "2025-07: 3 tx (R$42); 2025-08: 1 tx (R$15)"  // last 6 months: {year_month}: {tx_count} tx (R${total})
 }
 ```
 
 ### Agent Output
 ```json
 {
-  "risk_level": "critical",
-  "recommended_action": "immediate retention offer",
-  "suggested_product": "cashback credit card",
-  "message_tone": "urgent, empathetic",
-  "reasoning": "Customer registered via paid_ads 8 months ago (R$280 acquisition cost) and is already showing strong disengagement — only a wallet, low RFM, and 92 days since last transaction. Their cohort retains at just 38% by month 6. A targeted, low-friction credit card offer could reactivate engagement before the relationship is lost."
+  "risk_level": "critical",             // low | medium | high | critical — defaults to medium if LLM returns invalid value
+  "recommended_action": "immediate retention offer",  // one concrete action for the account manager
+  "suggested_product": "cashback credit card",        // specific product or feature to offer
+  "message_tone": "urgent, empathetic",               // tone descriptor to guide customer-facing copy
+  "notification_text": "Exclusive offer just for you — unlock cashback on every purchase today.",  // ready-to-send push notification (~160 chars), personalised with customer name
+  "reasoning": "Customer registered via paid_ads 8 months ago (R$280 acquisition cost) and is already showing strong disengagement — only a wallet, low RFM, and 92 days since last transaction. Their cohort retains at just 38% by month 6. A targeted, low-friction credit card offer could reactivate engagement before the relationship is lost.",  // 2–3 sentences citing specific data values from the input
+  "strategy_used": "retention"          // which routing branch fired: retention | upsell | reactivation | activation
 }
 ```
+
+> All fields are Pydantic-validated (`RecommendationOutput`). The values above are illustrative — `reasoning` and `notification_text` are generated by the LLM and will differ per customer.
 
 ---
 
@@ -320,7 +268,7 @@ return structured response
 | GET | `/dashboard/aggregates` | Cohort retention heatmap data + segment distribution for charts |
 | GET | `/customers` | Paginated, filterable customer list |
 | GET | `/customers/{id}` | Individual customer profile + RFM scores + segment |
-| POST | `/customers/{id}/analyze` | Trigger LangGraph AI agent → returns structured recommendation |
+| POST | `/customers/{id}/analyze` | Trigger LangGraph AI agent (OpenRouter LLM, LangSmith traced) → returns structured recommendation |
 
 ## FastAPI Endpoints (Phase 2 Addition)
 
@@ -334,9 +282,10 @@ return structured response
 
 | Page | What The Business Manager Sees |
 |---|---|
+| `/` | Landing page — hero metrics (8k customers, 4 segments, 3 clusters, 50 months history, 1.4s latency, 4 agent routes), tech stack grid, dashboard preview screenshot |
 | `/dashboard` | KPI cards (total customers, at-risk count, avg RFM score, segment breakdown) + segment distribution chart + cohort retention heatmap |
 | `/customers` | Filterable, sortable customer table with segment badge + RFM indicator |
-| `/customers/:id` | Full customer profile + RFM scores + cohort context + product ownership + AI recommendation |
+| `/customers/:id` | Full customer profile + RFM scores + cohort context + product ownership + AI recommendation panel (strategy, risk level, suggested product, notification text) |
 
 ---
 
@@ -443,7 +392,4 @@ Chart: Line chart showing acquisition trend over time
 
 ---
 
-## Project Narrative (For README + Interviews)
-
-> SynaptiqPay's commercial manager was spending 3+ hours every Monday morning analyzing spreadsheets to understand their 8,000 customers. This project replaces that workflow entirely. Through cohort analysis, we understood when and how customers arrive and at what point they disengage. Through RFM scoring and K-Means clustering, we identified 3 operational behavioral segments from the transacting population — profiling their value, activity patterns, and product utilization. Through an AI agent powered by LangGraph and Claude, we deliver a personalized, behaviorally-grounded recommendation for every single customer — automatically, in seconds. And through a Text-to-SQL chatbot, the manager can ask any question about the customer base in plain language and get an instant answer with an automatically generated chart — no analyst, no SQL, no waiting.
 
