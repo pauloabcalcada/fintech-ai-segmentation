@@ -26,26 +26,39 @@ describe("LandingNavbar", () => {
     expect(logo).toHaveAttribute("href", "/");
   });
 
-  it("renders anchor link for #how-it-works", () => {
+  it("renders anchor link for #methodology", () => {
     renderNavbar();
-    expect(screen.getByRole("link", { name: /how it works/i })).toHaveAttribute("href", "#how-it-works");
+    expect(screen.getByRole("link", { name: /methodology/i })).toHaveAttribute("href", "#methodology");
   });
 
-  it("renders anchor link for #dashboard", () => {
+  it("renders anchor link for #deliverables", () => {
     renderNavbar();
-    const links = screen.getAllByRole("link", { name: /dashboard/i });
-    const anchor = links.find((l) => l.getAttribute("href") === "#dashboard");
-    expect(anchor).toBeTruthy();
+    expect(screen.getByRole("link", { name: /deliverables/i })).toHaveAttribute("href", "#deliverables");
   });
 
-  it("renders anchor link for #ai-agent", () => {
+  it("renders anchor link for #stack", () => {
     renderNavbar();
-    expect(screen.getByRole("link", { name: /ai agent/i })).toHaveAttribute("href", "#ai-agent");
+    expect(screen.getByRole("link", { name: /stack/i })).toHaveAttribute("href", "#stack");
   });
 
   it("renders anchor link for #roadmap", () => {
     renderNavbar();
     expect(screen.getByRole("link", { name: /roadmap/i })).toHaveAttribute("href", "#roadmap");
+  });
+
+  it("does not render any nav anchor to the old sections", () => {
+    renderNavbar();
+    const oldAnchors = ["#how-it-works", "#dashboard", "#ai-agent"];
+    const links = screen.getAllByRole("link");
+    const hrefs = links.map((l) => l.getAttribute("href"));
+    for (const old of oldAnchors) {
+      expect(hrefs).not.toContain(old);
+    }
+  });
+
+  it("renders translated nav labels in pt-BR", () => {
+    renderNavbar("pt-BR");
+    expect(screen.getByRole("link", { name: /metodologia/i })).toHaveAttribute("href", "#methodology");
   });
 
   it("renders CTA link to /dashboard", () => {

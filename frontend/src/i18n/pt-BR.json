@@ -177,81 +177,87 @@
   },
   "landing": {
     "nav": {
-      "howItWorks": "Como Funciona",
-      "dashboard": "Painel",
-      "aiAgent": "Agente IA",
+      "methodology": "Metodologia",
+      "deliverables": "Entregas",
+      "stack": "Stack",
       "roadmap": "Roadmap",
       "ctaDashboard": "Painel",
       "ctaCustomers": "Clientes"
     },
     "hero": {
-      "heading": "SynaptiqPay AI Segmentation",
-      "tagline": "Análise de comportamento de clientes para uma fintech brasileira — substituindo tratamento manual e uniforme por segmentação e recomendações com IA.",
-      "situation": "O gerente comercial da SynaptiqPay gastava mais de 3 horas por semana em planilhas para analisar 8.000 clientes de carteira digital — sem segmentação consistente e sem próximos passos claros.",
-      "result": "Este sistema entrega uma visão completa do cliente em menos de 5 minutos e gera uma recomendação de IA por cliente, substituindo decisões intuitivas por ações baseadas em dados.",
-      "cta": "Abrir Painel →",
-      "ctaCustomers": "Ver Clientes"
+      "badge": "SynaptiqPay · Segmentação com IA",
+      "heading": "8.000 clientes. Uma planilha. Nenhuma direção.",
+      "subhead": "Fomos contratados para substituir a análise manual de clientes feita em planilhas por um pipeline de dados estruturado e um sistema de recomendação com IA. O resultado é um motor de segmentação que dá às equipes comerciais informação clara e acionável sobre cada cliente.",
+      "cta": "Ver Painel",
+      "ctaCustomers": "Explorar Clientes",
+      "urlBar": "fintech-ai-segmentation.up.railway.app/dashboard"
     },
-    "howItWorks": {
-      "sectionLabel": "02 · Como Funciona",
-      "heading": "Quatro camadas, um sistema coerente",
+    "summary": {
+      "heading": "O caso em resumo",
       "cards": [
         {
-          "badge": "01",
-          "category": "DATA",
-          "title": "Geração Sintética",
-          "why": "Faker pt_BR produz 8.000 clientes com segmentos comportamentalmente distintos — porque ruído aleatório uniforme esconde os segmentos que queremos encontrar."
+          "label": "O Problema",
+          "body": "Uma gerente comercial de uma fintech brasileira com 8.000 clientes passava horas por semana em planilhas. Não havia segmentação comportamental nem direção orientada por dados sobre como tratar cada cliente."
         },
         {
-          "badge": "02",
-          "category": "FEATURES",
-          "title": "RFM + Análise de Coorte",
-          "why": "Pandas e Scikit-learn transformam transações brutas em pontuações de recência, frequência e valor monetário — as três dimensões que preveem o valor vitalício do cliente."
+          "label": "O Desafio",
+          "body": "Entender a base de clientes atual, identificar padrões de comportamento e entregar um sistema que reduza o esforço manual e melhore como a equipe distribui atenção e recursos."
         },
         {
-          "badge": "03",
-          "category": "AGENT",
-          "title": "Roteamento Condicional LangGraph",
-          "why": "LangGraph com OpenRouter roteia cada cliente por um grafo condicional de 4 nós — para que as recomendações sejam baseadas em dados estruturados, não em alucinações genéricas de LLM."
+          "label": "A Abordagem",
+          "body": "Três fases de análise cobrindo dados demográficos, comportamento por coorte e pontuação RFM, combinadas com um modelo de segmentação de machine learning e um agente de recomendação com IA construído sobre essa base."
         },
         {
-          "badge": "04",
-          "category": "SURFACE",
-          "title": "Painel de Negócios",
-          "why": "React + Vite + Tailwind + shadcn/ui oferece ao gerente comercial uma interface sem SQL — sem planilhas, sem SQL, sem dependência de engenharia."
+          "label": "O Que Foi Entregue",
+          "body": "Um painel de negócios para acompanhamento contínuo e um agente de IA que gera uma recomendação personalizada para cada cliente com base no seu perfil e histórico de comportamento."
         }
       ]
     },
-    "agent": {
-      "sectionLabel": "05 · Agente IA",
-      "heading": "Veja um perfil de cliente se tornar uma ação de retenção",
-      "body": "Um grafo condicional LangGraph com 4 rotas monta o perfil RFM do cliente, saúde de coorte e carteira de produtos em uma recomendação estruturada validada por Pydantic — sem alucinação, sem cópia genérica."
+    "methodology": {
+      "sectionLabel": "Metodologia",
+      "heading": "Como o trabalho foi estruturado",
+      "phases": [
+        {
+          "number": "01",
+          "title": "Base de Dados",
+          "description": "Geramos um conjunto sintético de 8.000 clientes usando modelos estatísticos. Os dados usam distribuições comportamentais que replicam padrões reais de churn, dormência e adoção de produtos. A abordagem sintética foi intencional. Ela nos deu controle total sobre a separação dos segmentos e permitiu validar o pipeline de ponta a ponta antes de conectar dados reais.",
+          "tools": ["Faker", "Pandas", "Pydantic", "Supabase"]
+        },
+        {
+          "number": "02",
+          "title": "Análise Comportamental",
+          "description": "Três fases de análise cobriram quem são os clientes, como se comportam ao longo do tempo e como as coortes diferem em retenção e estágio de ciclo de vida. A pontuação RFM (Recência, Frequência, Valor Monetário) destilou o histórico de transações em sinais comparáveis entre todos os 8.000 clientes.",
+          "tools": ["Pandas", "Jupyter", "Scikit-learn"]
+        },
+        {
+          "number": "03",
+          "title": "Segmentação e Inteligência",
+          "description": "O clustering K-Means (aprendizado de máquina não supervisionado) agrupou os clientes em segmentos operacionais com base em sinais comportamentais. Um agente LangGraph então recebe cada perfil de cliente e gera uma recomendação estruturada usando um large language model.",
+          "tools": ["Scikit-learn", "LangGraph", "OpenRouter", "LangSmith"]
+        }
+      ],
+      "callout": "Duas camadas de IA foram aplicadas em estágios diferentes. O clustering K-Means identifica segmentos de clientes sem dados de treino rotulados. O agente baseado em LLM produz recomendações fundamentadas no comportamento real de cada cliente, não em texto genérico."
     },
-    "dashboard": {
-      "sectionLabel": "04 · Prévia do Painel",
-      "heading": "Sem SQL. Sem planilhas.",
-      "body": "O gerente comercial interage com um painel React — filtra por segmento, expande um cliente, aciona o agente de IA, copia a notificação push.",
-      "urlBar": "fintech-ai-segmentation.up.railway.app/dashboard"
-    },
-    "pipeline": {
-      "sectionLabel": "03 · Pipeline",
-      "heading": "Fluxo de dados de ponta a ponta",
-      "steps": [
-        { "title": "Geração de Dados", "tools": ["Faker (pt_BR)", "Python"] },
-        { "title": "EDA → Coorte → Análise RFM", "tools": ["Pandas", "3 Notebooks"] },
-        { "title": "Armazenamento de Segmentos", "tools": ["Supabase", "Postgres", "mart customer_analysis"] },
-        { "title": "API REST", "tools": ["FastAPI", "SQLAlchemy", "GET /customers", "POST /analyze"] },
-        { "title": "Agente IA", "tools": ["LangGraph", "OpenRouter", "Pydantic", "4 rotas"] },
-        { "title": "Painel de Negócios", "tools": ["React", "Vite", "Tailwind", "Recharts", "Railway"] }
-      ]
-    },
-    "about": {
-      "heading": "O que é isso",
-      "body": "A SynaptiqPay é uma fintech brasileira com 8.000 clientes de carteira digital. Este sistema substitui o tratamento manual e uniforme por um fluxo de segmentação e IA que identifica o valor do cliente, padrões de comportamento, risco de churn e recomenda próximas ações. Os dados dos clientes são sintéticos, gerados com demografia brasileira realista e modelos estatísticos de comportamento."
+    "deliverables": {
+      "label": "O Que Foi Construído",
+      "product1": {
+        "badge": "Produto 01",
+        "title": "Painel de Negócio",
+        "body": "Um painel React que dá ao time comercial uma visão em tempo real dos segmentos de clientes, scores RFM e saúde de coorte. Sem SQL, sem planilhas. Os dados ficam prontos para a ação.",
+        "cta": "Ver o painel",
+        "urlBar": "fintech-ai-segmentation.up.railway.app/dashboard",
+        "alt": "Painel de negócio da SynaptiqPay"
+      },
+      "product2": {
+        "badge": "Produto 02",
+        "title": "Agente de Recomendação com IA",
+        "body": "Um agente LangGraph que recebe o perfil comportamental de um cliente e devolve uma recomendação estruturada. Ele produz um nível de risco, uma ação sugerida, um produto a oferecer e o raciocínio por trás disso.",
+        "cta": "Ver em um cliente"
+      }
     },
     "stack": {
-      "sectionLabel": "06 · Stack Tecnológica",
-      "heading": "Ferramentas escolhidas por razões, não por modas",
+      "sectionLabel": "Stack e Arquitetura",
+      "heading": "Stack e Arquitetura",
       "filterAll": "TODOS",
       "tools": [
         { "name": "Faker", "category": "DATA", "why": "Gera dados de clientes brasileiros realistas com suporte nativo ao locale pt_BR — sem PII real necessária." },
@@ -306,9 +312,10 @@
       "githubRepo": "Repositório GitHub",
       "liveDemo": "Demo ao Vivo",
       "roadmapLink": "Roadmap",
-      "problem": "Problema",
-      "howItWorks": "Como Funciona",
-      "aiAgent": "Agente IA"
+      "methodology": "Metodologia",
+      "deliverables": "Entregáveis",
+      "stack": "Stack",
+      "disclaimer": "SynaptiqPay é uma empresa fictícia. Todos os dados são sintéticos e gerados para fins de portfólio."
     },
     "github": {
       "label": "Ver no GitHub"

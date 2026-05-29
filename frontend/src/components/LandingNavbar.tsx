@@ -18,14 +18,14 @@ export function LandingNavbar() {
           SYNAPTIQPAY / AI-SEG
         </Link>
         <div className="hidden md:flex items-center gap-4 text-sm text-gray-400">
-          <a href="#how-it-works" className="hover:text-white transition-colors">
-            {t("landing.nav.howItWorks")}
+          <a href="#methodology" className="hover:text-white transition-colors">
+            {t("landing.nav.methodology")}
           </a>
-          <a href="#dashboard" className="hover:text-white transition-colors">
-            {t("landing.nav.dashboard")}
+          <a href="#deliverables" className="hover:text-white transition-colors">
+            {t("landing.nav.deliverables")}
           </a>
-          <a href="#ai-agent" className="hover:text-white transition-colors">
-            {t("landing.nav.aiAgent")}
+          <a href="#stack" className="hover:text-white transition-colors">
+            {t("landing.nav.stack")}
           </a>
           <a href="#roadmap" className="hover:text-white transition-colors">
             {t("landing.nav.roadmap")}

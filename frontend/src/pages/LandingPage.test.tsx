@@ -20,15 +20,36 @@ function renderLanding(lng = "en") {
 }
 
 describe("LandingPage", () => {
-  it("renders the hero heading and Open Dashboard CTA", () => {
+  it("renders the hero heading and View Dashboard CTA", () => {
     renderLanding();
-    expect(screen.getByRole("heading", { name: /SynaptiqPay AI Segmentation/i })).toBeInTheDocument();
-    expect(screen.getByRole("link", { name: /open dashboard/i })).toBeInTheDocument();
+    expect(
+      screen.getByRole("heading", {
+        name: /8,000 customers\. One spreadsheet\. No direction\./i,
+      })
+    ).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: /view dashboard/i })).toBeInTheDocument();
   });
 
-  it("CTA links to /dashboard", () => {
+  it("primary CTA links to /dashboard", () => {
     renderLanding();
-    expect(screen.getByRole("link", { name: /open dashboard/i })).toHaveAttribute("href", "/dashboard");
+    expect(screen.getByRole("link", { name: /view dashboard/i })).toHaveAttribute("href", "/dashboard");
+  });
+
+  it("hero secondary CTA Explore Customers links to /customers", () => {
+    renderLanding();
+    expect(screen.getByRole("link", { name: /explore customers/i })).toHaveAttribute("href", "/customers");
+  });
+
+  it("hero browser chrome frame is present with the preview image", () => {
+    renderLanding();
+    const frame = screen.getByTestId("hero-browser-chrome");
+    expect(frame).toBeInTheDocument();
+    expect(frame.querySelector("img")).toBeInTheDocument();
+  });
+
+  it("hero metrics panel is removed", () => {
+    renderLanding();
+    expect(screen.queryByTestId("hero-metrics")).toBeNull();
   });
 
   it("GitHub link points to the correct repository URL", () => {
@@ -47,9 +68,39 @@ describe("LandingPage", () => {
     }
   });
 
+  // Issue #56 — Stack and Architecture section
+  it("stack section has id='stack'", () => {
+    renderLanding();
+    expect(document.getElementById("stack")).toBeInTheDocument();
+  });
+
+  it("stack section renders the 'Stack and Architecture' heading", () => {
+    renderLanding();
+    const section = screen.getByTestId("stack-section");
+    expect(section).toHaveTextContent("Stack and Architecture");
+  });
+
+  it("architecture workflow renders 6 nodes in order", () => {
+    renderLanding();
+    const workflow = screen.getByTestId("arch-workflow");
+    const nodes = within(workflow).getAllByTestId("arch-node");
+    expect(nodes).toHaveLength(6);
+    const names = ["Faker", "Pandas", "Supabase", "FastAPI", "LangGraph", "React"];
+    names.forEach((name, idx) => {
+      expect(nodes[idx]).toHaveTextContent(name);
+    });
+  });
+
+  it("architecture workflow renders 5 arrows between 6 nodes", () => {
+    renderLanding();
+    const workflow = screen.getByTestId("arch-workflow");
+    const arrows = within(workflow).getAllByTestId("arch-arrow");
+    expect(arrows).toHaveLength(5);
+  });
+
   it("renders pt-BR text when language is pt-BR", () => {
     renderLanding("pt-BR");
-    expect(screen.getByRole("link", { name: /abrir painel/i })).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: /ver painel/i })).toBeInTheDocument();
     expect(screen.getByRole("link", { name: /ver no github/i })).toBeInTheDocument();
   });
 
@@ -58,139 +109,153 @@ describe("LandingPage", () => {
     expect(screen.getByTestId("theme-toggle")).toBeInTheDocument();
   });
 
-  // Issue #43 — Hero section
-  it("hero metrics panel displays all 6 hardcoded values", () => {
-    renderLanding();
-    const panel = screen.getByTestId("hero-metrics");
-    expect(panel).toHaveTextContent("8,000");
-    expect(panel).toHaveTextContent("4");
-    expect(panel).toHaveTextContent("3");
-    expect(panel).toHaveTextContent("50");
-    expect(panel).toHaveTextContent("1.4s");
-    expect(panel).toHaveTextContent("4");
-  });
-
-  it("hero secondary CTA links to /customers", () => {
-    renderLanding();
-    const links = screen.getAllByRole("link");
-    const customersLink = links.find((l) => l.getAttribute("href") === "/customers");
-    expect(customersLink).toBeTruthy();
-  });
-
+  // Issue #52 — Hero section
   it("hero heading renders correctly in PT-BR", () => {
     renderLanding("pt-BR");
-    expect(screen.getByRole("heading", { name: /synaptiqpay ai segmentation/i })).toBeInTheDocument();
+    expect(
+      screen.getByRole("heading", {
+        name: /8\.000 clientes\. Uma planilha\. Nenhuma direção\./i,
+      })
+    ).toBeInTheDocument();
   });
 
-  // Issue #44 — How It Works section
-  it("how-it-works section has id='how-it-works'", () => {
-    renderLanding();
-    expect(document.getElementById("how-it-works")).toBeInTheDocument();
+  it("language toggle changes the hero H1", () => {
+    renderLanding("pt-BR");
+    expect(
+      screen.getByRole("heading", {
+        name: /8\.000 clientes\. Uma planilha\. Nenhuma direção\./i,
+      })
+    ).toBeInTheDocument();
+    expect(
+      screen.queryByRole("heading", {
+        name: /8,000 customers\. One spreadsheet\. No direction\./i,
+      })
+    ).toBeNull();
   });
 
-  it("how-it-works section renders 4 cards with badges 01–04", () => {
+  // Issue #53 — Summary Block section
+  it("summary block renders 4 cards", () => {
     renderLanding();
-    const section = document.getElementById("how-it-works")!;
+    const section = screen.getByTestId("summary-block");
+    const cards = within(section).getAllByTestId("summary-card");
+    expect(cards).toHaveLength(4);
+  });
+
+  it("summary block renders the 4 EN labels", () => {
+    renderLanding();
+    const section = screen.getByTestId("summary-block");
+    expect(section).toHaveTextContent("The Problem");
+    expect(section).toHaveTextContent("The Brief");
+    expect(section).toHaveTextContent("The Approach");
+    expect(section).toHaveTextContent("What Was Delivered");
+  });
+
+  it("each summary card has a non-empty label and body", () => {
+    renderLanding();
+    const section = screen.getByTestId("summary-block");
+    const cards = within(section).getAllByTestId("summary-card");
+    for (const card of cards) {
+      expect(card.textContent?.trim().length ?? 0).toBeGreaterThan(20);
+    }
+  });
+
+  it("summary block switches copy to PT-BR", () => {
+    renderLanding("pt-BR");
+    const section = screen.getByTestId("summary-block");
+    expect(section).toHaveTextContent("O Problema");
+    expect(section).not.toHaveTextContent("The Problem");
+  });
+
+  it("summary block renders without missing-key fallbacks", () => {
+    renderLanding();
+    const section = screen.getByTestId("summary-block");
+    expect(section).not.toHaveTextContent("landing.summary");
+  });
+
+  // Issue #54 — Methodology section
+  it("methodology section has id='methodology'", () => {
+    renderLanding();
+    expect(document.getElementById("methodology")).toBeInTheDocument();
+  });
+
+  it("methodology section renders 3 phases", () => {
+    renderLanding();
+    const section = document.getElementById("methodology")!;
+    const phases = section.querySelectorAll("[data-testid='phase']");
+    expect(phases).toHaveLength(3);
+  });
+
+  it("methodology phases render numbers 01/02/03 and titles", () => {
+    renderLanding();
+    const section = document.getElementById("methodology")!;
     expect(section).toHaveTextContent("01");
     expect(section).toHaveTextContent("02");
     expect(section).toHaveTextContent("03");
-    expect(section).toHaveTextContent("04");
+    expect(section).toHaveTextContent("Data Foundation");
+    expect(section).toHaveTextContent("Behavioral Analysis");
+    expect(section).toHaveTextContent("Segmentation and Intelligence");
   });
 
-  it("how-it-works section renders category labels DATA, FEATURES, AGENT, SURFACE", () => {
+  it("methodology callout box renders and mentions K-Means", () => {
     renderLanding();
-    const section = document.getElementById("how-it-works")!;
-    expect(section).toHaveTextContent("DATA");
-    expect(section).toHaveTextContent("FEATURES");
-    expect(section).toHaveTextContent("AGENT");
-    expect(section).toHaveTextContent("SURFACE");
+    const callout = screen.getByTestId("methodology-callout");
+    expect(callout).toBeInTheDocument();
+    expect(callout).toHaveTextContent("K-Means");
   });
 
-  it("how-it-works renders in PT-BR without missing-key fallbacks", () => {
+  it("methodology renders in PT-BR without missing-key fallbacks", () => {
     renderLanding("pt-BR");
-    const section = document.getElementById("how-it-works")!;
-    expect(section).not.toHaveTextContent("landing.howItWorks");
+    const section = document.getElementById("methodology")!;
+    expect(section).not.toHaveTextContent("landing.methodology");
   });
 
-  // Issue #45 — Pipeline section
-  it("pipeline section renders all 6 steps in order", () => {
+  // Issue #55 — Deliverables section
+  it("deliverables section has id='deliverables'", () => {
     renderLanding();
-    const section = screen.getByTestId("pipeline-section");
-    const steps = section.querySelectorAll("[data-testid='pipeline-step']");
-    expect(steps).toHaveLength(6);
+    expect(document.getElementById("deliverables")).toBeInTheDocument();
   });
 
-  it("pipeline step nodes show tool tag chips", () => {
+  it("deliverables section renders the 'What Was Built' shared label", () => {
     renderLanding();
-    const section = screen.getByTestId("pipeline-section");
-    expect(section).toHaveTextContent("Faker");
-    expect(section).toHaveTextContent("FastAPI");
-    expect(section).toHaveTextContent("LangGraph");
-    expect(section).toHaveTextContent("React");
+    const section = screen.getByTestId("deliverables-section");
+    expect(section).toHaveTextContent("What Was Built");
   });
 
-  it("pipeline renders in PT-BR without missing-key fallbacks", () => {
+  it("deliverables section renders both product badges", () => {
+    renderLanding();
+    const section = screen.getByTestId("deliverables-section");
+    expect(section).toHaveTextContent("Product 01");
+    expect(section).toHaveTextContent("Product 02");
+  });
+
+  it("deliverables section renders the dashboard screenshot in a browser chrome frame", () => {
+    renderLanding();
+    const frame = screen.getByTestId("deliverable-browser-chrome");
+    expect(frame).toBeInTheDocument();
+    expect(frame.querySelector("img")).toBeInTheDocument();
+  });
+
+  it("deliverables section renders the Sparkles icon beside the agent title", () => {
+    renderLanding();
+    expect(screen.getByTestId("deliverable-sparkles")).toBeInTheDocument();
+  });
+
+  it("deliverables code block renders input and output field names", () => {
+    renderLanding();
+    const code = screen.getByTestId("deliverable-code");
+    expect(code).toHaveTextContent("segment");
+    expect(code).toHaveTextContent("risk_level");
+  });
+
+  it("deliverables section renders 6 tool logo placeholders", () => {
+    renderLanding();
+    expect(screen.getAllByTestId("logo-placeholder")).toHaveLength(6);
+  });
+
+  it("deliverables renders in PT-BR without missing-key fallbacks", () => {
     renderLanding("pt-BR");
-    const section = screen.getByTestId("pipeline-section");
-    expect(section).not.toHaveTextContent("landing.pipeline");
-  });
-
-  // Issue #46 — Dashboard preview section
-  it("dashboard section has id='dashboard'", () => {
-    renderLanding();
-    expect(document.getElementById("dashboard")).toBeInTheDocument();
-  });
-
-  it("dashboard section renders an img element for the preview screenshot", () => {
-    renderLanding();
-    const section = document.getElementById("dashboard")!;
-    expect(section.querySelector("img")).toBeInTheDocument();
-  });
-
-  it("dashboard section has a browser-chrome frame wrapper with a mock URL bar", () => {
-    renderLanding();
-    const section = document.getElementById("dashboard")!;
-    expect(section.querySelector("[data-testid='browser-chrome']")).toBeInTheDocument();
-  });
-
-  it("dashboard renders in PT-BR without missing-key fallbacks", () => {
-    renderLanding("pt-BR");
-    const section = document.getElementById("dashboard")!;
-    expect(section).not.toHaveTextContent("landing.dashboard");
-  });
-
-  // Issue #47 — AI Agent section
-  it("ai-agent section has id='ai-agent'", () => {
-    renderLanding();
-    expect(document.getElementById("ai-agent")).toBeInTheDocument();
-  });
-
-  it("ai-agent terminal panels render input and output JSON field names", () => {
-    renderLanding();
-    const section = document.getElementById("ai-agent")!;
-    // input fields
-    expect(section).toHaveTextContent("segment");
-    expect(section).toHaveTextContent("rfm_score");
-    expect(section).toHaveTextContent("recency_days");
-    // output fields
-    expect(section).toHaveTextContent("risk_level");
-    expect(section).toHaveTextContent("recommended_action");
-    expect(section).toHaveTextContent("reasoning");
-  });
-
-  it("ai-agent node-flow shows all 5 node labels in correct order", () => {
-    renderLanding();
-    const flow = screen.getByTestId("agent-node-flow");
-    const nodes = flow.querySelectorAll("[data-testid='agent-node']");
-    expect(nodes).toHaveLength(5);
-    expect(nodes[0]).toHaveTextContent(/fetch_customer_profile/i);
-    expect(nodes[4]).toHaveTextContent(/validate_output/i);
-  });
-
-  it("ai-agent renders in PT-BR without missing-key fallbacks", () => {
-    renderLanding("pt-BR");
-    const section = document.getElementById("ai-agent")!;
-    expect(section).not.toHaveTextContent("landing.agent");
+    const section = screen.getByTestId("deliverables-section");
+    expect(section).not.toHaveTextContent("landing.deliverables");
   });
 
   // Issue #49 — Roadmap section
@@ -231,5 +296,44 @@ describe("LandingPage", () => {
   it("Out of Scope section is removed from LandingPage", () => {
     renderLanding();
     expect(screen.queryByTestId("out-of-scope")).toBeNull();
+  });
+
+  // Issue #57 — Footer disclaimer
+  it("footer renders the disclaimer line in EN", () => {
+    renderLanding();
+    const disclaimer = screen.getByTestId("footer-disclaimer");
+    expect(disclaimer).toBeInTheDocument();
+    expect(disclaimer).toHaveTextContent(
+      "SynaptiqPay is a fictional company. All data is synthetic and generated for portfolio purposes."
+    );
+  });
+
+  it("footer disclaimer switches to PT-BR", () => {
+    renderLanding("pt-BR");
+    const disclaimer = screen.getByTestId("footer-disclaimer");
+    expect(disclaimer).toHaveTextContent(
+      "SynaptiqPay é uma empresa fictícia. Todos os dados são sintéticos e gerados para fins de portfólio."
+    );
+  });
+
+  // Issue #57 — standalone About section removed
+  it("standalone About section is removed from LandingPage", () => {
+    renderLanding();
+    expect(screen.queryByText(/what this is/i)).toBeNull();
+    expect(screen.queryByText(/landing.about/i)).toBeNull();
+  });
+
+  // Issue #57 — footer section links point to real ids
+  it("footer section links point to current section ids", () => {
+    renderLanding();
+    const footer = screen.getByRole("contentinfo");
+    const hrefs = within(footer)
+      .getAllByRole("link")
+      .map((l) => l.getAttribute("href"));
+    expect(hrefs).toContain("#methodology");
+    expect(hrefs).toContain("#deliverables");
+    expect(hrefs).toContain("#stack");
+    expect(hrefs).not.toContain("#how-it-works");
+    expect(hrefs).not.toContain("#ai-agent");
   });
 });

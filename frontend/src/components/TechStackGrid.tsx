@@ -29,7 +29,7 @@ export function TechStackGrid() {
               "rounded-full border px-3 py-1 text-xs font-semibold transition-colors",
               (cat === "ALL" && activeFilter === "ALL") ||
               (cat !== "ALL" && activeFilter === cat)
-                ? "border-primary bg-primary/10 text-primary"
+                ? "border-amber-400 bg-amber-400 text-gray-900"
                 : "border-border text-muted-foreground hover:border-primary/50 hover:text-foreground"
             )}
           >
