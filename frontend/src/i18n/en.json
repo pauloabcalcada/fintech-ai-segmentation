@@ -177,54 +177,70 @@
   },
   "landing": {
     "nav": {
-      "howItWorks": "How It Works",
-      "dashboard": "Dashboard",
-      "aiAgent": "AI Agent",
+      "methodology": "Methodology",
+      "deliverables": "Deliverables",
+      "stack": "Stack",
       "roadmap": "Roadmap",
       "ctaDashboard": "Dashboard",
       "ctaCustomers": "Customers"
     },
     "hero": {
-      "heading": "SynaptiqPay AI Segmentation",
-      "tagline": "Customer behaviour analysis for a Brazilian fintech — replacing manual, one-size-fits-all treatment with AI-driven segmentation and recommendations.",
-      "situation": "SynaptiqPay's commercial manager was spending 3+ hours on spreadsheets every week to analyse 8,000 digital wallet customers — with no consistent segmentation and no actionable next steps.",
-      "result": "This system delivers a full customer picture in under 5 minutes and generates one AI recommendation per customer, replacing gut-feel decisions with data-driven actions.",
-      "cta": "Open Dashboard →",
-      "ctaCustomers": "Browse Customers"
+      "badge": "SynaptiqPay · AI Segmentation",
+      "heading": "8,000 customers. One spreadsheet. No direction.",
+      "subhead": "We were engaged to replace manual, spreadsheet-driven customer analysis with a structured data pipeline and AI recommendation system. The result is a segmentation engine that gives commercial teams clear, actionable intelligence on each customer.",
+      "cta": "View Dashboard",
+      "ctaCustomers": "Explore Customers",
+      "urlBar": "fintech-ai-segmentation.up.railway.app/dashboard"
     },
-    "howItWorks": {
-      "sectionLabel": "02 · How It Works",
-      "heading": "Four layers, one coherent system",
+    "summary": {
+      "heading": "Case at a glance",
       "cards": [
         {
-          "badge": "01",
-          "category": "DATA",
-          "title": "Synthetic Generation",
-          "why": "Faker pt_BR produces 8,000 customers with behaviorally distinct segments — because uniform random noise hides the segments we want to find."
+          "label": "The Problem",
+          "body": "A commercial manager at an 8,000 customer Brazilian fintech was spending hours each week in spreadsheets. There was no behavioral segmentation and no data-driven direction for how to treat each customer."
         },
         {
-          "badge": "02",
-          "category": "FEATURES",
-          "title": "RFM + Cohort Analysis",
-          "why": "Pandas and Scikit-learn turn raw transactions into recency, frequency, and monetary scores — the three dimensions that predict customer lifetime value."
+          "label": "The Brief",
+          "body": "Understand the current customer base, identify behavioral patterns, and deliver a system that reduces manual effort and improves how the team allocates attention and resources."
         },
         {
-          "badge": "03",
-          "category": "AGENT",
-          "title": "LangGraph Conditional Routing",
-          "why": "LangGraph with OpenRouter routes each customer through a 4-node conditional graph — so recommendations are grounded in structured data, not generic LLM hallucinations."
+          "label": "The Approach",
+          "body": "Three analysis phases covering demographics, cohort behavior, and RFM scoring, combined with a machine learning segmentation model and an AI recommendation agent built on top."
         },
         {
-          "badge": "04",
-          "category": "SURFACE",
-          "title": "Business Dashboard",
-          "why": "React + Vite + Tailwind + shadcn/ui gives the commercial manager a zero-SQL interface — no spreadsheets, no SQL, no engineering dependency."
+          "label": "What Was Delivered",
+          "body": "A business dashboard for ongoing monitoring and an AI agent that generates a personalized recommendation for each customer based on their profile and behavior history."
         }
       ]
     },
+    "methodology": {
+      "sectionLabel": "Methodology",
+      "heading": "How the engagement was structured",
+      "phases": [
+        {
+          "number": "01",
+          "title": "Data Foundation",
+          "description": "We generated a synthetic dataset of 8,000 customers using statistical models. The data uses behavioral distributions that replicate real churn, dormancy, and product adoption patterns. The synthetic approach was intentional. It gave us full control over segment separation and allowed end-to-end pipeline validation before connecting real data.",
+          "tools": ["Faker", "Pandas", "Pydantic", "Supabase"]
+        },
+        {
+          "number": "02",
+          "title": "Behavioral Analysis",
+          "description": "Three analysis phases covered who the customers are, how they behave over time, and how cohorts differ in retention and lifecycle stage. RFM scoring (Recency, Frequency, Monetary) distilled transaction history into comparable signals across all 8,000 customers.",
+          "tools": ["Pandas", "Jupyter", "Scikit-learn"]
+        },
+        {
+          "number": "03",
+          "title": "Segmentation and Intelligence",
+          "description": "K-Means clustering (unsupervised machine learning) grouped customers into operational segments based on behavioral signals. A LangGraph agent then takes each customer profile and generates a structured recommendation using a large language model.",
+          "tools": ["Scikit-learn", "LangGraph", "OpenRouter", "LangSmith"]
+        }
+      ],
+      "callout": "Two layers of AI were applied at different stages. K-Means clustering identifies customer segments without labeled training data. The LLM-based agent produces recommendations grounded in each customer's actual behavior, not generic copy."
+    },
     "stack": {
-      "sectionLabel": "06 · Tech Stack",
-      "heading": "Tools chosen for reasons, not trends",
+      "sectionLabel": "Stack and Architecture",
+      "heading": "Stack and Architecture",
       "filterAll": "ALL",
       "tools": [
         { "name": "Faker", "category": "DATA", "why": "Generates realistic Brazilian customer data with built-in pt_BR locale support — no real PII needed." },
@@ -241,32 +257,22 @@
         { "name": "Railway", "category": "OPS", "why": "One-command deploys from GitHub with automatic HTTPS — faster to ship than Render's 50s cold-start free tier." }
       ]
     },
-    "agent": {
-      "sectionLabel": "05 · AI Agent",
-      "heading": "Watch a customer profile become a retention action",
-      "body": "A LangGraph conditional graph with 4 routes assembles the customer's RFM profile, cohort health, and product ownership into a structured Pydantic-validated recommendation — no hallucination, no generic copy."
-    },
-    "dashboard": {
-      "sectionLabel": "04 · Dashboard Preview",
-      "heading": "No SQL. No spreadsheets.",
-      "body": "The commercial manager interacts with a React dashboard — filter by segment, expand a customer, trigger the AI agent, copy the push notification.",
-      "urlBar": "fintech-ai-segmentation.up.railway.app/dashboard"
-    },
-    "pipeline": {
-      "sectionLabel": "03 · Pipeline",
-      "heading": "End-to-end data flow",
-      "steps": [
-        { "title": "Data Generation", "tools": ["Faker (pt_BR)", "Python"] },
-        { "title": "EDA → Cohort → RFM Analysis", "tools": ["Pandas", "3 Notebooks"] },
-        { "title": "Segment Storage", "tools": ["Supabase", "Postgres", "customer_analysis mart"] },
-        { "title": "REST API", "tools": ["FastAPI", "SQLAlchemy", "GET /customers", "POST /analyze"] },
-        { "title": "AI Agent", "tools": ["LangGraph", "OpenRouter", "Pydantic", "4 routes"] },
-        { "title": "Business Dashboard", "tools": ["React", "Vite", "Tailwind", "Recharts", "Railway"] }
-      ]
-    },
-    "about": {
-      "heading": "What this is",
-      "body": "SynaptiqPay is a Brazilian fintech with 8,000 digital wallet customers. This system replaces manual, one-size-fits-all customer treatment with a segmentation and AI-driven workflow that identifies customer value, behaviour patterns, churn risk, and recommends next actions. Customer data is synthetic, generated with realistic Brazilian demographics and statistical behavioural models."
+    "deliverables": {
+      "label": "What Was Built",
+      "product1": {
+        "badge": "Product 01",
+        "title": "Business Dashboard",
+        "body": "A React dashboard that gives the commercial team a real-time view of customer segments, RFM scores, and cohort health. No SQL, no spreadsheets. The data is ready to act on.",
+        "cta": "View the dashboard",
+        "urlBar": "fintech-ai-segmentation.up.railway.app/dashboard",
+        "alt": "SynaptiqPay business dashboard"
+      },
+      "product2": {
+        "badge": "Product 02",
+        "title": "AI Recommendation Agent",
+        "body": "A LangGraph agent that receives a customer's behavioral profile and returns a structured recommendation. It produces a risk level, a suggested action, a product to offer, and the reasoning behind it.",
+        "cta": "See it on a customer"
+      }
     },
     "roadmap": {
       "sectionLabel": "07 · Roadmap",
@@ -306,9 +312,10 @@
       "githubRepo": "GitHub Repository",
       "liveDemo": "Live Demo",
       "roadmapLink": "Roadmap",
-      "problem": "Problem",
-      "howItWorks": "How It Works",
-      "aiAgent": "AI Agent"
+      "methodology": "Methodology",
+      "deliverables": "Deliverables",
+      "stack": "Stack",
+      "disclaimer": "SynaptiqPay is a fictional company. All data is synthetic and generated for portfolio purposes."
     },
     "github": {
       "label": "View on GitHub"
