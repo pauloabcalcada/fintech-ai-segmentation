@@ -319,19 +319,6 @@ export function LandingPage() {
           </div>
         </div>
 
-        {/* Tool logo placeholder row */}
-        {/* TODO: replace placeholders with actual tool logo <img> tags when assets are provided */}
-        <div className="mt-16 flex flex-wrap gap-4">
-          {Array.from({ length: 6 }).map((_, idx) => (
-            <div
-              key={idx}
-              data-testid="logo-placeholder"
-              className="w-12 h-12 rounded bg-muted flex items-center justify-center text-xs text-muted-foreground"
-            >
-              logo
-            </div>
-          ))}
-        </div>
       </section>
 
       {/* Stack and Architecture — 06 */}
