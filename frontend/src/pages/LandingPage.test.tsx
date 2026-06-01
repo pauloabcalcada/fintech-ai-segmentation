@@ -24,7 +24,7 @@ describe("LandingPage", () => {
     renderLanding();
     expect(
       screen.getByRole("heading", {
-        name: /8,000 customers\. One spreadsheet\. No direction\./i,
+        name: /personalized next action for every customer/i,
       })
     ).toBeInTheDocument();
     expect(screen.getByRole("link", { name: /view dashboard/i })).toBeInTheDocument();
@@ -35,9 +35,11 @@ describe("LandingPage", () => {
     expect(screen.getByRole("link", { name: /view dashboard/i })).toHaveAttribute("href", "/dashboard");
   });
 
-  it("hero secondary CTA Explore Customers links to /customers", () => {
+  it("hero secondary CTA links to /customers", () => {
     renderLanding();
-    expect(screen.getByRole("link", { name: /explore customers/i })).toHaveAttribute("href", "/customers");
+    expect(
+      screen.getByRole("link", { name: /try the recommendation agent/i })
+    ).toHaveAttribute("href", "/customers");
   });
 
   it("hero browser chrome frame is present with the preview image", () => {
@@ -128,7 +130,7 @@ describe("LandingPage", () => {
     ).toBeInTheDocument();
     expect(
       screen.queryByRole("heading", {
-        name: /8,000 customers\. One spreadsheet\. No direction\./i,
+        name: /personalized next action for every customer/i,
       })
     ).toBeNull();
   });

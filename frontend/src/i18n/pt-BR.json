@@ -1,6 +1,6 @@
 {
   "nav": {
-    "dashboard": "Painel",
+    "dashboard": "Dashboard",
     "customers": "Clientes"
   },
   "dashboard": {
@@ -181,23 +181,30 @@
       "deliverables": "Entregas",
       "stack": "Stack",
       "roadmap": "Roadmap",
-      "ctaDashboard": "Painel",
+      "ctaDashboard": "Dashboard",
       "ctaCustomers": "Clientes"
     },
     "hero": {
       "badge": "SynaptiqPay · Segmentação com IA",
-      "heading": "8.000 clientes. Uma planilha. Nenhuma direção.",
-      "subhead": "Fomos contratados para substituir a análise manual de clientes feita em planilhas por um pipeline de dados estruturado e um sistema de recomendação com IA. O resultado é um motor de segmentação que dá às equipes comerciais informação clara e acionável sobre cada cliente.",
-      "cta": "Ver Painel",
-      "ctaCustomers": "Explorar Clientes",
-      "urlBar": "fintech-ai-segmentation.up.railway.app/dashboard"
+      "heading": "Um sistema de IA que transforma perfil comportamental em uma próxima ação personalizada para cada cliente.",
+      "subhead": "SynaptiqPay é uma fintech brasileira com 8.000 clientes de carteira digital. O time comercial tinha dados ricos de transações, mas nenhuma forma clara de segmentar a base ou decidir o que oferecer para cada pessoa. Construímos uma segmentação comportamental com machine learning e um agente de IA que recomenda produtos a partir de scores RFM, saúde de cohort e sinais de posse de produtos. O objetivo é aumentar ROI: reter clientes em risco, expandir os engajados e transformar análise em receita.",
+      "cta": "Ver Dashboard",
+      "ctaCustomers": "Testar o Agente de Recomendação",
+      "urlBar": "fintech-ai-segmentation.up.railway.app/dashboard",
+      "agentCard": {
+        "label": "Recomendação de IA",
+        "segment": "at_risk_churner",
+        "customerLine": "Ana Souza · 92 dias inativa · apenas carteira · anúncios pagos",
+        "suggestedProduct": "Cartão de Crédito com Cashback",
+        "notificationText": "Oferta exclusiva para você — ative cashback em todas as compras hoje."
+      }
     },
     "summary": {
       "heading": "O caso em resumo",
       "cards": [
         {
           "label": "O Problema",
-          "body": "Uma gerente comercial de uma fintech brasileira com 8.000 clientes passava horas por semana em planilhas. Não havia segmentação comportamental nem direção orientada por dados sobre como tratar cada cliente."
+          "body": "O time comercial de uma fintech brasileira com 8.000 clientes passava horas por semana em planilhas. Não havia segmentação comportamental nem direção orientada por dados sobre como tratar cada cliente."
         },
         {
           "label": "O Desafio",
@@ -205,11 +212,11 @@
         },
         {
           "label": "A Abordagem",
-          "body": "Três fases de análise cobrindo dados demográficos, comportamento por coorte e pontuação RFM, combinadas com um modelo de segmentação de machine learning e um agente de recomendação com IA construído sobre essa base."
+          "body": "Três fases de análise cobrindo dados demográficos, comportamento por cohort e pontuação RFM, combinadas com um modelo de segmentação de machine learning e um agente de recomendação com IA construído sobre essa base."
         },
         {
           "label": "O Que Foi Entregue",
-          "body": "Um painel de negócios para acompanhamento contínuo e um agente de IA que gera uma recomendação personalizada para cada cliente com base no seu perfil e histórico de comportamento."
+          "body": "Um dashboard de negócios para acompanhamento contínuo e um agente de IA que gera uma recomendação personalizada para cada cliente com base no seu perfil e histórico de comportamento."
         }
       ]
     },
@@ -220,20 +227,20 @@
         {
           "number": "01",
           "title": "Base de Dados",
-          "description": "Geramos um conjunto sintético de 8.000 clientes usando modelos estatísticos. Os dados usam distribuições comportamentais que replicam padrões reais de churn, dormência e adoção de produtos. A abordagem sintética foi intencional. Ela nos deu controle total sobre a separação dos segmentos e permitiu validar o pipeline de ponta a ponta antes de conectar dados reais.",
+          "description": "Geramos um conjunto sintético de 8.000 clientes usando distribuições estatísticas. Os dados usam distribuições comportamentais que replicam padrões reais de churn, dormência e adoção de produtos. Um dataset único, nada que pode ser encontrado no Kaggle ou em outros sites.",
           "tools": ["Faker", "Pandas", "Pydantic", "Supabase"]
         },
         {
           "number": "02",
           "title": "Análise Comportamental",
-          "description": "Três fases de análise cobriram quem são os clientes, como se comportam ao longo do tempo e como as coortes diferem em retenção e estágio de ciclo de vida. A pontuação RFM (Recência, Frequência, Valor Monetário) destilou o histórico de transações em sinais comparáveis entre todos os 8.000 clientes.",
+          "description": "Três fases de análise cobriram: quem são os clientes, como se comportam ao longo do tempo e como os cohorts diferem em retenção e estágio de ciclo de vida. A pontuação RFM (Recência, Frequência, Valor Monetário) condensou o histórico de transações em sinais comparáveis entre todos os 8.000 clientes.",
           "tools": ["Pandas", "Jupyter", "Scikit-learn"]
         },
         {
           "number": "03",
           "title": "Segmentação e Inteligência",
-          "description": "O clustering K-Means (aprendizado de máquina não supervisionado) agrupou os clientes em segmentos operacionais com base em sinais comportamentais. Um agente LangGraph então recebe cada perfil de cliente e gera uma recomendação estruturada usando um large language model.",
-          "tools": ["Scikit-learn", "LangGraph", "OpenRouter", "LangSmith"]
+          "description": "O clustering K-Means (machine learning não supervisionado) agrupou os clientes em segmentos operacionais com base em sinais comportamentais. Um agente LangGraph recebe cada perfil de cliente e gera uma recomendação estruturada usando um LLM.",
+          "tools": ["Pydantic", "LangGraph", "OpenRouter", "LangSmith", "FastAPI"]
         }
       ],
       "callout": "Duas camadas de IA foram aplicadas em estágios diferentes. O clustering K-Means identifica segmentos de clientes sem dados de treino rotulados. O agente baseado em LLM produz recomendações fundamentadas no comportamento real de cada cliente, não em texto genérico."
@@ -242,16 +249,17 @@
       "label": "O Que Foi Construído",
       "product1": {
         "badge": "Produto 01",
-        "title": "Painel de Negócio",
-        "body": "Um painel React que dá ao time comercial uma visão em tempo real dos segmentos de clientes, scores RFM e saúde de coorte. Sem SQL, sem planilhas. Os dados ficam prontos para a ação.",
-        "cta": "Ver o painel",
+        "title": "Dashboard de Negócio",
+        "body": "Um dashboard que dá ao time comercial uma visão em tempo real dos segmentos de clientes, scores RFM e saúde de cohort. Sem SQL, sem planilhas. Os dados ficam prontos para a ação.",
+        "cta": "Ver o dashboard",
         "urlBar": "fintech-ai-segmentation.up.railway.app/dashboard",
-        "alt": "Painel de negócio da SynaptiqPay"
+        "alt": "Dashboard de negócio da SynaptiqPay"
       },
       "product2": {
         "badge": "Produto 02",
         "title": "Agente de Recomendação com IA",
         "body": "Um agente LangGraph que recebe o perfil comportamental de um cliente e devolve uma recomendação estruturada. Ele produz um nível de risco, uma ação sugerida, um produto a oferecer e o raciocínio por trás disso.",
+        "bodyDynamic": "O prompt se adapta ao segmento do cliente: retenção para usuários inativos, upsell para ativos de alto valor, reativação para contas dormentes e ativação para quem nunca transacionou.",
         "cta": "Ver em um cliente"
       }
     },
@@ -261,7 +269,7 @@
       "filterAll": "TODOS",
       "tools": [
         { "name": "Faker", "category": "DATA", "why": "Gera dados de clientes brasileiros realistas com suporte nativo ao locale pt_BR — sem PII real necessária." },
-        { "name": "Pandas", "category": "DATA", "why": "Transformações vetorizadas para pontuação RFM e pivôs de coorte — rápido o suficiente para 8.000 clientes sem data warehouse." },
+        { "name": "Pandas", "category": "DATA", "why": "Transformações vetorizadas para pontuação RFM e pivôs de cohort — rápido o suficiente para 8.000 clientes sem data warehouse." },
         { "name": "Supabase / Postgres", "category": "DATA", "why": "Postgres gerenciado com tier gratuito — zero overhead de ops, COPY direto via psql para cargas em massa." },
         { "name": "SQLAlchemy", "category": "DATA", "why": "Queries com parâmetros ligados como única interface SQL — elimina risco de injeção na camada da API." },
         { "name": "Scikit-learn", "category": "ML & AI", "why": "Clustering K-Means em features RFM produz três segmentos operacionais interpretáveis sem ruído de rótulos." },
@@ -270,7 +278,7 @@
         { "name": "FastAPI", "category": "API", "why": "Docs OpenAPI gerados automaticamente e suporte async com mínimo boilerplate — ideal para API Python pequena e tipada." },
         { "name": "React + Vite", "category": "FRONTEND", "why": "HMR em menos de um segundo no desenvolvimento e bundle de produção enxuto — sem overhead do Create React App." },
         { "name": "Tailwind + shadcn/ui", "category": "FRONTEND", "why": "Primitivos de componentes sem estilo + classes utilitárias dão controle total de design sem biblioteca pesada." },
-        { "name": "Recharts", "category": "FRONTEND", "why": "Gráficos SVG combináveis com API nativa React — heatmap de coorte e breakdown de segmento sem complexidade D3." },
+        { "name": "Recharts", "category": "FRONTEND", "why": "Gráficos SVG combináveis com API nativa React — heatmap de cohort e breakdown de segmento sem complexidade D3." },
         { "name": "Railway", "category": "OPS", "why": "Deploy em um comando pelo GitHub com HTTPS automático — mais rápido de subir que o cold-start de 50s do Render." }
       ]
     },
@@ -282,7 +290,7 @@
           "phase": "Fase 1",
           "title": "MVP",
           "status": "SHIPPED",
-          "items": ["Dataset Faker (4 segmentos)", "EDA + análise de coorte", "RFM + clustering K-Means", "Agente IA LangGraph", "API REST FastAPI", "Dashboard React", "Deploy Docker + Railway"]
+          "items": ["Dataset Faker (4 segmentos)", "EDA + análise de cohort", "RFM + clustering K-Means", "Agente IA LangGraph", "API REST FastAPI", "Dashboard React", "Deploy Docker + Railway"]
         },
         {
           "phase": "Fase 2",

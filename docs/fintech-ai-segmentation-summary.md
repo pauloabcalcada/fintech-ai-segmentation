@@ -174,7 +174,7 @@ For a full breakdown of the statistical distributions used — registration timi
 
 ```
 Faker
-  → generates 8,000 customers with 4 planted segments
+  → generates 8,000 customers
         ↓
 Pandas Pipeline
   → EDA → Cohort Analysis → RFM Scoring → K-Means Clustering

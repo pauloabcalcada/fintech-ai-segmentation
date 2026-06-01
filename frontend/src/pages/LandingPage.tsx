@@ -39,40 +39,80 @@ export function LandingPage() {
               </Link>
               <Link
                 to="/customers"
-                className={cn(buttonVariants({ variant: "outline", size: "lg" }), "cursor-pointer gap-2")}
+                className={cn(buttonVariants({ size: "lg" }), "cursor-pointer gap-2")}
               >
                 {t("landing.hero.ctaCustomers")}
+                <ArrowRight className="size-4" />
               </Link>
               <a
                 href="https://github.com/pauloabcalcada/fintech-ai-segmentation"
                 target="_blank"
                 rel="noopener noreferrer"
-                className={cn(buttonVariants({ variant: "ghost", size: "lg" }), "cursor-pointer gap-2")}
+                className={cn(buttonVariants({ size: "lg" }), "cursor-pointer gap-2")}
               >
-                <ExternalLink className="size-4" />
                 {t("landing.github.label")}
+                <ExternalLink className="size-4" />
               </a>
             </div>
           </div>
 
-          {/* Right — dashboard preview in browser chrome */}
-          <div
-            data-testid="hero-browser-chrome"
-            className="overflow-hidden rounded-xl border border-border bg-gray-900 shadow-2xl"
-          >
-            <div className="flex items-center gap-2 border-b border-border px-4 py-2.5">
-              <span className="size-3 rounded-full bg-red-500" />
-              <span className="size-3 rounded-full bg-yellow-500" />
-              <span className="size-3 rounded-full bg-green-500" />
-              <span className="ml-3 flex-1 rounded bg-gray-800 px-3 py-1 text-xs text-gray-400">
-                {t("landing.hero.urlBar")}
-              </span>
+          {/* Right — dashboard preview + AI agent card */}
+          <div className="flex flex-col gap-3">
+            <div
+              data-testid="hero-browser-chrome"
+              className="overflow-hidden rounded-xl border border-border bg-gray-900 shadow-2xl"
+            >
+              <div className="flex items-center gap-2 border-b border-border px-4 py-2.5">
+                <span className="size-3 rounded-full bg-red-500" />
+                <span className="size-3 rounded-full bg-yellow-500" />
+                <span className="size-3 rounded-full bg-green-500" />
+                <span className="ml-3 flex-1 rounded bg-gray-800 px-3 py-1 text-xs text-gray-400">
+                  {t("landing.hero.urlBar")}
+                </span>
+              </div>
+              <img
+                src={dashboardPreview}
+                alt="SynaptiqPay dashboard preview"
+                className="w-full"
+              />
             </div>
-            <img
-              src={dashboardPreview}
-              alt="SynaptiqPay dashboard preview"
-              className="w-full"
-            />
+
+            {/* AI agent simulation card */}
+            <div
+              data-testid="hero-agent-card"
+              className="rounded-xl border border-border bg-card p-4"
+            >
+              {/* Header */}
+              <div className="mb-3 flex items-center gap-2">
+                <Sparkles className="size-4 text-amber-400" />
+                <span className="text-xs font-semibold uppercase tracking-widest text-amber-400">
+                  {t("landing.hero.agentCard.label")}
+                </span>
+                <span className="ml-auto rounded-full bg-muted px-2 py-0.5 font-mono text-xs text-muted-foreground">
+                  {t("landing.hero.agentCard.segment")}
+                </span>
+              </div>
+
+              {/* Customer snapshot */}
+              <p className="mb-3 text-xs text-muted-foreground">
+                {t("landing.hero.agentCard.customerLine")}
+              </p>
+
+              {/* Offer row */}
+              <div className="mb-3 flex flex-wrap items-center gap-2">
+                <span className="rounded-full border border-red-500 px-2 py-0.5 text-xs font-bold text-red-400">
+                  {t("aiPanel.fields.riskLevels.critical").toUpperCase()}
+                </span>
+                <span className="rounded-full bg-amber-400/10 px-2 py-0.5 text-xs font-medium text-amber-400">
+                  {t("landing.hero.agentCard.suggestedProduct")}
+                </span>
+              </div>
+
+              {/* Notification text */}
+              <p className="text-xs italic text-muted-foreground">
+                &ldquo;{t("landing.hero.agentCard.notificationText")}&rdquo;
+              </p>
+            </div>
           </div>
         </div>
       </section>
@@ -212,8 +252,11 @@ export function LandingPage() {
               <Sparkles data-testid="deliverable-sparkles" className="size-6 text-amber-400" />
               {t("landing.deliverables.product2.title")}
             </h3>
-            <p className="mb-6 text-base leading-relaxed text-muted-foreground">
+            <p className="mb-3 text-base leading-relaxed text-muted-foreground">
               {t("landing.deliverables.product2.body")}
+            </p>
+            <p className="mb-6 text-base leading-relaxed text-muted-foreground">
+              {t("landing.deliverables.product2.bodyDynamic")}
             </p>
             <Link
               to="/customers"
@@ -228,29 +271,50 @@ export function LandingPage() {
             className="grid grid-cols-1 gap-4 sm:grid-cols-2"
           >
             <pre className="overflow-x-auto rounded-xl border border-border bg-secondary p-4 font-mono text-xs leading-relaxed text-foreground">
-{`// input
-{
-  segment: "at_risk_churner",
-  rfm_score: 1.4,
-  recency_days: 92,
-  products_owned: ["wallet"],
-  acquisition_channel: "paid_ads",
-  tenure_months: 8
-}`}
+              <span className="text-muted-foreground">{"// agent input (per customer)\n"}</span>
+              {"{\n"}
+              {"  "}<span className="text-amber-400">customer_name</span>{": \"Ana Souza\",\n"}
+              {"  "}<span className="text-amber-400">cluster_name</span>{": \"at_risk_churner\",\n"}
+              {"  "}<span className="text-amber-400">cluster_position</span>{": \"bottom_20\",\n"}
+              {"  "}<span className="text-amber-400">lifecycle_stage</span>{": \"dormant\",\n"}
+              {"  "}<span className="text-amber-400">rfm_score</span>{": 1.4,\n"}
+              {"  "}<span className="text-amber-400">cluster_avg_rfm</span>{": 1.61,\n"}
+              {"  "}<span className="text-amber-400">recency_score</span>{": 1,\n"}
+              {"  "}<span className="text-amber-400">frequency_score</span>{": 1,\n"}
+              {"  "}<span className="text-amber-400">monetary_score</span>{": 2,\n"}
+              {"  "}<span className="text-amber-400">recency_days</span>{": 92,\n"}
+              {"  "}<span className="text-amber-400">products_owned</span>{": [\"wallet\"],\n"}
+              {"  "}<span className="text-amber-400">acquisition_channel</span>{": \"paid_ads\",\n"}
+              {"  "}<span className="text-amber-400">acquisition_cost</span>{": 280.0,\n"}
+              {"  "}<span className="text-amber-400">tenure_months</span>{": 8,\n"}
+              {"  "}<span className="text-amber-400">cohort_health</span>{": \"n/a\",\n"}
+              {"  "}<span className="text-amber-400">activity_trend</span>{":\n"}
+              {"    \"2025-07: 3 tx (R$42);\n"}
+              {"     2025-08: 1 tx (R$15)\"\n"}
+              {"}"}
             </pre>
             <pre className="overflow-x-auto rounded-xl border border-border bg-secondary p-4 font-mono text-xs leading-relaxed text-foreground">
-{`// output
-{
-  risk_level: "critical",
-  recommended_action:
-    "immediate retention offer",
-  suggested_product:
-    "cashback credit card",
-  message_tone:
-    "urgent, empathetic",
-  reasoning:
-    "8mo tenure, paid_ads, low RFM…"
-}`}
+              <span className="text-muted-foreground">{"// agent output\n"}</span>
+              {"{\n"}
+              {"  "}<span className="text-amber-400">risk_level</span>{": \"critical\",\n"}
+              {"  "}<span className="text-amber-400">recommended_action</span>{":\n"}
+              {"    \"immediate retention offer\",\n"}
+              {"  "}<span className="text-amber-400">suggested_product</span>{":\n"}
+              {"    \"cashback credit card\",\n"}
+              {"  "}<span className="text-amber-400">message_tone</span>{":\n"}
+              {"    \"urgent, empathetic\",\n"}
+              {"  "}<span className="text-amber-400">notification_text</span>{":\n"}
+              {"    \"Exclusive offer just for you\n"}
+              {"     — unlock cashback on every\n"}
+              {"     purchase today.\",\n"}
+              {"  "}<span className="text-amber-400">reasoning</span>{":\n"}
+              {"    \"Registered via paid_ads 8mo\n"}
+              {"     ago (R$280 CAC). Low RFM,\n"}
+              {"     92 days silent, wallet only.\n"}
+              {"     Credit card offer could\n"}
+              {"     reactivate before churn.\",\n"}
+              {"  "}<span className="text-amber-400">strategy_used</span>{": \"retention\"\n"}
+              {"}"}
             </pre>
           </div>
         </div>

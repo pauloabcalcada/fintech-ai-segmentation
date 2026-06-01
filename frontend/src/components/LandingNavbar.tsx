@@ -15,7 +15,7 @@ export function LandingNavbar() {
           to="/"
           className="text-white font-semibold text-lg tracking-tight shrink-0"
         >
-          SYNAPTIQPAY / AI-SEG
+          SYNAPTIQPAY
         </Link>
         <div className="hidden md:flex items-center gap-4 text-sm text-gray-400">
           <a href="#methodology" className="hover:text-white transition-colors">

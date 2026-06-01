@@ -189,15 +189,22 @@
       "heading": "An AI system that turns behavioral segments into a personalized next action for every customer.",
       "subhead": "SynaptiqPay is a Brazilian fintech with 8,000 digital wallet customers. The commercial team had rich transaction data but no clear way to segment the base or decide what to offer each person. We built behavioral segmentation with machine learning and an AI agent that recommends products from RFM scores, cohort health, and ownership signals. The goal is higher ROI: retain at-risk customers, grow engaged ones, and turn insight into revenue.",
       "cta": "View Dashboard",
-      "ctaCustomers": "Explore Customers",
-      "urlBar": "fintech-ai-segmentation.up.railway.app/dashboard"
+      "ctaCustomers": "Try the Recommendation Agent",
+      "urlBar": "fintech-ai-segmentation.up.railway.app/dashboard",
+      "agentCard": {
+        "label": "AI Recommendation",
+        "segment": "at_risk_churner",
+        "customerLine": "Ana Souza · 92 days inactive · wallet only · paid ads",
+        "suggestedProduct": "Cashback Credit Card",
+        "notificationText": "Exclusive offer just for you — unlock cashback on every purchase today."
+      }
     },
     "summary": {
       "heading": "Case at a glance",
       "cards": [
         {
           "label": "The Problem",
-          "body": "A commercial manager at an 8,000 customer Brazilian fintech was spending hours each week in spreadsheets. There was no behavioral segmentation and no data-driven direction for how to treat each customer."
+          "body": "The commercial team at an 8,000 customer Brazilian fintech were spending hours each week in spreadsheets. There was no behavioral segmentation and no data-driven direction for how to treat each customer."
         },
         {
           "label": "The Brief",
@@ -220,7 +227,7 @@
         {
           "number": "01",
           "title": "Data Foundation",
-          "description": "We generated a synthetic dataset of 8,000 customers using statistical models. The data uses behavioral distributions that replicate real churn, dormancy, and product adoption patterns. The synthetic approach was intentional. It gave us full control over segment separation and allowed end-to-end pipeline validation before connecting real data.",
+          "description": "We generated a synthetic dataset of 8,000 customers using statistical distributions. The data uses behavioral distributions that replicate real churn, dormancy, and product adoption patterns. A unique dataset, nothing that can be found on Kaggle or other sites.",
           "tools": ["Faker", "Pandas", "Pydantic", "Supabase"]
         },
         {
@@ -233,7 +240,7 @@
           "number": "03",
           "title": "Segmentation and Intelligence",
           "description": "K-Means clustering (unsupervised machine learning) grouped customers into operational segments based on behavioral signals. A LangGraph agent then takes each customer profile and generates a structured recommendation using a large language model.",
-          "tools": ["Scikit-learn", "LangGraph", "OpenRouter", "LangSmith"]
+          "tools": ["Pydantic", "LangGraph", "OpenRouter", "LangSmith", "FastAPI"]
         }
       ],
       "callout": "Two layers of AI were applied at different stages. K-Means clustering identifies customer segments without labeled training data. The LLM-based agent produces recommendations grounded in each customer's actual behavior, not generic copy."
@@ -262,7 +269,7 @@
       "product1": {
         "badge": "Product 01",
         "title": "Business Dashboard",
-        "body": "A React dashboard that gives the commercial team a real-time view of customer segments, RFM scores, and cohort health. No SQL, no spreadsheets. The data is ready to act on.",
+        "body": "A dashboard that gives the commercial team a real-time view of customer segments, RFM scores, and cohort health. No SQL, no spreadsheets. The data is ready to act on.",
         "cta": "View the dashboard",
         "urlBar": "fintech-ai-segmentation.up.railway.app/dashboard",
         "alt": "SynaptiqPay business dashboard"
@@ -271,6 +278,7 @@
         "badge": "Product 02",
         "title": "AI Recommendation Agent",
         "body": "A LangGraph agent that receives a customer's behavioral profile and returns a structured recommendation. It produces a risk level, a suggested action, a product to offer, and the reasoning behind it.",
+        "bodyDynamic": "The prompt adapts to the customer's segment: retention for lapsed users, upsell for high-value actives, reactivation for dormant accounts, and activation for those who never transacted.",
         "cta": "See it on a customer"
       }
     },

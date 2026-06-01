@@ -20,7 +20,7 @@ function renderNavbar(lng = "en") {
 }
 
 describe("LandingNavbar", () => {
-  it("renders the logo text SYNAPTIQPAY / AI-SEG as a link to /", () => {
+  it("renders the logo text SYNAPTIQPAY  as a link to /", () => {
     renderNavbar();
     const logo = screen.getByRole("link", { name: /synaptiqpay \/ ai-seg/i });
     expect(logo).toHaveAttribute("href", "/");
