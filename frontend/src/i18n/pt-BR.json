@@ -162,7 +162,7 @@
     "chart": {
       "toggle": {
         "transactions": "Transações",
-        "gtv": "VBT"
+        "gtv": "TPV (R$)"
       }
     },
     "info": {

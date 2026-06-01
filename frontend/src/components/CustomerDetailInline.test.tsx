@@ -234,43 +234,43 @@ describe("CustomerDetailInline", () => {
     expect(screen.getByText("Produtos do cliente")).toBeInTheDocument();
   });
 
-  describe("activity chart GTV toggle", () => {
-    it("renders both Transactions and GTV toggle buttons", async () => {
+  describe("activity chart TPV toggle", () => {
+    it("renders both Transactions and TPV (R$) toggle buttons", async () => {
       renderInline();
       await screen.findByText("Ana Lima");
       expect(screen.getByRole("button", { name: "Transactions" })).toBeInTheDocument();
-      expect(screen.getByRole("button", { name: "GTV" })).toBeInTheDocument();
+      expect(screen.getByRole("button", { name: "TPV (R$)" })).toBeInTheDocument();
     });
 
-    it("Transactions toggle is active and GTV is inactive by default", async () => {
+    it("Transactions toggle is active and TPV (R$) is inactive by default", async () => {
       renderInline();
       await screen.findByText("Ana Lima");
       expect(screen.getByRole("button", { name: "Transactions" })).toHaveAttribute("aria-pressed", "true");
-      expect(screen.getByRole("button", { name: "GTV" })).toHaveAttribute("aria-pressed", "false");
+      expect(screen.getByRole("button", { name: "TPV (R$)" })).toHaveAttribute("aria-pressed", "false");
     });
 
-    it("clicking GTV makes GTV active and Transactions inactive", async () => {
+    it("clicking TPV (R$) makes TPV (R$) active and Transactions inactive", async () => {
       renderInline();
       await screen.findByText("Ana Lima");
-      fireEvent.click(screen.getByRole("button", { name: "GTV" }));
-      expect(screen.getByRole("button", { name: "GTV" })).toHaveAttribute("aria-pressed", "true");
+      fireEvent.click(screen.getByRole("button", { name: "TPV (R$)" }));
+      expect(screen.getByRole("button", { name: "TPV (R$)" })).toHaveAttribute("aria-pressed", "true");
       expect(screen.getByRole("button", { name: "Transactions" })).toHaveAttribute("aria-pressed", "false");
     });
 
-    it("clicking Transactions after GTV restores Transactions as active", async () => {
+    it("clicking Transactions after TPV (R$) restores Transactions as active", async () => {
       renderInline();
       await screen.findByText("Ana Lima");
-      fireEvent.click(screen.getByRole("button", { name: "GTV" }));
+      fireEvent.click(screen.getByRole("button", { name: "TPV (R$)" }));
       fireEvent.click(screen.getByRole("button", { name: "Transactions" }));
       expect(screen.getByRole("button", { name: "Transactions" })).toHaveAttribute("aria-pressed", "true");
-      expect(screen.getByRole("button", { name: "GTV" })).toHaveAttribute("aria-pressed", "false");
+      expect(screen.getByRole("button", { name: "TPV (R$)" })).toHaveAttribute("aria-pressed", "false");
     });
 
     it("renders Portuguese toggle labels when language is pt-BR", async () => {
       renderInline("pt-BR");
       await screen.findByText("Ana Lima");
       expect(screen.getByRole("button", { name: "Transações" })).toBeInTheDocument();
-      expect(screen.getByRole("button", { name: "VBT" })).toBeInTheDocument();
+      expect(screen.getByRole("button", { name: "TPV (R$)" })).toBeInTheDocument();
     });
   });
 

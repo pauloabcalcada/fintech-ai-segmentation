@@ -162,7 +162,7 @@
     "chart": {
       "toggle": {
         "transactions": "Transactions",
-        "gtv": "GTV"
+        "gtv": "TPV (R$)"
       }
     },
     "info": {
@@ -186,8 +186,8 @@
     },
     "hero": {
       "badge": "SynaptiqPay · AI Segmentation",
-      "heading": "8,000 customers. One spreadsheet. No direction.",
-      "subhead": "We were engaged to replace manual, spreadsheet-driven customer analysis with a structured data pipeline and AI recommendation system. The result is a segmentation engine that gives commercial teams clear, actionable intelligence on each customer.",
+      "heading": "An AI system that turns behavioral segments into a personalized next action for every customer.",
+      "subhead": "SynaptiqPay is a Brazilian fintech with 8,000 digital wallet customers. The commercial team had rich transaction data but no clear way to segment the base or decide what to offer each person. We built behavioral segmentation with machine learning and an AI agent that recommends products from RFM scores, cohort health, and ownership signals. The goal is higher ROI: retain at-risk customers, grow engaged ones, and turn insight into revenue.",
       "cta": "View Dashboard",
       "ctaCustomers": "Explore Customers",
       "urlBar": "fintech-ai-segmentation.up.railway.app/dashboard"
