@@ -370,14 +370,6 @@ Chart: Line chart showing acquisition trend over time
 ⬜ LTV/CAC heatmap (segment × channel)
 ```
 
-### Phase 4 — Documentation + Polish
-```
-⬜ MkDocs + mkdocstrings documentation site
-⬜ GitHub Pages deployment
-⬜ readme-ai generated README
-⬜ EDA notebook exported as HTML
-⬜ Architecture diagrams
-```
 
 ---
 
@@ -388,7 +380,6 @@ Chart: Line chart showing acquisition trend over time
 | Frontend (React + Vite) | Vercel | Free |
 | Backend (FastAPI + LangGraph) | Render or Fly.io | Free tier |
 | Database | Supabase | Free tier |
-| Documentation (Phase 4) | GitHub Pages | Free |
 
 ---
 

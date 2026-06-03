@@ -187,7 +187,9 @@
     "hero": {
       "badge": "SynaptiqPay · Segmentação com IA",
       "heading": "Um sistema de IA que transforma perfil comportamental em uma próxima ação personalizada para cada cliente.",
-      "subhead": "SynaptiqPay é uma fintech brasileira com 8.000 clientes de carteira digital. O time comercial tinha dados ricos de transações, mas nenhuma forma clara de segmentar a base ou decidir o que oferecer para cada pessoa. Construímos uma segmentação comportamental com machine learning e um agente de IA que recomenda produtos a partir de scores RFM, saúde de cohort e sinais de posse de produtos. O objetivo é aumentar ROI: reter clientes em risco, expandir os engajados e transformar análise em receita.",
+      "subhead1": "SynaptiqPay é uma fintech brasileira com 8.000 clientes de carteira digital. O time comercial tinha dados ricos de transações, mas nenhuma forma clara de segmentar a base ou decidir o que oferecer para cada pessoa.",
+      "subhead2": "Construímos um modelo de segmentação com machine learning que agrupa os clientes por comportamento, e alimentamos esses segmentos — junto com scores RFM, saúde de cohort e sinais de posse de produtos — em um agente de IA que recomenda o produto certo para cada cliente.",
+      "subhead3": "Também construímos um dashboard de negócio para que o time comercial possa monitorar a saúde dos segmentos, acompanhar a evolução dos KPIs e medir o impacto de cada intervenção ao longo do tempo. O objetivo é aumentar ROI: reter clientes em risco, expandir os engajados e transformar análise em receita.",
       "cta": "Ver Dashboard",
       "ctaCustomers": "Testar o Agente de Recomendação",
       "urlBar": "fintech-ai-segmentation.up.railway.app/dashboard",
@@ -268,8 +270,8 @@
       "heading": "Stack e Arquitetura",
       "filterAll": "TODOS",
       "tools": [
-        { "name": "Faker", "category": "DATA", "why": "Gera dados de clientes brasileiros realistas com suporte nativo ao locale pt_BR — sem PII real necessária." },
-        { "name": "Pandas", "category": "DATA", "why": "Transformações vetorizadas para pontuação RFM e pivôs de cohort — rápido o suficiente para 8.000 clientes sem data warehouse." },
+        { "name": "Faker", "category": "DATA", "why": "Gera dados sintéticos realistas de clientes brasileiros." },
+        { "name": "Pandas", "category": "DATA", "why": "Análise de dados, transformações vetorizadas para pontuação RFM e pivôs de cohort — rápido o suficiente para 8.000 clientes sem data warehouse." },
         { "name": "Supabase / Postgres", "category": "DATA", "why": "Postgres gerenciado com tier gratuito — zero overhead de ops, COPY direto via psql para cargas em massa." },
         { "name": "SQLAlchemy", "category": "DATA", "why": "Queries com parâmetros ligados como única interface SQL — elimina risco de injeção na camada da API." },
         { "name": "Scikit-learn", "category": "ML & AI", "why": "Clustering K-Means em features RFM produz três segmentos operacionais interpretáveis sem ruído de rótulos." },
@@ -279,7 +281,7 @@
         { "name": "React + Vite", "category": "FRONTEND", "why": "HMR em menos de um segundo no desenvolvimento e bundle de produção enxuto — sem overhead do Create React App." },
         { "name": "Tailwind + shadcn/ui", "category": "FRONTEND", "why": "Primitivos de componentes sem estilo + classes utilitárias dão controle total de design sem biblioteca pesada." },
         { "name": "Recharts", "category": "FRONTEND", "why": "Gráficos SVG combináveis com API nativa React — heatmap de cohort e breakdown de segmento sem complexidade D3." },
-        { "name": "Railway", "category": "OPS", "why": "Deploy em um comando pelo GitHub com HTTPS automático — mais rápido de subir que o cold-start de 50s do Render." }
+        { "name": "Railway", "category": "OPS", "why": "Deploy em um comando pelo GitHub com HTTPS automático e sem atraso de cold-start." }
       ]
     },
     "roadmap": {
@@ -296,19 +298,13 @@
           "phase": "Fase 2",
           "title": "Camada de Inteligência",
           "status": "ACTIVE",
-          "items": ["Chatbot Text-to-SQL (endpoint /chat)", "Gráficos Recharts automáticos por query", "Guardas SQL somente leitura", "Loop de esclarecimento para queries ambíguas"]
+          "items": ["Pergunte qualquer coisa aos dados em linguagem natural — sem SQL, sem dashboards", "Cada resposta gera automaticamente um gráfico pronto para compartilhar", "Seguro por design: a camada de chat só lê dados, nunca os modifica", "Lida com perguntas vagas pedindo esclarecimento antes de executar a consulta"]
         },
         {
           "phase": "Fase 3",
           "title": "Expansão de BI",
           "status": "PLANNED",
-          "items": ["Deep-dive de economics unitários (LTV, payback CAC)", "Modelo de predição de churn", "Heatmap LTV/CAC"]
-        },
-        {
-          "phase": "Fase 4",
-          "title": "Documentação",
-          "status": "PLANNED",
-          "items": ["Site MkDocs + mkdocstrings", "Deploy no GitHub Pages", "Diagramas de arquitetura", "Notebooks EDA como HTML"]
+          "items": ["Identifique quais canais de aquisição geram o maior valor no longo prazo", "Sinalize clientes com probabilidade de sair antes que isso aconteça, com um modelo preditivo", "Visualize o ROI de aquisição — custo vs. valor vitalício por segmento e canal"]
         }
       ]
     },
