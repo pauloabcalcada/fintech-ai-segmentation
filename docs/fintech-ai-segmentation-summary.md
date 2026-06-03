@@ -282,7 +282,7 @@ return structured response
 
 | Page | What The Business Manager Sees |
 |---|---|
-| `/` | Landing page — hero metrics (8k customers, 4 segments, 3 clusters, 50 months history, 1.4s latency, 4 agent routes), tech stack grid, dashboard preview screenshot |
+| `/` | Landing page — hero metrics (8k customers, 3 clusters, 50 months history, 1.4s latency, 4 agent routes), tech stack grid, dashboard preview screenshot |
 | `/dashboard` | KPI cards (total customers, at-risk count, avg RFM score, segment breakdown) + segment distribution chart + cohort retention heatmap |
 | `/customers` | Filterable, sortable customer table with segment badge + RFM indicator |
 | `/customers/:id` | Full customer profile + RFM scores + cohort context + product ownership + AI recommendation panel (strategy, risk level, suggested product, notification text) |
@@ -293,7 +293,7 @@ return structured response
 
 ### Phase 1 — MVP ✅ Complete
 ```
-✅ Faker dataset generation (4 planted segments)
+✅ Faker dataset generation
 ✅ EDA demographic (notebook 1) — discovery-first, no segment labels
 ✅ EDA cohort + behavioral discovery (notebook 2) — 8 discovery analyses
 ✅ Synthetic data validation (EDA_Validation_Fake_Dataset.ipynb)
