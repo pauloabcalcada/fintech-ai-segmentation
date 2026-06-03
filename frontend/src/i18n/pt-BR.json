@@ -290,7 +290,7 @@
           "phase": "Fase 1",
           "title": "MVP",
           "status": "SHIPPED",
-          "items": ["Dataset Faker (4 segmentos)", "EDA + análise de cohort", "RFM + clustering K-Means", "Agente IA LangGraph", "API REST FastAPI", "Dashboard React", "Deploy Docker + Railway"]
+          "items": ["Dataset Faker", "EDA + análise de cohort", "RFM + clustering K-Means", "Agente IA LangGraph", "API REST FastAPI", "Dashboard React", "Deploy Docker + Railway"]
         },
         {
           "phase": "Fase 2",
