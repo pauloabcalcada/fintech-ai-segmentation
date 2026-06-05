@@ -1,7 +1,7 @@
 {
   "nav": {
     "dashboard": "Dashboard",
-    "customers": "Customers"
+    "customers": "AI Agent"
   },
   "dashboard": {
     "title": "Population Overview",
@@ -182,7 +182,7 @@
       "stack": "Stack",
       "roadmap": "Roadmap",
       "ctaDashboard": "Dashboard",
-      "ctaCustomers": "Customers"
+      "ctaCustomers": "AI Agent"
     },
     "hero": {
       "badge": "SynaptiqPay · AI Segmentation",

@@ -43,7 +43,8 @@ export function LandingNavbar() {
         <div className="ml-auto flex items-center gap-1 sm:gap-2">
           <ThemeToggle />
           <LanguageToggle />
-          {/* Dashboard link — hidden on mobile to give Customers button room */}
+
+          {/* Desktop CTA buttons — hidden on mobile */}
           <Link
             to="/dashboard"
             className={cn(
@@ -55,7 +56,7 @@ export function LandingNavbar() {
           </Link>
           <Link
             to="/customers"
-            className={cn(buttonVariants({ size: "sm" }))}
+            className={cn(buttonVariants({ size: "sm" }), "hidden md:inline-flex")}
           >
             {t("landing.nav.ctaCustomers")}
           </Link>
@@ -74,8 +75,8 @@ export function LandingNavbar() {
 
       {/* Mobile dropdown */}
       {mobileMenuOpen && (
-        <div className="md:hidden border-t border-white/10 bg-gray-950 px-6 py-4 flex flex-col gap-3">
-          <p className="text-xs uppercase tracking-widest text-gray-600 pb-1">
+        <div className="md:hidden border-t border-white/10 bg-gray-950 px-6 py-4 flex flex-col gap-2.5">
+          <p className="text-xs uppercase tracking-widest text-gray-600 pb-0.5">
             Sections
           </p>
           <a
@@ -106,16 +107,25 @@ export function LandingNavbar() {
           >
             {t("landing.nav.roadmap")}
           </a>
-          <hr className="border-white/10" />
+
+          <hr className="border-white/10 my-1" />
+
+          <p className="text-xs uppercase tracking-widest text-gray-600 pb-0.5">
+            Products
+          </p>
           <Link
             to="/dashboard"
-            className={cn(
-              buttonVariants({ variant: "ghost", size: "sm" }),
-              "justify-start text-gray-300 hover:text-white"
-            )}
+            className="text-sm text-gray-400 hover:text-white transition-colors"
             onClick={closeMenu}
           >
             {t("landing.nav.ctaDashboard")}
+          </Link>
+          <Link
+            to="/customers"
+            className="text-sm text-gray-400 hover:text-white transition-colors"
+            onClick={closeMenu}
+          >
+            {t("landing.nav.ctaCustomers")}
           </Link>
         </div>
       )}

@@ -14,21 +14,21 @@ export function AppShell() {
   return (
     <div className="min-h-screen flex flex-col">
       <header className="sticky top-0 z-50 border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-        <nav className="flex items-center h-14 px-6 gap-6">
+        <nav className="flex items-center h-14 px-3 sm:px-6 gap-2 sm:gap-6">
           <NavLink
             to="/"
-            className="text-primary font-semibold text-lg tracking-tight shrink-0"
+            className="text-primary font-semibold text-base sm:text-lg tracking-tight shrink-0"
           >
             SynaptiqPay
           </NavLink>
-          <div className="flex items-center gap-1">
+          <div className="flex items-center gap-0.5 sm:gap-1 min-w-0">
             {NAV.map(({ to, label }) => (
               <NavLink
                 key={to}
                 to={to}
                 className={({ isActive }) =>
                   [
-                    "rounded-md px-3 py-1.5 text-sm font-medium transition-colors",
+                    "rounded-md px-2 sm:px-3 py-1.5 text-xs sm:text-sm font-medium transition-colors whitespace-nowrap",
                     isActive
                       ? "bg-accent text-accent-foreground"
                       : "text-muted-foreground hover:text-foreground hover:bg-accent/50",
@@ -39,7 +39,7 @@ export function AppShell() {
               </NavLink>
             ))}
           </div>
-          <div className="ml-auto flex items-center gap-1" data-testid="topnav-right-slot">
+          <div className="ml-auto flex items-center gap-1 shrink-0" data-testid="topnav-right-slot">
             <ThemeToggle />
             <LanguageToggle />
           </div>

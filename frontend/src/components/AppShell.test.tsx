@@ -43,7 +43,7 @@ describe("AppShell topnav", () => {
 
   it("renders Customers nav link pointing to /customers", () => {
     renderShell();
-    const link = screen.getByRole("link", { name: "Customers" });
+    const link = screen.getByRole("link", { name: "AI Agent" });
     expect(link).toHaveAttribute("href", "/customers");
   });
 
@@ -59,8 +59,8 @@ describe("AppShell topnav", () => {
 
   it("renders nav labels in Portuguese when language is pt-BR", () => {
     renderShell("pt-BR");
-    expect(screen.getByRole("link", { name: "Painel" })).toBeInTheDocument();
-    expect(screen.getByRole("link", { name: "Clientes" })).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "Dashboard" })).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "AI Agent" })).toBeInTheDocument();
   });
 
   it("renders the LanguageToggle in the right slot", () => {

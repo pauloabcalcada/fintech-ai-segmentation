@@ -1,7 +1,7 @@
 {
   "nav": {
     "dashboard": "Dashboard",
-    "customers": "Clientes"
+    "customers": "AI Agent"
   },
   "dashboard": {
     "title": "Visão Geral da População",
@@ -182,7 +182,7 @@
       "stack": "Stack",
       "roadmap": "Roadmap",
       "ctaDashboard": "Dashboard",
-      "ctaCustomers": "Clientes"
+      "ctaCustomers": "AI Agent"
     },
     "hero": {
       "badge": "SynaptiqPay · Segmentação com IA",

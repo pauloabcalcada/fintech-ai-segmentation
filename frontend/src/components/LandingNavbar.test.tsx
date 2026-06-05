@@ -70,7 +70,7 @@ describe("LandingNavbar", () => {
 
   it("renders CTA link to /customers", () => {
     renderNavbar();
-    const links = screen.getAllByRole("link", { name: /customers/i });
+    const links = screen.getAllByRole("link", { name: /ai agent/i });
     const cta = links.find((l) => l.getAttribute("href") === "/customers");
     expect(cta).toBeTruthy();
   });
