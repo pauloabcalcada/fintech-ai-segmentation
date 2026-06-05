@@ -17,7 +17,7 @@ import {
   type CustomerProfileResponse,
 } from "@/lib/api";
 import { InfoTooltip } from "@/components/ui/InfoTooltip";
-import { Info } from "lucide-react";
+import { Info, RotateCcw } from "lucide-react";
 
 function SkeletonRows({ count }: { count: number }) {
   return Array.from({ length: count }).map((_, i) => (
@@ -89,6 +89,14 @@ export function CustomersPage() {
       <div className="flex items-start gap-2 rounded-md border border-border bg-muted/30 px-3 py-2">
         <Info className="mt-0.5 h-3.5 w-3.5 shrink-0 text-muted-foreground" />
         <p className="text-xs text-muted-foreground">{t("customers.disclosure")}</p>
+      </div>
+
+      {/* Rotate hint — mobile only */}
+      <div className="flex items-center gap-2 rounded-md border border-amber-400/30 bg-amber-400/5 px-3 py-2 sm:hidden">
+        <RotateCcw className="h-3.5 w-3.5 shrink-0 text-amber-400" />
+        <p className="text-xs text-amber-400">
+          {t("customers.rotateHint", "For a better experience, rotate your phone to landscape.")}
+        </p>
       </div>
 
       {/* Table */}
