@@ -306,6 +306,12 @@
           "title": "BI Expansion",
           "status": "PLANNED",
           "items": ["Identify which acquisition channels generate the highest long-term value", "Flag customers likely to leave before they do, with a predictive model", "Map acquisition ROI visually — cost vs. lifetime value by segment and channel"]
+        },
+        {
+          "phase": "Phase 4",
+          "title": "Pipeline Automation",
+          "status": "PLANNED",
+          "items": ["Fully automated ETL — extraction, transformation, and load into the analytics mart without manual steps", "K-Means retraining on every data refresh, with results written back to Supabase automatically", "Dashboard updates in real time as new cluster and RFM data lands", "Scheduled quality checks tracking inertia, silhouette score, and cluster size balance over time", "Drift alerts when segment composition shifts beyond a configurable threshold between runs"]
         }
       ]
     },

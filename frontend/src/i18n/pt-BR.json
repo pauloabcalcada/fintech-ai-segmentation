@@ -306,6 +306,12 @@
           "title": "Expansão de BI",
           "status": "PLANNED",
           "items": ["Identifique quais canais de aquisição geram o maior valor no longo prazo", "Sinalize clientes com probabilidade de sair antes que isso aconteça, com um modelo preditivo", "Visualize o ROI de aquisição — custo vs. valor vitalício por segmento e canal"]
+        },
+        {
+          "phase": "Fase 4",
+          "title": "Automação do Pipeline",
+          "status": "PLANNED",
+          "items": ["ETL totalmente automatizado — extração, transformação e carga no mart analítico sem etapas manuais", "Retreinamento do K-Means a cada atualização de dados, com resultados gravados de volta ao Supabase automaticamente", "Dashboard atualizado em tempo real à medida que novos dados de cluster e RFM chegam", "Verificações de qualidade agendadas monitorando inércia, silhouette score e equilíbrio de tamanho dos clusters ao longo do tempo", "Alertas de drift quando a composição dos segmentos muda além de um limite configurável entre execuções"]
         }
       ]
     },

@@ -370,6 +370,17 @@ Chart: Line chart showing acquisition trend over time
 ⬜ LTV/CAC heatmap (segment × channel)
 ```
 
+### Phase 4 — Pipeline Automation & Cluster Monitoring
+```
+⬜ ETL pipeline scripts — automated extraction from Supabase, transformation (RFM + cohort features), load into customer_analysis mart
+⬜ Automated K-Means retraining — triggered on data refresh, writes new cluster labels to Supabase
+⬜ Real-time dashboard updates — mart refresh pushes cluster and RFM changes to the frontend without manual intervention
+⬜ Scheduled cluster quality checks — cron job tracks inertia, silhouette score, Davies-Bouldin index, and cluster size balance over time
+⬜ Drift alerting — flags when segment composition shifts beyond a configurable threshold (e.g. >15% redistribution between runs)
+⬜ Monitoring dashboard — time-series view of clustering KPIs (inertia curve, silhouette trend, per-cluster size evolution)
+⬜ Run history log — persists each pipeline run with timestamp, row count processed, cluster quality metrics, and duration
+```
+
 
 ---
 
