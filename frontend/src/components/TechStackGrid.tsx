@@ -4,7 +4,7 @@ import { cn } from "@/lib/utils";
 
 type Tool = { name: string; category: string; why: string };
 
-const CATEGORIES = ["ALL", "DATA", "ML & AI", "API", "FRONTEND", "OPS"] as const;
+const CATEGORIES = ["ALL", "DATA", "ML & AI", "BACKEND", "FRONTEND", "OPS"] as const;
 
 export function TechStackGrid() {
   const { t } = useTranslation();

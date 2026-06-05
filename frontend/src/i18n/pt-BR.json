@@ -273,15 +273,20 @@
       "tools": [
         { "name": "Faker", "category": "DATA", "why": "Gera dados sintéticos realistas de clientes brasileiros." },
         { "name": "Pandas", "category": "DATA", "why": "Análise de dados, transformações vetorizadas para pontuação RFM e pivôs de cohort — rápido o suficiente para 8.000 clientes sem data warehouse." },
+        { "name": "Pydantic", "category": "ML & AI", "why": "Valida e garante o formato de cada contrato de dados — dos schemas de tabelas brutas até o output do agente — na fronteira entre camadas." },
         { "name": "Supabase / Postgres", "category": "DATA", "why": "Postgres gerenciado com tier gratuito — zero overhead de ops, COPY direto via psql para cargas em massa." },
-        { "name": "SQLAlchemy", "category": "DATA", "why": "Queries com parâmetros ligados como única interface SQL — elimina risco de injeção na camada da API." },
+        { "name": "SQLAlchemy", "category": "BACKEND", "why": "Queries com parâmetros ligados como única interface SQL — elimina risco de injeção na camada da API." },
         { "name": "Scikit-learn", "category": "ML & AI", "why": "Clustering K-Means em features RFM produz três segmentos operacionais interpretáveis sem ruído de rótulos." },
         { "name": "LangGraph", "category": "ML & AI", "why": "Roteamento condicional em grafo conecta dados estruturados do cliente à chamada LLM — previne alucinações." },
+        { "name": "LangSmith", "category": "ML & AI", "why": "Rastreia cada chamada LLM com latência, uso de tokens e input/output — torna o comportamento do agente observável e depurável em produção." },
         { "name": "OpenRouter", "category": "ML & AI", "why": "Chave de API única para LLMs de tier gratuito (Gemini Flash, LLaMA 70B) — sem compromisso de cobrança no desenvolvimento." },
-        { "name": "FastAPI", "category": "API", "why": "Docs OpenAPI gerados automaticamente e suporte async com mínimo boilerplate — ideal para API Python pequena e tipada." },
+        { "name": "FastAPI", "category": "BACKEND", "why": "Docs OpenAPI gerados automaticamente e suporte async com mínimo boilerplate — ideal para API Python pequena e tipada." },
         { "name": "React + Vite", "category": "FRONTEND", "why": "HMR em menos de um segundo no desenvolvimento e bundle de produção enxuto — sem overhead do Create React App." },
         { "name": "Tailwind + shadcn/ui", "category": "FRONTEND", "why": "Primitivos de componentes sem estilo + classes utilitárias dão controle total de design sem biblioteca pesada." },
         { "name": "Recharts", "category": "FRONTEND", "why": "Gráficos SVG combináveis com API nativa React — heatmap de cohort e breakdown de segmento sem complexidade D3." },
+        { "name": "Poetry", "category": "OPS", "why": "Trava cada dependência Python em uma versão exata — instalações reproduzíveis em desenvolvimento local, CI e no container de produção." },
+        { "name": "Docker", "category": "OPS", "why": "Empacota o backend e suas dependências em uma única imagem — o mesmo container roda localmente e no Railway sem variação de ambiente." },
+        { "name": "GitHub Actions", "category": "OPS", "why": "Automatiza o deploy do backend a cada push na main — executa apenas quando arquivos do backend mudam (src/, Dockerfile, lockfile do Poetry) e chama o flyctl para subir o novo container no Fly.io sem etapas manuais." },
         { "name": "Railway", "category": "OPS", "why": "Deploy em um comando pelo GitHub com HTTPS automático e sem atraso de cold-start." }
       ]
     },
