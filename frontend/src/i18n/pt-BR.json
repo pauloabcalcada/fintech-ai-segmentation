@@ -210,7 +210,7 @@
         },
         {
           "label": "O Desafio",
-          "body": "Entender a base de clientes atual, identificar padrões de comportamento e entregar um sistema que reduza o esforço manual e melhore como a equipe distribui atenção e recursos."
+          "body": "Entender a base de clientes atual, identificar os clusters comportamentais e entregar um sistema onde cada cluster orienta uma ação distinta: retenção para usuários inativos, upsell para ativos de alto valor, reativação para contas dormentes e ativação para quem nunca transacionou."
         },
         {
           "label": "A Abordagem",

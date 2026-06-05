@@ -210,7 +210,7 @@
         },
         {
           "label": "The Brief",
-          "body": "Understand the current customer base, identify behavioral patterns, and deliver a system that reduces manual effort and improves how the team allocates attention and resources."
+          "body": "Understand the current customer base, identify behavioral clusters, and deliver a system where each cluster drives a distinct action: retention for lapsed users, upsell for high-value actives, reactivation for dormant accounts, and activation for customers who never transacted."
         },
         {
           "label": "The Approach",
