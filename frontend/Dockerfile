@@ -9,6 +9,10 @@ WORKDIR /app
 COPY package.json package-lock.json ./
 RUN npm install --ignore-scripts
 
+# Receive backend URL at build time so Vite can bake it into the bundle
+ARG VITE_API_BASE_URL
+ENV VITE_API_BASE_URL=$VITE_API_BASE_URL
+
 # Copy source and build
 COPY . .
 RUN npm run build
