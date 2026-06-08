@@ -7,7 +7,7 @@ WORKDIR /app
 
 # Install deps first for cache efficiency
 COPY package.json package-lock.json ./
-RUN npm ci --ignore-scripts
+RUN npm install --ignore-scripts
 
 # Copy source and build
 COPY . .
