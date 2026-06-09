@@ -193,7 +193,7 @@
       "subhead3": "We also built a business dashboard so the commercial team can monitor segment health, track KPI evolution, and measure the impact of each intervention over time. The goal is higher ROI: retain at-risk customers, grow engaged ones, and turn insight into revenue.",
       "cta": "View Dashboard",
       "ctaCustomers": "Try the Recommendation Agent",
-      "urlBar": "fintech-ai-segmentation.up.railway.app/dashboard",
+      "urlBar": "fintech-ai.up.railway.app/dashboard",
       "agentCard": {
         "label": "AI Recommendation",
         "segment": "at_risk_churner",
@@ -278,7 +278,7 @@
         "title": "Business Dashboard",
         "body": "A dashboard that gives the commercial team a real-time view of customer segments, RFM scores, and cohort health. No SQL, no spreadsheets. The data is ready to act on.",
         "cta": "View the dashboard",
-        "urlBar": "fintech-ai-segmentation.up.railway.app/dashboard",
+        "urlBar": "fintech-ai.up.railway.app/dashboard",
         "alt": "SynaptiqPay business dashboard"
       },
       "product2": {

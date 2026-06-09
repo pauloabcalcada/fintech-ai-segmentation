@@ -193,7 +193,7 @@
       "subhead3": "Também construímos um dashboard de negócio para que o time comercial possa monitorar a saúde dos segmentos, acompanhar a evolução dos KPIs e medir o impacto de cada intervenção ao longo do tempo. O objetivo é aumentar ROI: reter clientes em risco, expandir os engajados e transformar análise em receita.",
       "cta": "Ver Dashboard",
       "ctaCustomers": "Testar o Agente de Recomendação",
-      "urlBar": "fintech-ai-segmentation.up.railway.app/dashboard",
+      "urlBar": "fintech-ai.up.railway.app/dashboard",
       "agentCard": {
         "label": "Recomendação de IA",
         "segment": "at_risk_churner",
@@ -255,7 +255,7 @@
         "title": "Dashboard de Negócio",
         "body": "Um dashboard que dá ao time comercial uma visão em tempo real dos segmentos de clientes, scores RFM e saúde de cohort. Sem SQL, sem planilhas. Os dados ficam prontos para a ação.",
         "cta": "Ver o dashboard",
-        "urlBar": "fintech-ai-segmentation.up.railway.app/dashboard",
+        "urlBar": "fintech-ai.up.railway.app/dashboard",
         "alt": "Dashboard de negócio da SynaptiqPay"
       },
       "product2": {
