@@ -11,11 +11,16 @@ class Settings(BaseSettings):
     LANGCHAIN_API_KEY: str = ""
     LANGCHAIN_PROJECT: str = ""
     MAX_PER_IP_DAILY: int = 10
+    # Number of trusted reverse proxies in front of the app. Used to pick the
+    # real client IP from the X-Forwarded-For chain. Railway = 1 hop.
+    TRUSTED_PROXY_HOPS: int = 1
     ENVIRONMENT: str = "development"
     FRONTEND_ORIGIN: str = "http://localhost:5173"
     VERSION: str = "0.1.0"
 
-    model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8", extra="ignore")
+    model_config = SettingsConfigDict(
+        env_file=".env", env_file_encoding="utf-8", extra="ignore"
+    )
 
 
 @lru_cache

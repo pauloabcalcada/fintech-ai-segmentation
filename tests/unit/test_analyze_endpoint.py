@@ -3,7 +3,6 @@ from __future__ import annotations
 import uuid
 from datetime import datetime, timezone
 
-import pytest
 from fastapi.testclient import TestClient
 
 from fintech_ai_segmentation.app.main import app
@@ -51,10 +50,18 @@ _STUB_PROFILE = CustomerProfile(
     has_insurance=False,
     has_loan=False,
     cluster_position="mid_60",
-    cluster_averages=RFMAverages(recency_score=1.5, frequency_score=1.5, monetary_score=1.5, rfm_score=1.5),
-    population_averages=RFMAverages(recency_score=3.0, frequency_score=3.0, monetary_score=3.0, rfm_score=3.0),
+    cluster_averages=RFMAverages(
+        recency_score=1.5, frequency_score=1.5, monetary_score=1.5, rfm_score=1.5
+    ),
+    population_averages=RFMAverages(
+        recency_score=3.0, frequency_score=3.0, monetary_score=3.0, rfm_score=3.0
+    ),
     cluster_product_profile=ClusterProductProfile(
-        wallet_pct=0.9, credit_card_pct=0.1, investment_pct=0.1, insurance_pct=0.1, loan_pct=0.1
+        wallet_pct=0.9,
+        credit_card_pct=0.1,
+        investment_pct=0.1,
+        insurance_pct=0.1,
+        loan_pct=0.1,
     ),
 )
 
@@ -104,8 +111,10 @@ class StubAgent:
 class StubRateLimiter:
     def __init__(self, result=None):
         self._result = result if result is not None else Allowed()
+        self.checked = []
 
-    async def check(self, customer_id, ip_address):
+    async def check(self, customer_id, ip_address, language="en"):
+        self.checked.append((customer_id, ip_address, language))
         return self._result
 
 
@@ -113,10 +122,14 @@ class StubLogStore:
     def __init__(self):
         self.recorded = []
 
-    async def record(self, customer_id, ip_address, model_used, recommendation_json):
-        self.recorded.append((customer_id, ip_address, model_used, recommendation_json))
+    async def record(
+        self, customer_id, ip_address, model_used, recommendation_json, language="en"
+    ):
+        self.recorded.append(
+            (customer_id, ip_address, model_used, recommendation_json, language)
+        )
 
-    async def get_cached_recommendation(self, customer_id):
+    async def get_cached_recommendation(self, customer_id, language="en"):
         return None
 
 
@@ -187,7 +200,9 @@ def test_analyze_allowed_returns_recommendation() -> None:
         body = response.json()
         assert body["cached"] is False
         assert body["recommendation"]["risk_level"] == "critical"
-        assert body["recommendation"]["recommended_action"] == "immediate retention offer"
+        assert (
+            body["recommendation"]["recommended_action"] == "immediate retention offer"
+        )
         assert len(stub_log.recorded) == 1
     finally:
         app.dependency_overrides.clear()
@@ -210,7 +225,9 @@ def test_analyze_cached_returns_cached_recommendation() -> None:
         async def run(self, customer_id, model_id="smart-auto", language="en"):
             raise AssertionError("Agent should not be called for cached result")
 
-    overrides, stub_log = _all_overrides(rate_result=cached_result, agent=NeverCalledAgent())
+    overrides, stub_log = _all_overrides(
+        rate_result=cached_result, agent=NeverCalledAgent()
+    )
     app.dependency_overrides.update(overrides)
     try:
         response = client.post(
@@ -303,6 +320,30 @@ def test_analyze_pt_br_language_returns_200() -> None:
         )
         assert response.status_code == 200
         assert response.json()["recommendation"]["risk_level"] == "critical"
+    finally:
+        app.dependency_overrides.clear()
+
+
+def test_analyze_uses_forwarded_client_ip_for_rate_limiting() -> None:
+    stub_limiter = StubRateLimiter(Allowed())
+    app.dependency_overrides.update(
+        {
+            get_customer_repository: _repo_override(),
+            get_rate_limiter: lambda: stub_limiter,
+            get_recommendation_log_store: lambda: StubLogStore(),
+            get_recommendation_agent: lambda: StubAgent(),
+        }
+    )
+    try:
+        response = client.post(
+            f"/customers/{_CUSTOMER_ID}/analyze",
+            json={},
+            headers={"X-Forwarded-For": "203.0.113.42, 10.0.0.5"},
+        )
+        assert response.status_code == 200
+        # The real client (rightmost, appended by the trusted proxy) must be
+        # used — not the spoofable leading entry, nor the proxy peer.
+        assert stub_limiter.checked[0][1] == "10.0.0.5"
     finally:
         app.dependency_overrides.clear()
 

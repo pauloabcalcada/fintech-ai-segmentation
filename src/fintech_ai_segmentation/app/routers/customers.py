@@ -9,6 +9,7 @@ from typing import Any, Literal
 from fastapi import APIRouter, Depends, HTTPException, Query, Request
 from pydantic import BaseModel
 
+from fintech_ai_segmentation.app.client_ip import get_client_ip
 from fintech_ai_segmentation.app.repositories.customer import (
     CustomerRepository,
     get_customer_repository,
@@ -26,8 +27,14 @@ from fintech_ai_segmentation.app.schemas.customer import (
     CustomerListResponse,
     CustomerProfileResponse,
 )
+from fintech_ai_segmentation.app.settings import Settings, get_settings
 
 _MODEL = "smart-auto"
+
+# How long to wait for a free analysis slot before rejecting with 503. A free
+# slot is acquired immediately; this only bounds the wait when both slots are
+# busy, so the LLM is never overloaded.
+_ANALYZE_ACQUIRE_TIMEOUT = 0.05
 
 
 class AnalyzeRequest(BaseModel):
@@ -103,12 +110,13 @@ async def analyze_customer(
     rate_limiter: RateLimiter = Depends(get_rate_limiter),
     log_store: RecommendationLogStore = Depends(get_recommendation_log_store),
     agent: Any = Depends(get_recommendation_agent),
+    settings: Settings = Depends(get_settings),
 ) -> dict:
     profile = await repository.get_customer_profile(customer_id)
     if profile is None:
         raise HTTPException(status_code=404, detail="Customer not found")
 
-    ip = request.client.host if request.client else "unknown"
+    ip = get_client_ip(request, settings.TRUSTED_PROXY_HOPS)
     result = await rate_limiter.check(customer_id, ip, language=body.language)
 
     if isinstance(result, CachedResult):
@@ -128,7 +136,14 @@ async def analyze_customer(
             },
         )
 
-    if _analyze_semaphore._value == 0:
+    # Acquire a slot atomically: a free slot is taken without waiting; if both
+    # are busy we reject with 503 rather than queueing indefinitely. Using
+    # wait_for avoids the check-then-acquire race of inspecting the semaphore.
+    try:
+        await asyncio.wait_for(
+            _analyze_semaphore.acquire(), timeout=_ANALYZE_ACQUIRE_TIMEOUT
+        )
+    except (asyncio.TimeoutError, TimeoutError):
         raise HTTPException(
             status_code=503,
             detail={
@@ -136,7 +151,6 @@ async def analyze_customer(
                 "message": "Too many analysis requests in progress. Please try again in a moment.",
             },
         )
-    await _analyze_semaphore.acquire()
 
     try:
         recommendation = await agent.run(customer_id, _MODEL, language=body.language)
