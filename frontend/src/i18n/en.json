@@ -59,7 +59,7 @@
     "analyzing": "Analyzing…",
     "reAnalyze": "Re-analyze",
     "notificationText": "Push Notification",
-    "notificationTextTooltip": "A short, ready-to-send push notification (~160 chars) personalised for this customer. Copy it and use it directly in your CRM or messaging tool.",
+    "notificationTextTooltip": "A short, ready-to-send push notification (~160 chars) personalised for this customer.",
     "copy": "Copy",
     "copied": "Copied!",
     "reAnalyzeToGenerate": "Re-analyze to generate notification",
