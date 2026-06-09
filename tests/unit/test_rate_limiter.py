@@ -9,6 +9,7 @@ import pytest_asyncio
 from sqlalchemy import text
 from sqlalchemy.ext.asyncio import create_async_engine
 
+from fintech_ai_segmentation.app.client_ip import hash_ip
 from fintech_ai_segmentation.app.repositories.recommendation import (
     Allowed,
     Blocked,
@@ -71,7 +72,8 @@ async def _insert_log(engine, customer_id, ip, model, generated_at: datetime):
             ),
             {
                 "cid": str(customer_id),
-                "ip": ip,
+                # Stored IPs are hashed (salt "" matches the default-salt limiter)
+                "ip": hash_ip(ip, ""),
                 "model": model,
                 "ts": generated_at,
                 "rec": _SAMPLE_REC,

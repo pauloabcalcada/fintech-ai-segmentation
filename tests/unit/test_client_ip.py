@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from starlette.requests import Request
 
-from fintech_ai_segmentation.app.client_ip import get_client_ip
+from fintech_ai_segmentation.app.client_ip import get_client_ip, hash_ip
 
 
 def _request(
@@ -50,3 +50,21 @@ def test_two_trusted_hops_picks_correct_entry() -> None:
 def test_more_hops_than_entries_falls_back_to_leftmost() -> None:
     req = _request({"X-Forwarded-For": "198.51.100.7"}, peer="10.0.0.1")
     assert get_client_ip(req, trusted_proxy_hops=3) == "198.51.100.7"
+
+
+def test_hash_ip_does_not_expose_raw_address() -> None:
+    digest = hash_ip("198.51.100.7", "salt")
+    assert "198.51.100.7" not in digest
+    assert len(digest) == 64  # sha256 hex
+
+
+def test_hash_ip_is_deterministic() -> None:
+    assert hash_ip("198.51.100.7", "salt") == hash_ip("198.51.100.7", "salt")
+
+
+def test_hash_ip_differs_by_salt() -> None:
+    assert hash_ip("198.51.100.7", "a") != hash_ip("198.51.100.7", "b")
+
+
+def test_hash_ip_differs_by_address() -> None:
+    assert hash_ip("198.51.100.7", "salt") != hash_ip("198.51.100.8", "salt")
