@@ -27,6 +27,7 @@ CREATE TABLE IF NOT EXISTS recommendation_log (
     customer_id     TEXT NOT NULL,
     ip_address      TEXT NOT NULL,
     model_used      TEXT NOT NULL,
+    language        TEXT NOT NULL DEFAULT 'en',
     generated_at    TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%SZ', 'now')),
     recommendation_json TEXT NOT NULL
 )
@@ -95,7 +96,9 @@ async def test_rate_limiter_allowed_when_no_entries(limiter) -> None:
 
 
 @pytest.mark.asyncio
-async def test_rate_limiter_cached_result_for_recent_customer_entry(limiter, engine) -> None:
+async def test_rate_limiter_cached_result_for_recent_customer_entry(
+    limiter, engine
+) -> None:
     recent = datetime.now(timezone.utc) - timedelta(hours=1)
     await _insert_log(engine, _CUSTOMER_ID, _IP, "gemini-flash-free", recent)
 
@@ -113,7 +116,9 @@ async def test_rate_limiter_cached_result_for_recent_customer_entry(limiter, eng
 async def test_rate_limiter_blocked_when_ip_limit_exceeded(limiter, engine) -> None:
     base = datetime.now(timezone.utc) - timedelta(hours=2)
     for i in range(_MAX_DAILY):
-        await _insert_log(engine, _OTHER_CUSTOMER_ID, _IP, "smart-auto", base + timedelta(minutes=i))
+        await _insert_log(
+            engine, _OTHER_CUSTOMER_ID, _IP, "smart-auto", base + timedelta(minutes=i)
+        )
 
     result = await limiter.check(_CUSTOMER_ID, _IP)
     assert isinstance(result, Blocked)
@@ -130,7 +135,9 @@ async def test_rate_limiter_blocked_when_ip_limit_exceeded(limiter, engine) -> N
 async def test_rate_limiter_ignores_entries_older_than_24h(limiter, engine) -> None:
     old = datetime.now(timezone.utc) - timedelta(hours=25)
     for i in range(_MAX_DAILY):
-        await _insert_log(engine, _OTHER_CUSTOMER_ID, _IP, "smart-auto", old + timedelta(minutes=i))
+        await _insert_log(
+            engine, _OTHER_CUSTOMER_ID, _IP, "smart-auto", old + timedelta(minutes=i)
+        )
 
     result = await limiter.check(_CUSTOMER_ID, _IP)
     assert isinstance(result, Allowed)

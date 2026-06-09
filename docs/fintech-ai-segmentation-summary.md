@@ -394,4 +394,10 @@ Chart: Line chart showing acquisition trend over time
 
 ---
 
+## Security Disclaimer
+
+This is a portfolio project running on a fully synthetic dataset — every customer, transaction, and identity is generated with Faker and maps to no real person. There is no real PII, no real money, and no production customer data involved.
+
+To keep the demo open and easy to explore, the API endpoints are intentionally unauthenticated. This is an accepted trade-off for a synthetic showcase, not a pattern for production. A real deployment handling actual customer data would require authentication and authorization on every endpoint, a least-privilege database role, PII minimization and masking, and audit logging under LGPD. These gaps are tracked in the project's security checklist.
+
 
