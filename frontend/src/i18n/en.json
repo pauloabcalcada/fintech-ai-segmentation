@@ -330,7 +330,8 @@
       "methodology": "Methodology",
       "deliverables": "Deliverables",
       "stack": "Stack",
-      "disclaimer": "SynaptiqPay is a fictional company. All data is synthetic and generated for portfolio purposes."
+      "disclaimer": "SynaptiqPay is a fictional company. All data is synthetic and generated for portfolio purposes.",
+      "privacyNote": "When you use the AI recommendation feature, your IP address is hashed (SHA-256) before storage and automatically deleted after 24 hours. No raw IP addresses are retained. Data handling follows LGPD and applicable privacy regulations."
     },
     "github": {
       "label": "View on GitHub"

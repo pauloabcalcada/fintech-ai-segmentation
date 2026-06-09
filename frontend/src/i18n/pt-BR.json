@@ -330,7 +330,8 @@
       "methodology": "Metodologia",
       "deliverables": "Entregáveis",
       "stack": "Stack",
-      "disclaimer": "SynaptiqPay é uma empresa fictícia. Todos os dados são sintéticos e gerados para fins de portfólio."
+      "disclaimer": "SynaptiqPay é uma empresa fictícia. Todos os dados são sintéticos e gerados para fins de portfólio.",
+      "privacyNote": "Ao usar o recurso de recomendação com IA, seu endereço IP é processado com hash (SHA-256) antes do armazenamento e excluído automaticamente após 24 horas. Nenhum endereço IP bruto é retido. O tratamento de dados segue a LGPD e demais regulamentações de privacidade aplicáveis."
     },
     "github": {
       "label": "Ver no GitHub"

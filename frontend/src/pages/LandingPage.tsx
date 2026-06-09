@@ -479,6 +479,12 @@ export function LandingPage() {
           >
             {t("landing.footer.disclaimer")}
           </div>
+          <div
+            data-testid="footer-privacy-note"
+            className="mt-2 text-center text-xs text-white/30"
+          >
+            {t("landing.footer.privacyNote")}
+          </div>
         </div>
       </footer>
     </main>
