@@ -7,6 +7,7 @@ create table if not exists recommendation_log (
     customer_id     uuid not null references customers_raw(customer_id),
     ip_address      text not null,
     model_used      text not null,
+    language        text not null default 'en',
     generated_at    timestamptz not null default now(),
     recommendation_json jsonb not null
 );

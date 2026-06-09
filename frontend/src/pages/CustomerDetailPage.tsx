@@ -255,7 +255,7 @@ function ProductOwnershipChart({ profile }: { profile: CustomerProfile }) {
 export function CustomerDetailPage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const [profile, setProfile] = useState<CustomerProfile | null>(null);
   const [timeline, setTimeline] = useState<ActivityTimelineEntry[]>([]);
   const [loading, setLoading] = useState(true);
@@ -264,7 +264,7 @@ export function CustomerDetailPage() {
   useEffect(() => {
     if (!id) return;
     setLoading(true);
-    fetchCustomerProfile(id)
+    fetchCustomerProfile(id, i18n.language)
       .then((resp) => {
         setProfile(resp.data);
         setTimeline(resp.activity_timeline);

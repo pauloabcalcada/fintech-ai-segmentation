@@ -49,17 +49,23 @@ class RecommendationLogStore:
     def __init__(self, engine: AsyncEngine) -> None:
         self._engine = engine
 
-    async def get_cached_recommendation(self, customer_id: uuid.UUID) -> dict | None:
+    async def get_cached_recommendation(
+        self, customer_id: uuid.UUID, language: str = "en"
+    ) -> dict | None:
         cutoff = datetime.now(timezone.utc) - timedelta(hours=24)
         async with self._engine.connect() as conn:
             row = await conn.execute(
                 text(
                     "SELECT recommendation_json, generated_at, model_used "
                     "FROM recommendation_log "
-                    "WHERE customer_id = :customer_id AND generated_at >= :cutoff "
+                    "WHERE customer_id = :customer_id AND language = :language AND generated_at >= :cutoff "
                     "ORDER BY generated_at DESC LIMIT 1"
                 ),
-                {"customer_id": str(customer_id), "cutoff": cutoff},
+                {
+                    "customer_id": str(customer_id),
+                    "language": language,
+                    "cutoff": cutoff,
+                },
             )
             cached = row.mappings().first()
             if not cached:
@@ -76,19 +82,23 @@ class RecommendationLogStore:
         ip_address: str,
         model_used: str,
         recommendation_json: dict,
+        language: str = "en",
     ) -> None:
         async with self._engine.begin() as conn:
             await conn.execute(
                 text(
                     "INSERT INTO recommendation_log "
-                    "(customer_id, ip_address, model_used, recommendation_json) "
-                    "VALUES (:customer_id, :ip_address, :model_used, CAST(:recommendation_json AS jsonb))"
+                    "(customer_id, ip_address, model_used, language, recommendation_json) "
+                    "VALUES (:customer_id, :ip_address, :model_used, :language, CAST(:recommendation_json AS jsonb))"
                 ),
                 {
                     "customer_id": str(customer_id),
                     "ip_address": ip_address,
                     "model_used": model_used,
-                    "recommendation_json": __import__("json").dumps(recommendation_json),
+                    "language": language,
+                    "recommendation_json": __import__("json").dumps(
+                        recommendation_json
+                    ),
                 },
             )
 
@@ -98,17 +108,23 @@ class RateLimiter:
         self._engine = engine
         self._max = max_per_ip_daily
 
-    async def check(self, customer_id: uuid.UUID, ip_address: str) -> RateLimitResult:
+    async def check(
+        self, customer_id: uuid.UUID, ip_address: str, language: str = "en"
+    ) -> RateLimitResult:
         cutoff = datetime.now(timezone.utc) - timedelta(hours=24)
         async with self._engine.connect() as conn:
             row = await conn.execute(
                 text(
                     "SELECT recommendation_json, generated_at, model_used "
                     "FROM recommendation_log "
-                    "WHERE customer_id = :customer_id AND generated_at >= :cutoff "
+                    "WHERE customer_id = :customer_id AND language = :language AND generated_at >= :cutoff "
                     "ORDER BY generated_at DESC LIMIT 1"
                 ),
-                {"customer_id": str(customer_id), "cutoff": cutoff},
+                {
+                    "customer_id": str(customer_id),
+                    "language": language,
+                    "cutoff": cutoff,
+                },
             )
             cached = row.mappings().first()
             if cached:
@@ -145,7 +161,9 @@ def get_rate_limiter() -> RateLimiter:
 
 def get_recommendation_agent():
     from fintech_ai_segmentation.agent.llm_client import OpenRouterLLMClient
-    from fintech_ai_segmentation.agent.recommendation_agent import LangGraphRecommendationAgent
+    from fintech_ai_segmentation.agent.recommendation_agent import (
+        LangGraphRecommendationAgent,
+    )
     from fintech_ai_segmentation.app.repositories.customer import CustomerRepository
 
     settings = get_settings()

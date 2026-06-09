@@ -14,7 +14,6 @@ from fintech_ai_segmentation.app.repositories.customer import (
     get_customer_repository,
 )
 from fintech_ai_segmentation.app.repositories.recommendation import (
-    Allowed,
     Blocked,
     CachedResult,
     RateLimiter,
@@ -27,7 +26,6 @@ from fintech_ai_segmentation.app.schemas.customer import (
     CustomerListResponse,
     CustomerProfileResponse,
 )
-
 
 _MODEL = "smart-auto"
 
@@ -63,7 +61,9 @@ async def list_customers(
         page=page,
         page_size=page_size,
     )
-    return CustomerListResponse(data=customers, total=total, page=page, page_size=page_size)
+    return CustomerListResponse(
+        data=customers, total=total, page=page, page_size=page_size
+    )
 
 
 @router.get("/customers/sample", response_model=CustomerListResponse)
@@ -72,12 +72,15 @@ async def sample_customers(
     repository: CustomerRepository = Depends(get_customer_repository),
 ) -> CustomerListResponse:
     customers = await repository.sample_customers(per_cluster)
-    return CustomerListResponse(data=customers, total=len(customers), page=1, page_size=per_cluster * 3)
+    return CustomerListResponse(
+        data=customers, total=len(customers), page=1, page_size=per_cluster * 3
+    )
 
 
 @router.get("/customers/{customer_id}", response_model=CustomerProfileResponse)
 async def get_customer(
     customer_id: uuid.UUID,
+    language: str = Query(default="en"),
     repository: CustomerRepository = Depends(get_customer_repository),
     log_store: RecommendationLogStore = Depends(get_recommendation_log_store),
 ) -> CustomerProfileResponse:
@@ -85,7 +88,9 @@ async def get_customer(
     if profile is None:
         raise HTTPException(status_code=404, detail="Customer not found")
     timeline = await repository.get_activity_timeline(customer_id)
-    profile.cached_recommendation = await log_store.get_cached_recommendation(customer_id)
+    profile.cached_recommendation = await log_store.get_cached_recommendation(
+        customer_id, language
+    )
     return CustomerProfileResponse(data=profile, activity_timeline=timeline)
 
 
@@ -104,7 +109,7 @@ async def analyze_customer(
         raise HTTPException(status_code=404, detail="Customer not found")
 
     ip = request.client.host if request.client else "unknown"
-    result = await rate_limiter.check(customer_id, ip)
+    result = await rate_limiter.check(customer_id, ip, language=body.language)
 
     if isinstance(result, CachedResult):
         return {
@@ -137,6 +142,7 @@ async def analyze_customer(
         recommendation = await agent.run(customer_id, _MODEL, language=body.language)
     except Exception as exc:
         import openai
+
         if isinstance(exc, openai.RateLimitError):
             raise HTTPException(
                 status_code=503,
@@ -150,7 +156,7 @@ async def analyze_customer(
         _analyze_semaphore.release()
 
     rec_json = recommendation.model_dump()
-    await log_store.record(customer_id, ip, _MODEL, rec_json)
+    await log_store.record(customer_id, ip, _MODEL, rec_json, language=body.language)
     return {
         "cached": False,
         "generated_at": datetime.now(timezone.utc).isoformat(),

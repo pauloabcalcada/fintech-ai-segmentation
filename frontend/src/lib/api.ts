@@ -172,9 +172,12 @@ export async function fetchCustomers(
 }
 
 export async function fetchCustomerProfile(
-  id: string
+  id: string,
+  language: string = "en"
 ): Promise<CustomerProfileResponse> {
-  const res = await fetch(`${BASE_URL}/customers/${id}`);
+  const url = new URL(`${BASE_URL}/customers/${id}`);
+  url.searchParams.set("language", language);
+  const res = await fetch(url.toString());
   if (res.status === 404) throw new NotFoundError();
   if (!res.ok) throw new Error(`GET /customers/${id} failed: ${res.status}`);
   return res.json() as Promise<CustomerProfileResponse>;
