@@ -394,10 +394,24 @@ Chart: Line chart showing acquisition trend over time
 
 ---
 
-## Security Disclaimer
+## Security Posture
 
-This is a portfolio project running on a fully synthetic dataset — every customer, transaction, and identity is generated with Faker and maps to no real person. There is no real PII, no real money, and no production customer data involved.
+This is a portfolio project running on a fully synthetic dataset. Every customer, transaction, and identity is generated with Faker and maps to no real person. There is no real PII, no real money, and no production customer data involved.
 
-To keep the demo open and easy to explore, the API endpoints are intentionally unauthenticated. This is an accepted trade-off for a synthetic showcase, not a pattern for production. A real deployment handling actual customer data would require authentication and authorization on every endpoint, a least-privilege database role, PII minimization and masking, and audit logging under LGPD. These gaps are tracked in the project's security checklist.
+A security assessment was run against the live deployment (`docs/security/pentest-2026-06-09.md`). The injection surface is clean (all SQL is parameterized, the sort field is allowlisted), CORS is locked to the frontend origin, client IPs are hashed at rest, the page size is capped at 100, and secrets are kept out of the image and out of git. Low effort hardening from that assessment is already applied: the OpenAPI schema is disabled in production, the API returns baseline security headers, and the backend container runs as a non root user.
+
+Two larger gaps remain open by design. They are acceptable for a synthetic showcase but would be blockers for a production deployment handling real customer data.
+
+### Known limitation 1: No authentication
+
+Every endpoint (`/customers`, `/customers/{id}`, `/customers/{id}/analyze`, `/dashboard/*`) is reachable without a credential. Anyone with the URL can read the data or trigger the AI agent. This keeps the demo open to explore. A production version would need JWT bearer authentication on every endpoint, role based access control (for example a `customers:read` scope to list customers and a `customers:analyze` scope to run the agent), and audit logging of every PII access under LGPD.
+
+### Known limitation 2: Customer PII is enumerable
+
+`GET /customers` returns each customer's name and email, and read endpoints have no rate limit (only the AI agent endpoint is throttled). The page size cap of 100 bounds a single request but not pagination depth, so walking the pages dumps the full base of 8,000 names and emails in roughly 80 requests. The response even reports `total` so a caller knows how many pages to fetch. On synthetic data this is harmless, but the same code against a real database is an excessive data exposure and phishing target list risk (OWASP API3/API4).
+
+A production version would fix this with data minimization (drop name and email from the list view, keep them only in the detail view and mask them there, for example `da***@gmail.com`) and per IP rate limiting on read endpoints. Both reduce the risk sharply even before authentication is added.
+
+These gaps, and the lower priority items (prompt injection sanitizer hardening before the Phase 2 chat feature, and a global LLM spend cap), are tracked in the project security checklist and the assessment report.
 
 
