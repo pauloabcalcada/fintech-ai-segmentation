@@ -11,6 +11,10 @@ class Settings(BaseSettings):
     LANGCHAIN_API_KEY: str = ""
     LANGCHAIN_PROJECT: str = ""
     MAX_PER_IP_DAILY: int = 10
+    # Secret salt for hashing client IPs before they are stored. IPv4 space is
+    # small enough to brute-force an unsalted hash, so set a stable random
+    # value in production. Must not change, or existing rate-limit counts reset.
+    IP_HASH_SALT: str = ""
     # Number of trusted reverse proxies in front of the app. Used to pick the
     # real client IP from the X-Forwarded-For chain. Railway = 1 hop.
     TRUSTED_PROXY_HOPS: int = 1

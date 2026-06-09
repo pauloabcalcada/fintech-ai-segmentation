@@ -1,6 +1,19 @@
 from __future__ import annotations
 
+import hashlib
+
 from starlette.requests import Request
+
+
+def hash_ip(ip: str, salt: str = "") -> str:
+    """Hash a client IP so the raw address is never persisted.
+
+    Rate limiting only needs equality comparison, so a stable salted SHA-256 is
+    a drop-in replacement that removes the personal data at rest: the stored
+    value can no longer be read back as an IP. The salt should be a secret —
+    the IPv4 space is small enough to brute-force an unsalted hash.
+    """
+    return hashlib.sha256(f"{salt}:{ip}".encode()).hexdigest()
 
 
 def get_client_ip(request: Request, trusted_proxy_hops: int = 1) -> str:

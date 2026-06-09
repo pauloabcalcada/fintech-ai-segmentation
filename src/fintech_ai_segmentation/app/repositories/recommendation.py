@@ -8,6 +8,7 @@ from datetime import datetime, timedelta, timezone
 from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncEngine
 
+from fintech_ai_segmentation.app.client_ip import hash_ip
 from fintech_ai_segmentation.app.database import get_engine
 from fintech_ai_segmentation.app.settings import get_settings
 
@@ -46,8 +47,9 @@ RateLimitResult = Allowed | CachedResult | Blocked
 
 
 class RecommendationLogStore:
-    def __init__(self, engine: AsyncEngine) -> None:
+    def __init__(self, engine: AsyncEngine, ip_hash_salt: str = "") -> None:
         self._engine = engine
+        self._ip_hash_salt = ip_hash_salt
 
     async def get_cached_recommendation(
         self, customer_id: uuid.UUID, language: str = "en"
@@ -93,7 +95,7 @@ class RecommendationLogStore:
                 ),
                 {
                     "customer_id": str(customer_id),
-                    "ip_address": ip_address,
+                    "ip_address": hash_ip(ip_address, self._ip_hash_salt),
                     "model_used": model_used,
                     "language": language,
                     "recommendation_json": __import__("json").dumps(
@@ -104,9 +106,12 @@ class RecommendationLogStore:
 
 
 class RateLimiter:
-    def __init__(self, engine: AsyncEngine, max_per_ip_daily: int) -> None:
+    def __init__(
+        self, engine: AsyncEngine, max_per_ip_daily: int, ip_hash_salt: str = ""
+    ) -> None:
         self._engine = engine
         self._max = max_per_ip_daily
+        self._ip_hash_salt = ip_hash_salt
 
     async def check(
         self, customer_id: uuid.UUID, ip_address: str, language: str = "en"
@@ -140,7 +145,7 @@ class RateLimiter:
                     "WHERE ip_address = :ip AND generated_at >= :cutoff "
                     "ORDER BY generated_at ASC"
                 ),
-                {"ip": ip_address, "cutoff": cutoff},
+                {"ip": hash_ip(ip_address, self._ip_hash_salt), "cutoff": cutoff},
             )
             ip_entries = ip_rows.mappings().all()
             if len(ip_entries) >= self._max:
@@ -151,12 +156,13 @@ class RateLimiter:
 
 
 def get_recommendation_log_store() -> RecommendationLogStore:
-    return RecommendationLogStore(get_engine())
+    settings = get_settings()
+    return RecommendationLogStore(get_engine(), settings.IP_HASH_SALT)
 
 
 def get_rate_limiter() -> RateLimiter:
     settings = get_settings()
-    return RateLimiter(get_engine(), settings.MAX_PER_IP_DAILY)
+    return RateLimiter(get_engine(), settings.MAX_PER_IP_DAILY, settings.IP_HASH_SALT)
 
 
 def get_recommendation_agent():
