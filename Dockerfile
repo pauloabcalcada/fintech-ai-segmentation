@@ -27,6 +27,10 @@ ENV PYTHONPATH=/app/src \
     PYTHONUNBUFFERED=1 \
     PYTHONDONTWRITEBYTECODE=1
 
+# Run as an unprivileged user — defense in depth if the app is compromised.
+RUN useradd --create-home --uid 10001 appuser
+USER appuser
+
 EXPOSE 8000
 
 CMD ["uvicorn", "fintech_ai_segmentation.app.main:app", "--host", "0.0.0.0", "--port", "8000"]

@@ -23,3 +23,23 @@ class RequestLogMiddleware(BaseHTTPMiddleware):
             duration_ms=duration_ms,
         )
         return response
+
+
+class SecurityHeadersMiddleware(BaseHTTPMiddleware):
+    """Attach baseline security headers to every API response.
+
+    The API returns JSON, so it does not need a full CSP, but ``nosniff``
+    (blocks MIME sniffing), HSTS (enforces HTTPS), and a restrictive
+    ``Referrer-Policy`` are cheap defense-in-depth. ``Cache-Control: no-store``
+    keeps PII-bearing responses out of shared caches.
+    """
+
+    async def dispatch(self, request: Request, call_next: object) -> Response:
+        response: Response = await call_next(request)  # type: ignore[arg-type]
+        response.headers.setdefault("X-Content-Type-Options", "nosniff")
+        response.headers.setdefault("Referrer-Policy", "no-referrer")
+        response.headers.setdefault(
+            "Strict-Transport-Security", "max-age=31536000; includeSubDomains"
+        )
+        response.headers.setdefault("Cache-Control", "no-store")
+        return response

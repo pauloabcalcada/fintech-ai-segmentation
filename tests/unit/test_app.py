@@ -26,7 +26,10 @@ def test_request_log_emits_method_path_status_duration() -> None:
         client.get("/health")
 
     mock_logger.info.assert_called_once()
-    event, kwargs = mock_logger.info.call_args.args[0], mock_logger.info.call_args.kwargs
+    event, kwargs = (
+        mock_logger.info.call_args.args[0],
+        mock_logger.info.call_args.kwargs,
+    )
     assert event == "request"
     assert kwargs["method"] == "GET"
     assert kwargs["path"] == "/health"
@@ -36,7 +39,9 @@ def test_request_log_emits_method_path_status_duration() -> None:
 
 def test_cors_allows_local_dev_origin() -> None:
     response = client.get("/health", headers={"Origin": "http://localhost:5173"})
-    assert response.headers.get("access-control-allow-origin") == "http://localhost:5173"
+    assert (
+        response.headers.get("access-control-allow-origin") == "http://localhost:5173"
+    )
 
 
 # ---------------------------------------------------------------------------
@@ -48,30 +53,60 @@ def test_docs_disabled_in_production(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setenv("ENVIRONMENT", "production")
     from fintech_ai_segmentation.app import main as main_module
     from fintech_ai_segmentation.app import settings as settings_module
+
     settings_module.get_settings.cache_clear()
     prod_app = main_module.create_app()
     from fastapi.testclient import TestClient as _TC
+
     with _TC(prod_app) as prod_client:
         assert prod_client.get("/docs").status_code == 404
         assert prod_client.get("/redoc").status_code == 404
     settings_module.get_settings.cache_clear()
 
 
+def test_openapi_schema_disabled_in_production(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setenv("ENVIRONMENT", "production")
+    from fintech_ai_segmentation.app import main as main_module
+    from fintech_ai_segmentation.app import settings as settings_module
+
+    settings_module.get_settings.cache_clear()
+    prod_app = main_module.create_app()
+    assert prod_app.openapi_url is None
+    from fastapi.testclient import TestClient as _TC
+
+    with _TC(prod_app) as prod_client:
+        assert prod_client.get("/openapi.json").status_code == 404
+    settings_module.get_settings.cache_clear()
+
+
+def test_security_headers_present_on_responses() -> None:
+    response = client.get("/health")
+    assert response.headers.get("x-content-type-options") == "nosniff"
+    assert response.headers.get("referrer-policy") == "no-referrer"
+    assert "max-age=" in response.headers.get("strict-transport-security", "")
+    assert response.headers.get("cache-control") == "no-store"
+
+
 def test_docs_enabled_in_development(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setenv("ENVIRONMENT", "development")
     from fintech_ai_segmentation.app import main as main_module
     from fintech_ai_segmentation.app import settings as settings_module
+
     settings_module.get_settings.cache_clear()
     dev_app = main_module.create_app()
     from fastapi.testclient import TestClient as _TC
+
     with _TC(dev_app) as dev_client:
         assert dev_client.get("/docs").status_code == 200
     settings_module.get_settings.cache_clear()
 
 
-def test_settings_reads_max_per_ip_daily_from_env(monkeypatch: pytest.MonkeyPatch) -> None:
+def test_settings_reads_max_per_ip_daily_from_env(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
     monkeypatch.setenv("MAX_PER_IP_DAILY", "25")
     from fintech_ai_segmentation.app.settings import Settings
+
     settings = Settings()
     assert settings.MAX_PER_IP_DAILY == 25
 
