@@ -268,8 +268,7 @@
         { "name": "Recharts", "category": "FRONTEND", "why": "Composable SVG charts with a React-native API — cohort heatmap and segment breakdown without D3 complexity." },
         { "name": "Poetry", "category": "OPS", "why": "Locks every Python dependency to an exact version — reproducible installs across local dev, CI, and the production container." },
         { "name": "Docker", "category": "OPS", "why": "Packages the backend and its dependencies into a single image — the same container runs locally and on Railway with no environment drift." },
-        { "name": "GitHub Actions", "category": "OPS", "why": "Automates backend deployment on every push to main — runs only when backend files change (src/, Dockerfile, Poetry lockfile), then calls flyctl to ship the new container to Fly.io without manual steps." },
-        { "name": "Railway", "category": "OPS", "why": "One-command deploys from GitHub with automatic HTTPS and zero cold-start delay." }
+        { "name": "Railway", "category": "OPS", "why": "Hosts both backend and frontend as separate services in one project — auto-deploys on every push to main via GitHub webhook, with automatic HTTPS and no cold-start delay." }
       ]
     },
     "deliverables": {

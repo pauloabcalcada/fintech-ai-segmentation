@@ -1,7 +1,6 @@
-# Deployment Guide — Fly.io + Vercel
+# Deployment Guide — Railway
 
-SynaptiqPay backend runs on **Fly.io** (GRU — São Paulo), frontend auto-deploys to **Vercel**.  
-The first deployment is manual (from your machine). All subsequent deployments are triggered automatically by pushes to `main`.
+SynaptiqPay runs on **Railway** — one project, two services (backend + frontend), both auto-deploying on push to `main`.
 
 ---
 
@@ -9,42 +8,37 @@ The first deployment is manual (from your machine). All subsequent deployments a
 
 ```
 GitHub (main branch)
-  ├── push → .github/workflows/fly-deploy.yml → Fly.io (backend, gru region)
-  └── push → Vercel GitHub integration           → Vercel CDN  (frontend)
+  └── push → Railway GitHub webhook
+        ├── backend service  → FastAPI/uvicorn container  (port 8000)
+        └── frontend service → React/Vite/nginx container (port 80)
 ```
 
-| Service | Platform | Region | Trigger |
-|---------|----------|--------|---------|
-| FastAPI backend | Fly.io | GRU (São Paulo) | GitHub Actions on push to `main` |
-| React + Vite frontend | Vercel | Global CDN | Vercel GitHub integration on push to `main` |
+| Service | Platform | Trigger |
+|---------|----------|---------|
+| FastAPI backend | Railway | Push to `main` via GitHub webhook |
+| React + Vite frontend | Railway | Push to `main` via GitHub webhook |
 
 ---
 
 ## Cost
 
-Fly.io has no free tier. This configuration targets **~$2/month**:
+Railway Hobby plan gives **$5/month** of free compute credit.
 
 | Resource | Config | Cost |
 |----------|--------|------|
-| Machine | 1× shared-1x CPU, 256 MB RAM | ~$1.94/month |
-| IP | IPv6 only (no static IPv4) | $0 |
-| Bandwidth | First 100 GB/month free | $0 |
-| **Total** | | **~$1.94/month** |
-
-FastAPI + SQLAlchemy + LangGraph idles well under 150 MB — the agent calls OpenRouter over HTTP and never loads a model into memory, so 256 MB is sufficient.
+| Backend | Shared CPU, 512 MB RAM | ~$2–3/month |
+| Frontend | nginx container, minimal idle usage | ~$0.50/month |
+| **Total** | | **~$3/month (within free credit)** |
 
 ---
 
 ## What Is Already Done in the Repo
 
-No action needed on these — they are committed and ready:
-
 | Item | Detail |
 |------|--------|
-| `fly.toml` | App config: GRU region, 256 MB shared VM, `/health` check, no cold starts |
-| `.github/workflows/fly-deploy.yml` | Auto-deploys backend on push to `main` |
-| Multi-stage `Dockerfile` | Clean runtime image, no build tools, no `--reload` |
-| `VITE_API_BASE_URL` in `frontend/src/lib/api.ts` | Reads Fly URL in production, falls back to `localhost:8000` locally |
+| `Dockerfile` (root) | Backend: multi-stage Python image, uvicorn on port 8000 |
+| `frontend/Dockerfile` | Frontend: Node 22 build → nginx:1.27-alpine on port 80, `ARG VITE_API_BASE_URL` for build-time injection |
+| `frontend/nginx.conf` | SPA routing — all paths fall back to `index.html` |
 | FastAPI docs disabled in production | `/docs` and `/redoc` return 404 when `ENVIRONMENT=production` |
 | No SQL injection risk | All queries use SQLAlchemy bound parameters |
 
@@ -52,247 +46,86 @@ No action needed on these — they are committed and ready:
 
 ## Step-by-Step Deployment
 
-### Step 1 — Create external accounts
+### Step 1 — Create a Railway account
 
-**Fly.io** (required — has a cost)
-1. Sign up at [fly.io](https://fly.io)
-2. Add a credit card — required even for the ~$2/month tier
-3. You will not be charged until a machine is running
-
-**Vercel** (free)
-1. Sign up at [vercel.com](https://vercel.com) with your GitHub account
-2. No credit card needed for the free hobby plan
+1. Go to [railway.app](https://railway.app) and sign up with your GitHub account
+2. Authorize the Railway GitHub App when prompted — grant access to the `fintech-ai-segmentation` repo
 
 ---
 
-### Step 2 — Install the Fly CLI and authenticate
+### Step 2 — Create a new project
 
-```bash
-brew install flyctl
-fly auth login   # opens browser to complete login
-```
+1. Click **New Project** → **Empty Project**
+2. Name it `synaptiqpay`
 
 ---
 
-### Step 3 — Push current changes to GitHub
+### Step 3 — Deploy the backend service
 
-Vercel connects to GitHub and needs the latest code — including `fly.toml` and the GitHub Actions workflow — before you set anything up on either platform.
+1. On the project canvas, click **+ New Service → GitHub Repo**
+2. Select `pauloabcalcada/fintech-ai-segmentation`
+3. Leave **Root Directory** blank (repo root, where `Dockerfile` lives)
+4. In the **Variables** tab, add:
 
-```bash
-git add fly.toml .github/workflows/fly-deploy.yml .env.example \
-        src/fintech_ai_segmentation/app/settings.py \
-        src/fintech_ai_segmentation/app/middleware.py \
-        src/fintech_ai_segmentation/app/routers/customers.py \
-        src/fintech_ai_segmentation/app/main.py \
-        frontend/src/lib/api.ts \
-        frontend/src/components/AiRecommendationPanel.tsx \
-        docs/deployment-guide.md
-git commit -m "chore: deployment configuration and pre-deploy cleanup"
-git push origin main
-```
+| Variable | Value |
+|---|---|
+| `SUPABASE_DATABASE_URL` | Your Supabase connection string |
+| `OPENROUTER_API_KEY` | Your OpenRouter key |
+| `LANGCHAIN_API_KEY` | Your LangSmith key |
+| `LANGCHAIN_PROJECT` | `synaptiqpay-recommendations` |
+| `MAX_PER_IP_DAILY` | `10` |
+| `FRONTEND_ORIGIN` | `placeholder` (update after Step 4) |
+| `ENVIRONMENT` | `production` |
 
----
+5. Click **Deploy** and wait for the build to complete (~3 minutes)
+6. Click **Settings → Networking → Generate Domain**, set port `8000`
+7. Verify: visit `https://<backend-url>/health` → `{"status": "ok", "environment": "production"}`
 
-### Step 4 — Create a least-privilege Supabase database role
-
-The current `SUPABASE_DATABASE_URL` uses the `postgres` superuser. Do this before deploying so you never expose superuser credentials to the live backend.
-
-Open the **Supabase SQL editor** for your project and run:
-
-```sql
-CREATE ROLE synaptiqpay_api WITH LOGIN PASSWORD 'choose-a-strong-password';
-
-GRANT SELECT ON
-  customer_analysis,
-  customers_raw,
-  transactions_raw,
-  products_raw,
-  customer_products_raw,
-  cohort_activity_matrix,
-  channel_m6_retention
-TO synaptiqpay_api;
-
-GRANT SELECT, INSERT ON recommendation_log TO synaptiqpay_api;
-```
-
-Note down the connection string for this new role — you will use it in the next step instead of the superuser URL. The format is:
-
-```
-postgresql://synaptiqpay_api:<password>@aws-1-us-east-2.pooler.supabase.com:5432/postgres
-```
-
-> The host and port are the same as your current `SUPABASE_DATABASE_URL` — only the username and password change.
+> **Security note:** Variables are encrypted at rest in Railway's vault and injected at container startup — never stored in the Docker image or visible in build logs.
 
 ---
 
-### Step 5 — Register the Fly app
+### Step 4 — Deploy the frontend service
 
-Run from the **project root**. Say **no** to Postgres and Redis — the project uses Supabase.
+1. On the project canvas, click **+ New Service → GitHub Repo**
+2. Select the same `pauloabcalcada/fintech-ai-segmentation` repo
+3. Set **Root Directory** to `frontend`
+4. In the **Variables** tab, add:
 
-```bash
-fly launch \
-  --name synaptiqpay-backend \
-  --region gru \
-  --no-deploy
-```
+| Variable | Value |
+|---|---|
+| `VITE_API_BASE_URL` | `https://<backend-url>` from Step 3 — must include `https://` |
 
-`--no-deploy` registers the app name without building anything yet. If prompted to overwrite `fly.toml`, keep the existing one — it is already production-ready.
+> **Important:** `VITE_API_BASE_URL` is baked into the JS bundle at build time by Vite. It must be set before the first build runs. If you ever change the backend URL, update this variable and redeploy the frontend.
 
-Then release the auto-allocated IPv4 (paid) and add a free IPv6:
-
-```bash
-fly ips list
-fly ips release <ipv4-address>   # remove if one was allocated
-fly ips allocate-v6
-```
+5. Click **Deploy** and wait for the build to complete (~2 minutes)
+6. Click **Settings → Networking → Generate Domain**, set port `80`
+7. Copy the frontend URL — you need it in Step 5
 
 ---
 
-### Step 6 — Set Fly secrets
+### Step 5 — Wire CORS
 
-All secrets are encrypted and injected at runtime — never in the Docker image or `fly.toml`.
-
-> **Note:** Skip `FRONTEND_ORIGIN` for now — you don't have the Vercel URL yet. You will add it in Step 10.
-
-```bash
-fly secrets set \
-  SUPABASE_DATABASE_URL="postgresql://synaptiqpay_api:<password>@aws-1-us-east-2.pooler.supabase.com:5432/postgres" \
-  OPENROUTER_API_KEY="sk-or-v1-your-key" \
-  LANGCHAIN_API_KEY="your-langchain-key" \
-  LANGCHAIN_PROJECT="synaptiqpay-recommendations" \
-  MAX_PER_IP_DAILY="10" \
-  ENVIRONMENT="production"
-```
-
-Verify (values are always redacted):
-
-```bash
-fly secrets list
-```
+1. Go back to the **backend** service → **Variables**
+2. Update `FRONTEND_ORIGIN` from `placeholder` to your frontend Railway URL:
+   ```
+   https://<frontend-url>
+   ```
+3. Save — Railway restarts the backend automatically (~60 seconds, no rebuild)
 
 ---
 
-### Step 7 — First deploy (from your machine)
+### Step 6 — End-to-end verification
 
-```bash
-fly deploy
-```
+Open the frontend URL in the browser:
 
-Fly builds the Docker image remotely using `Dockerfile`, deploys to GRU, and runs the `/health` check before marking the machine live. Watch logs:
+- `/dashboard` — KPI cards and charts load from the database
+- `/customers` — paginated customer table loads with segment badges
+- `/customers/:id` → click **Analyze** — AI recommendation panel returns a result
 
-```bash
-fly logs
-```
+Open DevTools → **Network** tab and confirm all API calls go to the Railway backend URL, not `localhost`.
 
----
-
-### Step 8 — Verify the live backend
-
-```bash
-# Health check
-curl https://synaptiqpay-backend.fly.dev/health
-# → {"status": "ok"}
-
-# Confirm /docs is disabled
-curl -I https://synaptiqpay-backend.fly.dev/docs
-# → 404
-
-# Confirm data is reachable
-curl "https://synaptiqpay-backend.fly.dev/customers?limit=1"
-```
-
----
-
-### Step 9 — Enable GitHub Actions auto-deploy
-
-Generate a long-lived deploy token so GitHub can deploy on your behalf:
-
-```bash
-fly tokens create deploy -x 999999h
-```
-
-Copy the output and add it to GitHub:
-
-> GitHub repo → **Settings** → **Secrets and variables** → **Actions** → **New repository secret**  
-> Name: `FLY_API_TOKEN` | Value: *(paste token)*
-
-From this point on, every push to `main` that touches `src/`, `Dockerfile`, `pyproject.toml`, `poetry.lock`, or `fly.toml` triggers an automatic backend deploy.
-
----
-
-### Step 10 — Connect repo to Vercel and deploy frontend
-
-1. Go to [vercel.com/new](https://vercel.com/new)
-2. **Import Git Repository** → `pauloabcalcada/fintech-ai-segmentation`
-3. In **Configure Project**:
-   - **Root Directory**: `frontend` ← click "Edit" to set this
-   - **Framework Preset**: Vite (auto-detected)
-   - **Build Command**: `npm run build`
-   - **Output Directory**: `dist`
-4. Add environment variable:
-
-| Name | Value | Environments |
-|------|-------|--------------|
-| `VITE_API_BASE_URL` | `https://synaptiqpay-backend.fly.dev` | Production, Preview, Development |
-
-5. Click **Deploy**
-
-Vercel will give you a live URL — typically `https://synaptiqpay-frontend.vercel.app` or a variant with a random suffix. Note it down.
-
----
-
-### Step 11 — Set FRONTEND_ORIGIN on Fly
-
-Now that you have the Vercel URL, update the CORS allowlist on the backend:
-
-```bash
-fly secrets set FRONTEND_ORIGIN="https://synaptiqpay-frontend.vercel.app"
-```
-
-This triggers an automatic rolling restart. CORS will now allow requests from the deployed frontend.
-
----
-
-### Step 12 — Enable Supabase Row Level Security (RLS)
-
-Enabling RLS adds a safety net for Phase 2, when the Supabase REST API may be used directly.
-
-In the Supabase dashboard:  
-**Table Editor** → select each table → **RLS** → **Enable Row Level Security**
-
-Tables to enable RLS on: `customer_analysis`, `customers_raw`, `transactions_raw`, `products_raw`, `customer_products_raw`, `cohort_activity_matrix`, `channel_m6_retention`, `recommendation_log`
-
-The backend connects via direct Postgres (bypasses RLS), so this does not affect current functionality.
-
----
-
-### Step 13 — End-to-end verification
-
-```bash
-# Backend health
-curl https://synaptiqpay-backend.fly.dev/health
-# → {"status": "ok"}
-
-# /docs disabled
-curl -I https://synaptiqpay-backend.fly.dev/docs
-# → 404
-
-# Full round-trip: AI analysis (replace <uuid> with a real customer_id from your DB)
-curl -X POST https://synaptiqpay-backend.fly.dev/customers/<uuid>/analyze \
-  -H "Content-Type: application/json" \
-  -d '{"model": "gemini-flash-free"}'
-# → {"cached": false, "recommendation": {...}}
-
-# No secrets in the repo
-git grep -r "sk-or-v1\|postgresql://postgres\." -- ':!.env.example' ':!docs/'
-# → must return nothing
-```
-
-Open the Vercel URL in the browser, open DevTools → Network tab, and confirm all API calls go to `fly.dev`, not `localhost`.
-
-Push a whitespace commit to `main` and confirm:
-- GitHub → **Actions** tab shows the `fly-deploy` job running
-- Vercel Dashboard shows a new deployment triggered
+Push a whitespace commit to `main` — both services should show a new deployment in the Railway **Deployments** tab within 30 seconds.
 
 ---
 
@@ -300,10 +133,20 @@ Push a whitespace commit to `main` and confirm:
 
 | What changed | Action needed |
 |---|---|
-| Backend code (`src/`, `Dockerfile`, etc.) | Push to `main` → GitHub Action deploys automatically |
-| Frontend code (`frontend/src/`, etc.) | Push to `main` → Vercel deploys automatically |
-| Fly secrets | `fly secrets set KEY="value"` — triggers automatic restart |
-| Vercel env vars | Vercel Dashboard → Settings → Environment Variables → redeploy |
+| Backend code (`src/`, `Dockerfile`, etc.) | Push to `main` → Railway deploys automatically |
+| Frontend code (`frontend/src/`, etc.) | Push to `main` → Railway deploys automatically |
+| Backend env vars | Railway dashboard → Variables → save → auto-restart |
+| `VITE_API_BASE_URL` (frontend) | Update in Railway → Variables → Redeploy frontend |
+
+---
+
+## Adding a Custom Domain
+
+1. Go to the service → **Settings → Networking → Custom Domain**
+2. Enter your domain (e.g. `api.synaptiqpay.com`)
+3. Point your DNS CNAME to the Railway-provided target
+4. Railway provisions TLS automatically
+5. Update `VITE_API_BASE_URL` (backend) and `FRONTEND_ORIGIN` (backend) to use the new domains, then redeploy both services
 
 ---
 
@@ -311,10 +154,8 @@ Push a whitespace commit to `main` and confirm:
 
 | Symptom | Check |
 |---------|-------|
-| `fly deploy` fails at build | `fly logs` — usually a missing dependency in `pyproject.toml` |
-| `/health` returns 503 | `fly status` → `fly machine start` if stopped |
-| Frontend shows CORS error | `FRONTEND_ORIGIN` on Fly does not match the Vercel URL exactly (no trailing slash) |
-| GitHub Action fails with auth error | `FLY_API_TOKEN` not set or expired — run `fly tokens create deploy` and update the secret |
-| Vercel build fails | Check build logs — most likely wrong Root Directory (must be `frontend`) |
-| `/docs` still visible in production | `ENVIRONMENT` secret not set to `production` on Fly |
-| AI analysis returns 429 | Rate limit hit — wait until tomorrow or increase `MAX_PER_IP_DAILY` via `fly secrets set` |
+| Frontend calls `localhost:8000` | `VITE_API_BASE_URL` was not set before the build — update the variable and **Redeploy** the frontend |
+| Frontend shows CORS error | `FRONTEND_ORIGIN` on the backend does not match the frontend URL exactly (no trailing slash) |
+| Backend health check fails | Check the **Deployments** build log — usually a missing env var or Poetry install failure |
+| `/docs` visible in production | `ENVIRONMENT` not set to `production` on the backend service |
+| AI analysis returns 429 | Rate limit hit — wait until tomorrow or increase `MAX_PER_IP_DAILY` in Railway Variables |

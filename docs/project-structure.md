@@ -16,7 +16,7 @@ This project follows a standard analytics + ML + app architecture aligned with t
 - `tests/integration` — end-to-end and API tests that span multiple layers.
 - `docs` — documentation (this file plus additional guides like setup, architecture, and usage).
 - `infra/docker` — Dockerfiles and local container orchestration.
-- `infra/deployment` — deployment manifests and scripts for Render/Fly.io/Vercel and related infra.
+- `infra/deployment` — deployment manifests and scripts for Railway and related infra.
 
 This structure keeps experimentation (`notebooks`) clearly separated from production code (`src`), and cleanly isolates infrastructure, tests, and data lifecycle.
 

@@ -286,8 +286,7 @@
         { "name": "Recharts", "category": "FRONTEND", "why": "Gráficos SVG combináveis com API nativa React — heatmap de cohort e breakdown de segmento sem complexidade D3." },
         { "name": "Poetry", "category": "OPS", "why": "Trava cada dependência Python em uma versão exata — instalações reproduzíveis em desenvolvimento local, CI e no container de produção." },
         { "name": "Docker", "category": "OPS", "why": "Empacota o backend e suas dependências em uma única imagem — o mesmo container roda localmente e no Railway sem variação de ambiente." },
-        { "name": "GitHub Actions", "category": "OPS", "why": "Automatiza o deploy do backend a cada push na main — executa apenas quando arquivos do backend mudam (src/, Dockerfile, lockfile do Poetry) e chama o flyctl para subir o novo container no Fly.io sem etapas manuais." },
-        { "name": "Railway", "category": "OPS", "why": "Deploy em um comando pelo GitHub com HTTPS automático e sem atraso de cold-start." }
+        { "name": "Railway", "category": "OPS", "why": "Hospeda backend e frontend como serviços separados em um único projeto — faz deploy automático a cada push na main via webhook do GitHub, com HTTPS automático e sem atraso de cold-start." }
       ]
     },
     "roadmap": {

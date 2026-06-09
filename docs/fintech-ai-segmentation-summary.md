@@ -164,8 +164,8 @@ For a full breakdown of the statistical distributions used — registration timi
 | Database | Supabase (PostgreSQL) | Data persistence |
 | ORM | SQLAlchemy | Database interaction |
 | Containerization | Docker + Docker Compose | Local + VPS deployment |
-| Frontend deployment | Vercel | Free, auto-deploy on GitHub push |
-| Backend deployment | Render or Fly.io | Free tier VPS |
+| Frontend deployment | Railway | Auto-deploy on GitHub push |
+| Backend deployment | Railway | Auto-deploy on GitHub push |
 | Version control | Git + GitHub | Source control |
 
 ---
@@ -182,7 +182,7 @@ Pandas Pipeline
 Supabase (PostgreSQL)
   → persists all customers, scores, segments, cohort metrics
         ↓
-FastAPI (deployed on Render/Fly.io)
+FastAPI (deployed on Railway)
   → serves data to frontend
   → triggers LangGraph AI agent
         ↓
@@ -193,7 +193,7 @@ LangGraph Agent (+ OpenRouter LLM)
   → every LLM call traced in LangSmith (latency, tokens, run inspection)
   → returns structured Pydantic-validated recommendation
         ↓
-React + Vite Dashboard (deployed on Vercel)
+React + Vite Dashboard (deployed on Railway)
   → business manager interacts via browser
         ↓
 Docker Compose
@@ -304,7 +304,7 @@ return structured response
 ✅ React + Vite dashboard — /dashboard, /customers list, /customers/:id + AI recommendation panel
 ✅ Supabase write-back of derived features (customer_analysis mart)
 ✅ Docker + Docker Compose
-✅ Deployed on Vercel (frontend) + Fly.io (backend)
+✅ Deployed on Railway (frontend + backend)
 ```
 
 ### Phase 2 — Intelligence Layer
@@ -388,8 +388,8 @@ Chart: Line chart showing acquisition trend over time
 
 | Service | Platform | Cost |
 |---|---|---|
-| Frontend (React + Vite) | Vercel | Free |
-| Backend (FastAPI + LangGraph) | Render or Fly.io | Free tier |
+| Frontend (React + Vite) | Railway | Hobby plan ($5/month credit) |
+| Backend (FastAPI + LangGraph) | Railway | Hobby plan ($5/month credit) |
 | Database | Supabase | Free tier |
 
 ---
