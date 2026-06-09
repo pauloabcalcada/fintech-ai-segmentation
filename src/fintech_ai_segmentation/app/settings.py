@@ -14,7 +14,9 @@ class Settings(BaseSettings):
     # Number of trusted reverse proxies in front of the app. Used to pick the
     # real client IP from the X-Forwarded-For chain. Railway = 1 hop.
     TRUSTED_PROXY_HOPS: int = 1
-    ENVIRONMENT: str = "development"
+    # Secure by default: docs (/docs, /redoc) are only exposed when this is
+    # explicitly set to "development". A missing value in production stays safe.
+    ENVIRONMENT: str = "production"
     FRONTEND_ORIGIN: str = "http://localhost:5173"
     VERSION: str = "0.1.0"
 
