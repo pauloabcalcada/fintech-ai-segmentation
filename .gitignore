@@ -44,6 +44,9 @@ CLAUDE.md
 .cursor/
 
 
+# Deployment platform config (not used — deployed on Railway)
+fly.toml
+
 # Data
 data/
 skills-lock.json

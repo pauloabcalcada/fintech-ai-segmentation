@@ -1,110 +1,95 @@
 ## Project Folder Structure
 
-This project follows a standard analytics + ML + app architecture aligned with the `fintech-ai-segmentation-summary.md` design.
-
-- `data/raw` — original synthetic data exported from Faker and any external sources.
-- `data/processed` — cleaned, feature-engineered datasets ready for modeling and dashboard consumption.
-- `notebooks` — Jupyter notebooks for EDA, cohort analysis, RFM, clustering, unit economics, and churn modeling.
-- `src/backend` — FastAPI backend application (API endpoints, business logic, services).
-- `src/frontend` — Next.js dashboard code (pages, components, charts).
-- `src/agent` — LangGraph agent, Pydantic schemas, and LLM orchestration logic.
-- `src/ml` — reusable ML pipeline code (feature engineering, training, evaluation, model artifacts).
-- `src/api` — shared request/response models and client abstractions between services.
-- `src/db` — database models and migrations (SQLAlchemy, Supabase/PostgreSQL integration).
-- `src/config` — configuration, settings, and environment management.
-- `tests/unit` — fast unit tests for isolated pieces of logic.
-- `tests/integration` — end-to-end and API tests that span multiple layers.
-- `docs` — documentation (this file plus additional guides like setup, architecture, and usage).
-- `infra/docker` — Dockerfiles and local container orchestration.
-- `infra/deployment` — deployment manifests and scripts for Railway and related infra.
-
-This structure keeps experimentation (`notebooks`) clearly separated from production code (`src`), and cleanly isolates infrastructure, tests, and data lifecycle.
-
----
-
-## Reference Pattern: Production AI App Structure
-
-The pattern below (from a reference production AI app) captures the layered folder conventions that this project follows and should extend toward as the AI agent and serving layers mature.
+This project follows a standard analytics + ML + app architecture as described in `fintech-ai-segmentation-summary.md`.
 
 ```
-production-ai-app/
-├── app/
-│   ├── main.py                        # FastAPI entry, config, schemas, containerized
-│   ├── config.py
-│   ├── models.py
+Fintech_AI_Segmentation/
+├── src/
+│   └── fintech_ai_segmentation/
+│       ├── __init__.py
+│       ├── base_tables.py              # Pydantic schemas for raw table contracts
+│       ├── faker_base_generation.py    # Synthetic data generation (Faker pt_BR)
+│       ├── rfm_features.py             # RFM feature engineering pipeline
+│       ├── cohort_aggregates.py        # Cohort-level aggregation logic
+│       ├── agent/
+│       │   ├── llm_client.py           # OpenRouter LLM client (OpenAI-compatible)
+│       │   ├── prompts.py              # Prompt templates
+│       │   ├── recommendation_agent.py # LangGraph agent (4-node conditional graph)
+│       │   └── schemas.py              # Pydantic output schemas
+│       └── app/
+│           ├── main.py                 # FastAPI entry point + CORS + rate limiter
+│           ├── settings.py             # Pydantic settings (env vars)
+│           ├── database.py             # SQLAlchemy engine + session factory
+│           ├── middleware.py           # Security middleware (DEMO_PASSWORD auth)
+│           ├── client_ip.py            # Client IP extraction utility
+│           ├── repositories/
+│           │   ├── customer.py         # Customer queries (list, detail, mart)
+│           │   ├── dashboard.py        # Aggregated KPI queries
+│           │   └── recommendation.py   # Recommendation log store
+│           ├── routers/
+│           │   ├── customers.py        # GET /customers, GET /customers/:id, POST /customers/:id/analyze
+│           │   ├── dashboard.py        # GET /dashboard/summary, GET /dashboard/aggregates
+│           │   └── health.py           # GET /health
+│           └── schemas/
+│               ├── customer.py         # Customer request/response models
+│               └── dashboard.py        # Dashboard response models
+├── frontend/                           # React + Vite + Tailwind + shadcn/ui + Recharts
+│   ├── src/
+│   │   ├── pages/                      # Dashboard, Customers list, Customer detail
+│   │   ├── components/                 # Shared UI components
+│   │   ├── context/                    # React context (theme, auth)
+│   │   ├── i18n/                       # Translations
+│   │   └── lib/                        # API client, utilities
+│   ├── public/
 │   ├── Dockerfile
-│   ├── components/
-│   │   ├── hybrid_retriever.py        # Custom retrieval: hybrid search + reranking
-│   │   └── reranker.py
-│   ├── services/
-│   │   ├── rag_pipeline.py            # Core business logic: pipeline, cache,
-│   │   ├── semantic_cache.py          #   memory, rewriting, routing
-│   │   ├── conversation.py
-│   │   ├── query_rewriter.py
-│   │   └── query_router.py
-│   ├── prompts/
-│   │   ├── templates.py               # Versioned, type-specific, hot-swappable
-│   │   └── registry.py
-│   ├── agents/
-│   │   ├── document_grader.py         # Intelligence layer: self-correcting
-│   │   ├── query_decomposer.py        #   retrieval, LLM-driven source selection
-│   │   ├── adaptive_router.py
-│   │   └── tools/
-│   │       ├── vector_search.py       # Pluggable tool definitions
-│   │       ├── web_search.py
-│   │       └── code_search.py
-│   └── security/
-│       ├── input_guard.py             # Three guard layers: input, content, output
-│       ├── content_filter.py
-│       └── output_filter.py
-├── evaluation/
-│   ├── golden_dataset.json            # Golden test set, offline + online pipelines,
-│   ├── offline_eval.py                #   tracked history
-│   ├── online_monitor.py
-│   └── eval_results/
-├── observability/
-│   ├── tracer.py                      # Per-stage tracing, feedback capture,
-│   ├── feedback.py                    #   cost breakdown
-│   └── cost_tracker.py
+│   ├── Dockerfile.dev
+│   ├── nginx.conf
+│   ├── vite.config.ts
+│   └── package.json
+├── notebooks/
+│   ├── 0.Data_Generation.ipynb         # Orchestrates data gen + validation
+│   ├── 1.EDA_demographic_analysis.ipynb
+│   ├── 2.EDA_cohort_analysis.ipynb
+│   ├── 3.EDA_RFM_Clustering.ipynb
+│   ├── EDA_Validation_Fake_Dataset.ipynb
+│   └── snapshots/                      # Static HTML exports of key notebook states
 ├── data/
-│   ├── raw/                           # Raw → processed → index config
-│   ├── processed/
-│   └── index_config/
-├── scripts/
-│   ├── seed.py                        # Seed, migrate, healthcheck
-│   ├── migrate.py
-│   └── healthcheck.py
-├── frontend/
-│   ├── app.py                         # UI, containerized separately
-│   ├── static/
-│   ├── requirements.txt
-│   └── Dockerfile
+│   └── raw/                            # Synthetic CSVs (customers, transactions, products, customer_products)
 ├── tests/
-│   ├── test_retrieval.py              # Retrieval, cache, routing tests. CI-ready.
-│   ├── test_cache.py
-│   └── test_routing.py
+│   └── unit/                           # Unit tests (pytest)
+├── supabase/
+│   ├── base_schema.sql                 # Raw table DDL
+│   ├── customers_analytics_view.sql    # customer_analysis mart view
+│   └── phase1_app_layer.sql            # App-layer tables (recommendation_log, rate_limit)
+├── scripts/
+│   └── load_raw_tables.sh              # Bulk-loads raw CSVs into Supabase via psql COPY
 ├── docs/
-│   ├── architecture.md                # Architecture, API ref, deployment guide
-│   ├── api-reference.md
-│   └── deployment.md
-├── .claude/
-│   └── rules/
-│       ├── code-style.md              # AI coding agent context, rules, project memory
-│       └── testing.md
-├── CLAUDE.md
-├── AGENTS.md
+│   ├── fintech-ai-segmentation-summary.md
+│   ├── project-structure.md            # This file
+│   ├── deployment-guide.md
+│   ├── data-generation-summary.md
+│   ├── kpi-dashboard-ranking.md
+│   ├── project-journey.md
+│   ├── security/
+│   │   └── pentest-2026-06-09.md
+│   └── images/
+├── infra/
+│   └── (future: deployment manifests, Railway config)
+├── Dockerfile                          # Backend Dockerfile
 ├── docker-compose.yml
-├── pyproject.toml
-└── README.md
+├── docker-compose.override.yml
+├── pyproject.toml                      # Poetry config + dev dependencies
+├── poetry.lock
+├── CLAUDE.md
+└── .env.example
 ```
 
-### Key conventions from this pattern
+### Layer responsibilities
 
-- **`app/services/`** — Core business logic lives here (pipelines, caches, routing). Keep it separate from entry points (`main.py`) and data models (`models.py`).
-- **`app/agents/`** — Intelligence layer (LLM-driven nodes, graders, decomposers). Tools live under `agents/tools/` as pluggable definitions.
-- **`app/prompts/`** — Prompt templates are versioned and registered centrally, not scattered across nodes.
-- **`app/security/`** — Guard layers (input → content → output) are explicit modules, not inline conditionals.
-- **`evaluation/`** — Golden datasets and offline/online eval pipelines are first-class citizens, not afterthoughts.
-- **`observability/`** — Tracing, feedback capture, and cost tracking are isolated from business logic.
-- **`scripts/`** — Operational scripts (seed, migrate, healthcheck) live outside `src/` and `app/`.
-- **`.claude/rules/`** — Agent coding context and project-specific rules live here for AI-assisted development.
+- **`src/fintech_ai_segmentation/`** — All Python source: data generation, feature engineering, FastAPI app, LangGraph agent. Single package under a `src/` layout.
+- **`frontend/`** — React SPA. Communicates only with the FastAPI backend; never holds DB credentials.
+- **`notebooks/`** — Exploratory and analytical work. Self-contained per notebook; outputs are CSV aggregates or mart writes.
+- **`supabase/`** — SQL schema and migrations. The `customer_analysis` mart is the single source of truth for the agent and dashboard.
+- **`scripts/`** — Operational scripts outside `src/` (bulk load, healthcheck).
+- **`tests/unit/`** — Fast, isolated pytest tests covering API endpoints, agent logic, and feature engineering.
+- **`docs/`** — Project documentation and architecture references.
