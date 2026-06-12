@@ -61,7 +61,7 @@ class AnalyzeRequest(BaseModel):
 
 router = APIRouter()
 
-_analyze_semaphore = asyncio.Semaphore(2)
+_analyze_semaphore = asyncio.Semaphore(10)
 
 
 @router.get("/customers", response_model=CustomerListResponse)
