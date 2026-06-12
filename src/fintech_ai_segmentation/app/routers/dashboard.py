@@ -1,3 +1,12 @@
+"""Dashboard endpoints.
+
+GET /dashboard/summary    — KPI cards, acquisition cost by channel, product
+                            ownership distribution. All data from the mart +
+                            raw tables; no heavy joins.
+GET /dashboard/aggregates — Cohort activity heatmap and channel M6 retention.
+                            Reads from pre-computed tables written by Notebook 2.
+"""
+
 from __future__ import annotations
 
 from fastapi import APIRouter, Depends

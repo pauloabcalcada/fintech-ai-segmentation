@@ -1,3 +1,20 @@
+"""FastAPI application factory and startup/shutdown lifecycle.
+
+``create_app()`` is the single entry point for wiring together all layers:
+- Middleware stack: CORS → SecurityHeaders → RequestLog
+- Routers: health, customers, dashboard
+- Lifespan: opens the DB connection and pre-loads the ``AggregateCache``
+  on startup; disposes the engine on shutdown
+
+``AggregateCache`` holds cluster and population RFM averages computed once
+at boot rather than on every request. It is stored in a module-level variable
+and exposed via ``get_aggregate_cache()`` so routers can inject it through
+FastAPI's dependency system.
+
+Swagger UI and the OpenAPI schema are only served in ``development``
+environment to avoid leaking the full API surface in production.
+"""
+
 from __future__ import annotations
 
 from contextlib import asynccontextmanager

@@ -1,3 +1,25 @@
+"""Customer data access layer.
+
+``CustomerRepository`` is the only place in the codebase that reads from
+``customer_analysis`` and ``customers_raw``. All SQL is written as SQLAlchemy
+``text()`` with named bind parameters — no string interpolation, no injection
+risk.
+
+``AggregateCache`` is loaded once at startup (see ``main.py`` lifespan) and
+injected into the repository via ``get_customer_repository()``. It holds
+cluster-level and population-level RFM averages that are appended to every
+``CustomerProfile`` without an extra per-request query.
+
+Key design decisions:
+- Sort column is validated against ``_SORT_ALLOWLIST`` before interpolation
+  into the ORDER BY clause — the only dynamic SQL in the file.
+- ``_PROFILE_SQL`` computes ``cluster_position`` (bottom_20/mid_60/top_20)
+  and five population-relative percentiles in a single window-function query
+  so the frontend can display contextual rankings without a second round-trip.
+- ``get_activity_timeline`` queries ``transactions_raw`` directly (not the mart)
+  to show the full raw monthly transaction history sent to the AI agent.
+"""
+
 from __future__ import annotations
 
 import uuid

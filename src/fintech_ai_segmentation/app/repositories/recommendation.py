@@ -1,3 +1,26 @@
+"""Rate limiting and recommendation persistence.
+
+Three classes work together to protect the ``POST /customers/{id}/analyze``
+endpoint:
+
+``RateLimiter.check()`` returns one of three discriminated dataclasses:
+  - ``Allowed``      — no prior call in the last 24h for this customer + IP,
+                       safe to run the agent
+  - ``CachedResult`` — a recommendation already exists for this customer in
+                       the last 24h; return it without calling the LLM
+  - ``Blocked``      — the IP has hit the per-IP daily cap; includes a
+                       ``retry_after`` timestamp for the 429 response
+
+``RecommendationLogStore.record()`` persists the recommendation JSON after a
+successful agent run. IPs are hashed with a salted SHA-256 before storage so
+raw addresses are never written to the database (LGPD compliance).
+
+``get_recommendation_agent()`` is a FastAPI dependency factory that assembles
+the full agent stack (LLM client → repository → LangGraph agent) on demand.
+It is defined here rather than in the router to keep the router thin and make
+the dependency graph explicit.
+"""
+
 from __future__ import annotations
 
 import json

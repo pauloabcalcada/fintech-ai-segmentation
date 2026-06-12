@@ -1,3 +1,18 @@
+"""Async SQLAlchemy engine lifecycle management.
+
+A single global ``AsyncEngine`` is created at startup via ``init_db()`` and
+disposed at shutdown via ``close_db()``. All repositories receive the engine
+via ``get_engine()``, which raises if called before ``init_db()`` completes.
+
+``pool_pre_ping=True`` sends a lightweight ``SELECT 1`` before each connection
+is handed to a query, so stale connections from Supabase's idle-timeout are
+detected and recycled transparently rather than causing mid-request errors.
+
+The URL rewrite from ``postgresql://`` to ``postgresql+asyncpg://`` is needed
+because SQLAlchemy's async interface requires an async driver; asyncpg is the
+standard choice for PostgreSQL.
+"""
+
 from __future__ import annotations
 
 from sqlalchemy import text

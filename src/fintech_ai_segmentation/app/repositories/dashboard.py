@@ -1,3 +1,18 @@
+"""Dashboard data access layer.
+
+``DashboardRepository`` serves two endpoints:
+
+- ``get_summary()`` — runs five queries in a single DB connection to populate
+  KPI cards, acquisition cost by channel, product ownership distribution, and
+  the product × tenure bubble chart. All queries hit ``customer_analysis`` and
+  ``customers_raw``; none touch the heavier transaction tables.
+
+- ``get_aggregates()`` — reads from ``cohort_activity_matrix`` and
+  ``channel_m6_retention``, which are pre-computed tables written by Notebook 2
+  and loaded into Supabase. This keeps the cohort heatmap fast even with 50
+  months of history.
+"""
+
 from __future__ import annotations
 
 from fastapi import Depends

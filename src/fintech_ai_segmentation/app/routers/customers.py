@@ -1,3 +1,21 @@
+"""Customer endpoints.
+
+Four routes:
+
+GET  /customers            — paginated, filterable list (cluster, lifecycle,
+                             channel, free-text search). Max page_size = 100.
+GET  /customers/sample     — random sample of N customers per cluster; used by
+                             the frontend landing view before a filter is applied.
+GET  /customers/{id}       — full profile with RFM scores, cluster context,
+                             product ownership, and the most recent cached
+                             recommendation (if any, within 24h).
+POST /customers/{id}/analyze — triggers the LangGraph agent. Checks the rate
+                             limiter first (returns cached result or 429 if
+                             blocked), then acquires a semaphore slot to cap
+                             concurrent LLM calls at 2. Returns 503 if both
+                             slots are busy rather than queueing indefinitely.
+"""
+
 from __future__ import annotations
 
 import asyncio

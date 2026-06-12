@@ -1,4 +1,21 @@
-"""Cohort aggregate builders for Supabase materialisation."""
+"""Cohort aggregate builders for Supabase materialisation.
+
+Two functions transform the raw customer-level activity grid (produced in
+Notebook 2) into the aggregate tables that the dashboard reads:
+
+``build_cohort_activity_matrix`` — collapses the per-customer activity grid
+into a (cohort_month × activity_month) matrix with an ``active_rate`` per cell.
+Written to ``cohort_activity_matrix`` in Supabase; consumed by the retention
+heatmap on the dashboard.
+
+``build_channel_m6_retention`` — extracts M6 retention per channel from the
+channel KPI DataFrame. Written to ``channel_m6_retention`` in Supabase;
+consumed by the channel quality chart on the dashboard.
+
+Both functions are called from Notebook 2 after cohort analysis is complete.
+They produce DataFrames that are bulk-loaded into Supabase via the notebook's
+write-back cell.
+"""
 
 from __future__ import annotations
 
@@ -20,7 +37,9 @@ def build_cohort_activity_matrix(grid: pd.DataFrame) -> pd.DataFrame:
     One row per unique (cohort_month, calendar_month) pair.
     """
     if grid.empty:
-        return pd.DataFrame(columns=["cohort_month", "activity_month", "active_rate", "cohort_size"])
+        return pd.DataFrame(
+            columns=["cohort_month", "activity_month", "active_rate", "cohort_size"]
+        )
 
     cohort_sizes = (
         grid.groupby("cohort_month")["customer_id"]
@@ -40,10 +59,10 @@ def build_cohort_activity_matrix(grid: pd.DataFrame) -> pd.DataFrame:
     result["active_rate"] = result["active_count"] / result["cohort_size"]
 
     return (
-        result
-        .rename(columns={"calendar_month": "activity_month"})
-        .drop(columns="active_count")
-        [["cohort_month", "activity_month", "active_rate", "cohort_size"]]
+        result.rename(columns={"calendar_month": "activity_month"})
+        .drop(columns="active_count")[
+            ["cohort_month", "activity_month", "active_rate", "cohort_size"]
+        ]
         .reset_index(drop=True)
     )
 
@@ -64,15 +83,24 @@ def build_channel_m6_retention(channel_kpi: pd.DataFrame) -> pd.DataFrame:
     """
     if channel_kpi.empty:
         return pd.DataFrame(
-            columns=["acquisition_channel", "cohort_month", "m6_active_rate", "cohort_size"]
+            columns=[
+                "acquisition_channel",
+                "cohort_month",
+                "m6_active_rate",
+                "cohort_size",
+            ]
         )
 
     result = (
-        channel_kpi[["cohort_month", "acquisition_channel", "eligible_n_h6", "m6_active_rate"]]
+        channel_kpi[
+            ["cohort_month", "acquisition_channel", "eligible_n_h6", "m6_active_rate"]
+        ]
         .rename(columns={"eligible_n_h6": "cohort_size"})
         .dropna(subset=["m6_active_rate"])
         .loc[lambda df: df["cohort_size"] > 0]
         .reset_index(drop=True)
     )
 
-    return result[["acquisition_channel", "cohort_month", "m6_active_rate", "cohort_size"]]
+    return result[
+        ["acquisition_channel", "cohort_month", "m6_active_rate", "cohort_size"]
+    ]

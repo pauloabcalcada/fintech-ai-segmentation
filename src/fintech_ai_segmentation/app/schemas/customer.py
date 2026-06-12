@@ -1,3 +1,18 @@
+"""Pydantic response models for customer endpoints.
+
+``CustomerSummary``        — lightweight row for the paginated list view
+``CustomerProfile``        — full detail view including RFM scores, cluster
+                             context, product flags, percentile rankings, and
+                             the optional cached recommendation payload
+``CustomerProfileResponse``— wraps ``CustomerProfile`` with the monthly
+                             activity timeline
+``ActivityTimelineEntry``  — one row per calendar month of transaction history
+``RFMAverages``            — cluster-level or population-level RFM averages
+                             (injected from ``AggregateCache``)
+``ClusterProductProfile``  — per-cluster product ownership rates, used to
+                             render the product mix comparison panel
+"""
+
 from __future__ import annotations
 
 import uuid

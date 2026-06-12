@@ -1,3 +1,19 @@
+"""Pydantic response models for dashboard endpoints.
+
+``DashboardSummaryResponse``   — top-level wrapper for /dashboard/summary:
+    KpiCards                   — total customers, at-risk count, per-cluster
+                                 breakdown with avg RFM and avg CAC
+    AcquisitionCostByChannel   — average CAC per acquisition channel
+    PopulationByProductsOwned  — customer count bucketed by number of products
+    ProductOwnershipVsTenure   — avg tenure per products-owned bucket (bubble chart)
+    MostCommonProduct          — active ownership count per product type
+
+``DashboardAggregatesResponse`` — top-level wrapper for /dashboard/aggregates:
+    CohortActivityEntry        — one cell of the retention heatmap
+                                 (cohort_month × activity_month)
+    ChannelM6RetentionEntry    — M6 retention rate per channel per cohort
+"""
+
 from __future__ import annotations
 
 from pydantic import BaseModel

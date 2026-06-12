@@ -1,3 +1,18 @@
+"""Application settings loaded from environment variables and .env file.
+
+Pydantic-settings reads values from the environment first, then falls back
+to ``.env``. The ``@lru_cache`` on ``get_settings()`` means the file is
+parsed exactly once per process — callers can import and call ``get_settings()``
+freely without re-reading disk.
+
+Defaults are chosen to be safe when a variable is missing in production:
+- ``ENVIRONMENT`` defaults to ``"production"``, so docs are hidden unless
+  explicitly overridden to ``"development"``.
+- ``TRUSTED_PROXY_HOPS`` defaults to 1 (Railway's single proxy layer).
+- ``IP_HASH_SALT`` defaults to ``""`` — workable but weaker; set a real value
+  in Railway Variables to prevent brute-forcing rate-limit records.
+"""
+
 from __future__ import annotations
 
 from functools import lru_cache

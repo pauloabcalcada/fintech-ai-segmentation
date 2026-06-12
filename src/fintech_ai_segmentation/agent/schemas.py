@@ -1,3 +1,11 @@
+"""Pydantic output schema for the LangGraph recommendation agent.
+
+A single model, ``RecommendationOutput``, is the contract between the LLM
+response and the rest of the application. Every field is validated by Pydantic
+before the recommendation reaches the API caller, so the frontend always
+receives a well-typed object even if the LLM returns unexpected values.
+"""
+
 from __future__ import annotations
 
 from typing import Literal

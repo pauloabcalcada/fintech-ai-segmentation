@@ -1,11 +1,29 @@
+"""Prompt builders for the four recommendation strategies.
+
+Each strategy has a tailored system prompt (``_STRATEGY_BODIES``) that
+instructs the LLM to take a specific role — retention, upsell, reactivation,
+or activation — before seeing the customer profile. The prompts share a common
+``_PARAMETER_GLOSSARY`` (defines every input field so the LLM can reference
+exact numbers) and ``_JSON_SCHEMA`` (the required output structure).
+
+The public API is two functions:
+- ``build_system_prompt(strategy, language)`` — assembles the full system prompt
+- ``build_user_message(profile, ...)`` — serialises a customer profile as the
+  user turn, sanitising free-text fields to block prompt injection.
+"""
+
 from __future__ import annotations
 
-from fintech_ai_segmentation.app.schemas.customer import ActivityTimelineEntry, CustomerProfile
+from fintech_ai_segmentation.app.schemas.customer import (
+    ActivityTimelineEntry,
+    CustomerProfile,
+)
 
 
 def _sanitize(s: str) -> str:
     """Remove newlines and carriage returns to block prompt injection via free-text customer fields."""
     return s.replace("\n", " ").replace("\r", " ")
+
 
 _PARAMETER_GLOSSARY = """
 Parameter reference — use these definitions to interpret each field:
@@ -88,13 +106,15 @@ ACTIVATION_SYSTEM = build_system_prompt("activation")
 
 def _products_list(profile: CustomerProfile) -> str:
     owned = [
-        name for name, flag in [
+        name
+        for name, flag in [
             ("wallet", profile.has_wallet),
             ("credit card", profile.has_credit_card),
             ("investment account", profile.has_investment),
             ("insurance", profile.has_insurance),
             ("loan", profile.has_loan),
-        ] if flag
+        ]
+        if flag
     ]
     return ", ".join(owned) if owned else "none"
 
@@ -103,7 +123,9 @@ def _timeline_summary(timeline: list[ActivityTimelineEntry]) -> str:
     if not timeline:
         return "no transaction history"
     last = timeline[-6:]
-    return "; ".join(f"{e.year_month}: {e.tx_count} tx (R${e.total_amount:.0f})" for e in last)
+    return "; ".join(
+        f"{e.year_month}: {e.tx_count} tx (R${e.total_amount:.0f})" for e in last
+    )
 
 
 def build_user_message(
