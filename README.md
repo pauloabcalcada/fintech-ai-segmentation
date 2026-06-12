@@ -31,6 +31,10 @@ A machine learning segmentation model groups customers by behavior. Those segmen
 On top of that, a business dashboard gives the commercial team a live view of segment health and KPI evolution. No SQL, no spreadsheets.
 
 <p align="center">
+  <img src="docs/images/AI_Agent_Example.png" alt="AI agent recommendation example" width="840" />
+</p>
+
+<p align="center">
   <img src="frontend/src/assets/dashboard-preview.png" alt="SynaptiqPay business dashboard" width="840" />
 </p>
 
