@@ -56,30 +56,32 @@ Fintech_AI_Segmentation/
 ├── data/
 │   └── raw/                            # Synthetic CSVs (customers, transactions, products, customer_products)
 ├── tests/
-│   └── unit/                           # Unit tests (pytest)
+│   ├── unit/                           # Unit tests (pytest) — no DB required
+│   └── integration/                    # Integration tests — require SUPABASE_DATABASE_URL
 ├── supabase/
 │   ├── base_schema.sql                 # Raw table DDL
-│   ├── customers_analytics_view.sql    # customer_analysis mart view
-│   └── phase1_app_layer.sql            # App-layer tables (recommendation_log, rate_limit)
+│   ├── phase1_app_layer.sql            # App-layer tables (recommendation_log, cohort matrices)
+│   └── customer_analysis_schema.sql    # customer_analysis mart DDL (RFM + K-Means output)
 ├── scripts/
-│   └── load_raw_tables.sh              # Bulk-loads raw CSVs into Supabase via psql COPY
+│   ├── load_raw_tables.sh              # Legacy: bulk-loads raw CSVs via psql COPY
+│   ├── data_loader.py                  # Zero-click setup: schema → Faker generation → COPY load → RFM mart
+│   └── load_test_analyze.py            # Concurrent load test for POST /customers/:id/analyze
 ├── docs/
 │   ├── fintech-ai-segmentation-summary.md
 │   ├── project-structure.md            # This file
-│   ├── deployment-guide.md
+│   ├── deployment-guide.md             # Railway production deployment (step-by-step)
 │   ├── data-generation-summary.md
 │   ├── kpi-dashboard-ranking.md
 │   ├── project-journey.md
 │   ├── security/
 │   │   └── pentest-2026-06-09.md
 │   └── images/
-├── infra/
-│   └── (future: deployment manifests, Railway config)
-├── Dockerfile                          # Backend Dockerfile
-├── docker-compose.yml
+├── Dockerfile                          # Backend Dockerfile (multi-stage, runs as non-root)
+├── docker-compose.yml                  # backend + frontend + data-loader (one-shot setup service)
 ├── docker-compose.override.yml
 ├── pyproject.toml                      # Poetry config + dev dependencies
 ├── poetry.lock
+├── SETUP.md                            # Local setup guide (Docker only, six steps)
 ├── CLAUDE.md
 └── .env.example
 ```
@@ -90,6 +92,7 @@ Fintech_AI_Segmentation/
 - **`frontend/`** — React SPA. Communicates only with the FastAPI backend; never holds DB credentials.
 - **`notebooks/`** — Exploratory and analytical work. Self-contained per notebook; outputs are CSV aggregates or mart writes.
 - **`supabase/`** — SQL schema and migrations. The `customer_analysis` mart is the single source of truth for the agent and dashboard.
-- **`scripts/`** — Operational scripts outside `src/` (bulk load, healthcheck).
-- **`tests/unit/`** — Fast, isolated pytest tests covering API endpoints, agent logic, and feature engineering.
+- **`scripts/`** — Operational scripts outside `src/`. `data_loader.py` is the canonical zero-click setup path; `load_raw_tables.sh` is the legacy psql-based alternative.
+- **`tests/unit/`** — Fast, isolated pytest tests covering API endpoints, agent logic, and feature engineering. No database required.
+- **`tests/integration/`** — Integration tests that assert on real Supabase tables. Skipped automatically when `SUPABASE_DATABASE_URL` is absent.
 - **`docs/`** — Project documentation and architecture references.

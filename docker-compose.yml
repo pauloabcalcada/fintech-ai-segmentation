@@ -18,3 +18,14 @@ services:
     depends_on:
       - backend
     restart: unless-stopped
+
+  data-loader:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    command: python scripts/data_loader.py
+    env_file:
+      - .env
+    volumes:
+      - ./data:/app/data
+      - ./supabase:/app/supabase

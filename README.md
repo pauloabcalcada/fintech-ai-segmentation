@@ -14,6 +14,10 @@
   <a href="https://fintech-ai.up.railway.app/customers">Try the Agent</a>
 </p>
 
+<p align="center">
+  <a href="SETUP.md">Local setup guide</a>
+</p>
+
 ---
 
 ## The Problem

@@ -79,7 +79,7 @@ Railway Hobby plan gives **$5/month** of free compute credit.
 
 5. Click **Deploy** and wait for the build to complete (~3 minutes)
 6. Click **Settings → Networking → Generate Domain**, set port `8000`
-7. Verify: visit `https://<backend-url>/health` → `{"status": "ok", "environment": "production"}`
+7. Verify: visit `https://<backend-url>/health` → `{"status": "ok", "version": "0.1.0"}`
 
 > **Security note:** Variables are encrypted at rest in Railway's vault and injected at container startup — never stored in the Docker image or visible in build logs.
 

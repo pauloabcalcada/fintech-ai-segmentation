@@ -29,6 +29,9 @@ dependencies = [
 [tool.pytest.ini_options]
 pythonpath = ["src"]
 asyncio_mode = "auto"
+markers = [
+    "slow: marks tests as slow (run the full data loader end-to-end; deselect with -m 'not slow')",
+]
 
 [build-system]
 requires = ["poetry-core>=2.0.0,<3.0.0"]

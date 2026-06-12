@@ -1,5 +1,10 @@
 -- Supabase base schema for SynaptiqPay raw tables.
 -- These tables are populated from Faker-generated CSV/Parquet files.
+--
+-- Schema load order:
+--   1. base_schema.sql            — this file (raw tables; no dependencies)
+--   2. phase1_app_layer.sql       — app-layer tables (references customers_raw)
+--   3. customer_analysis_schema.sql — mart table (references customers_raw)
 
 create table if not exists customers_raw (
     customer_id uuid primary key,
