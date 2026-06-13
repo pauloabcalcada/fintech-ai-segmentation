@@ -61,7 +61,8 @@ Fintech_AI_Segmentation/
 ├── supabase/
 │   ├── base_schema.sql                 # Raw table DDL
 │   ├── phase1_app_layer.sql            # App-layer tables (recommendation_log, cohort matrices)
-│   └── customer_analysis_schema.sql    # customer_analysis mart DDL (RFM + K-Means output)
+│   ├── customer_analysis_schema.sql    # customer_analysis mart DDL (RFM + K-Means output)
+│   └── customers_analytics_view.sql    # Legacy unified view (references pre-mart schema tables; not active)
 ├── scripts/
 │   ├── load_raw_tables.sh              # Legacy: bulk-loads raw CSVs via psql COPY
 │   ├── data_loader.py                  # Zero-click setup: schema → Faker generation → COPY load → RFM mart
