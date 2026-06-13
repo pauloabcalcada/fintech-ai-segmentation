@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Sparkles } from "lucide-react";
+import { SpinnerWords } from "@/components/SpinnerWords";
 import { InfoTooltip } from "@/components/ui/InfoTooltip";
 import {
   analyzeCustomer,
@@ -208,10 +209,7 @@ export function AiRecommendationPanel({
 
       {/* Loading state */}
       {status === "loading" && (
-        <div className="flex items-center gap-3 py-6 text-muted-foreground text-sm">
-          <div className="h-4 w-4 rounded-full border-2 border-primary border-t-transparent animate-spin" />
-          {t("aiPanel.analyzing")}
-        </div>
+        <SpinnerWords phrasesKey="aiPanel.analyzingPhrases" />
       )}
 
       {/* Success state */}

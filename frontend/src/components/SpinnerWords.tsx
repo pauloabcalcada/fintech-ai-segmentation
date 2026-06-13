@@ -3,9 +3,9 @@ import { useTranslation } from "react-i18next";
 
 const DOTS = ["⠋", "⠙", "⠹", "⠸", "⠼", "⠴", "⠦", "⠧", "⠇", "⠏"];
 
-export function SpinnerWords() {
+export function SpinnerWords({ phrasesKey = "customers.loadingPhrases" }: { phrasesKey?: string } = {}) {
   const { t } = useTranslation();
-  const phrases = t("customers.loadingPhrases", { returnObjects: true }) as string[];
+  const phrases = t(phrasesKey, { returnObjects: true }) as string[];
 
   const [phraseIdx, setPhraseIdx] = useState(
     () => Math.floor(Math.random() * phrases.length)

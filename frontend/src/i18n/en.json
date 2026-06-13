@@ -64,6 +64,19 @@
     "copied": "Copied!",
     "reAnalyzeToGenerate": "Re-analyze to generate notification",
     "idleHint": "Click Analyze to generate a personalized recommendation.",
+    "analyzingPhrases": [
+      "Fetching customer profile…",
+      "Loading RFM scores…",
+      "Reading transaction history…",
+      "Checking product ownership…",
+      "Assembling customer context…",
+      "Routing to LLM provider…",
+      "Sending request to model…",
+      "Waiting for LLM response…",
+      "Parsing model output…",
+      "Validating recommendation…",
+      "Formatting results…"
+    ],
     "fields": {
       "riskLevel": "Risk Level",
       "riskLevels": {
