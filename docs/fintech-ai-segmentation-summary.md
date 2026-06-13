@@ -266,7 +266,8 @@ return structured response
 |---|---|---|
 | GET | `/dashboard/summary` | Aggregated KPI counts (total customers, segment breakdown, at-risk count) |
 | GET | `/dashboard/aggregates` | Cohort retention heatmap data + segment distribution for charts |
-| GET | `/customers` | Paginated, filterable customer list |
+| GET | `/customers` | Paginated, filterable customer list (backend only — not surfaced in the UI) |
+| GET | `/customers/sample` | Random sample of N customers per cluster; used by the Customer Explorer |
 | GET | `/customers/{id}` | Individual customer profile + RFM scores + segment |
 | POST | `/customers/{id}/analyze` | Trigger LangGraph AI agent (OpenRouter LLM, LangSmith traced) → returns structured recommendation |
 
@@ -284,7 +285,7 @@ return structured response
 |---|---|
 | `/` | Landing page — hero metrics (8k customers, 3 clusters, 50 months history, 1.4s latency, 4 agent routes), tech stack grid, dashboard preview screenshot |
 | `/dashboard` | KPI cards (total customers, at-risk count, avg RFM score, segment breakdown) + segment distribution chart + cohort retention heatmap |
-| `/customers` | Filterable, sortable customer table with segment badge + RFM indicator |
+| `/customers` | Customer Explorer — random sample of customers across all segments (3 per cluster by default), with a refresh button to reshuffle. Click any row to expand the full profile inline. Pagination is intentionally absent: the sample pattern keeps the demo focused on the agent experience rather than browsing 8,000 rows. |
 | `/customers/:id` | Full customer profile + RFM scores + cohort context + product ownership + AI recommendation panel (strategy, risk level, suggested product, notification text) |
 
 ---
@@ -408,7 +409,7 @@ Every endpoint (`/customers`, `/customers/{id}`, `/customers/{id}/analyze`, `/da
 
 ### Known limitation 2: Customer PII is enumerable
 
-`GET /customers` returns each customer's name and email, and read endpoints have no rate limit (only the AI agent endpoint is throttled). The page size cap of 100 bounds a single request but not pagination depth, so walking the pages dumps the full base of 8,000 names and emails in roughly 80 requests. The response even reports `total` so a caller knows how many pages to fetch. On synthetic data this is harmless, but the same code against a real database is an excessive data exposure and phishing target list risk (OWASP API3/API4).
+The frontend does not expose pagination — the Customer Explorer uses `GET /customers/sample` and shows a fixed sample per session. However, `GET /customers` exists on the backend with full pagination and returns name, email, and a `total` field. Read endpoints have no rate limit (only the AI agent endpoint is throttled). A caller who knows the URL can walk all pages and dump the full base of 8,000 names and emails in roughly 80 requests. On synthetic data this is harmless, but the same backend code against a real database is an excessive data exposure and phishing target list risk (OWASP API3/API4).
 
 A production version would fix this with data minimization (drop name and email from the list view, keep them only in the detail view and mask them there, for example `da***@gmail.com`) and per IP rate limiting on read endpoints. Both reduce the risk sharply even before authentication is added.
 
