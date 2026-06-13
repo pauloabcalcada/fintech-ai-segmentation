@@ -85,7 +85,7 @@ describe("SpinnerWords", () => {
     const before = screen.getByTestId("customer-detail-inline-loading").textContent ?? "";
 
     act(() => {
-      vi.advanceTimersByTime(700);
+      vi.advanceTimersByTime(2000);
     });
 
     const after = screen.getByTestId("customer-detail-inline-loading").textContent ?? "";

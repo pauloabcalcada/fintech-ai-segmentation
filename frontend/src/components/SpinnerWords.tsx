@@ -15,7 +15,7 @@ export function SpinnerWords({ phrasesKey = "customers.loadingPhrases" }: { phra
   useEffect(() => {
     const id = setInterval(() => {
       setPhraseIdx((i) => (i + 1) % phrases.length);
-    }, 700);
+    }, 2000);
     return () => clearInterval(id);
   }, [phrases.length]);
 
