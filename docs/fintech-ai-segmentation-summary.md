@@ -5,9 +5,9 @@
 
 ## Problem Statement
 
-SynaptiqPay is a Brazilian fintech with 8,000 digital wallet customers. Their commercial manager treats every customer identically — same offers, same communication, same retention strategy. This is inefficient because customers behave very differently from each other. Some are highly engaged and profitable. Others are dormant and about to leave.
+SynaptiqPay is a Brazilian fintech with 8,000 digital wallet customers. The commercial team had rich transaction data but no clear way to segment the base or decide what to offer each person. Every customer received the same treatment — same offers, same communication, same retention strategy — regardless of whether they were highly engaged, quietly drifting, or already gone.
 
-Every Monday morning, the commercial manager spends 3+ hours manually analyzing spreadsheets to answer basic questions. This project replaces that manual workflow by leveraging deep analytical work to uncover customer behavioral profiles. We built a customized dashboard and an AI recommendation system to drive value through personalized actions—specifically, reactivating dormant or at-risk customers and upselling the most engaged ones, ultimately increasing overall ROI.
+We built a machine learning segmentation model that groups customers by behavior, then fed those segments — alongside RFM scores, cohort health, and product ownership signals — into an AI agent that recommends the right action for each customer. On top of that, a business dashboard gives the commercial team a live view of segment health and KPI evolution. The goal is higher ROI: retain at-risk customers, grow engaged ones, and turn insight into revenue.
 
 ---
 
@@ -52,12 +52,14 @@ STEP 4: What should we do about it?
 
 ### Discovery (EDA + Cohort)
 
-*(Notebook 1, Q1-Q2 in notebook flow)*
+*Notebook 1 — Q1–Q2*
+
 1. How is our customer base distributed by age, state, and acquisition channel?
 2. Which acquisition channel brings customers with the broadest product portfolios?
-2.1 Does broader product ownership correlate with longer tenure?
+   - Does broader product ownership correlate with longer tenure?
 
-*(Notebook 2, Q3–Q9 in notebook flow)*
+*Notebook 2 — Q3–Q10*
+
 3. Which acquisition month produces the most retained customers?
 4. At what month do most customers disengage? (tenure retention curve)
 5. Are recent cohorts healthier than older ones?
@@ -68,7 +70,9 @@ STEP 4: What should we do about it?
 10. Does broader product ownership drive retention?
 
 ### Behavioral Intelligence (RFM + Clustering)
-*(Notebook 3, Q11–Q15 in notebook flow)*
+
+*Notebook 3 — Q11–Q15*
+
 11. Who are our most valuable customers right now?
 12. What behavioral patterns define each customer segment?
 13. What is the RFM profile of each segment?
@@ -76,6 +80,7 @@ STEP 4: What should we do about it?
 15. How does credit and investment utilization vary across segments?
 
 ### AI Intelligence (LangGraph Agent)
+
 16. Given this customer's full profile, what product should we offer?
 17. What is the best retention strategy for this specific customer?
 18. What message tone and approach fits this customer's segment?
@@ -211,7 +216,7 @@ build_context  (fetch profile + activity timeline from Supabase)
   → at_risk_churner     → generate_retention
   → high_value_active   → generate_upsell
   → low_value_dormant   → generate_reactivation
-  → mid_value_regular   → generate_activation
+  → (no cluster / no tx) → generate_activation
         ↓
 [strategy node]  call OpenRouter LLM (gemini-flash / llama-70b / smart-auto)
   LangSmith traces every call (model, latency, tokens, prompt/response)
@@ -220,6 +225,8 @@ validate_output  (repair JSON → Pydantic RecommendationOutput)
         ↓
 return structured response
 ```
+
+> K-Means runs with k=3, producing three named clusters. The `generate_activation` branch is a fallback for customers with no transaction history who were never assigned a cluster. These customers are excluded from the Customer Explorer in the live app.
 
 ### Agent Input (per customer)
 ```json
