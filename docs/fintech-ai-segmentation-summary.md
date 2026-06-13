@@ -399,7 +399,7 @@ Chart: Line chart showing acquisition trend over time
 
 This is a portfolio project running on a fully synthetic dataset. Every customer, transaction, and identity is generated with Faker and maps to no real person. There is no real PII, no real money, and no production customer data involved.
 
-A security assessment was run against the live deployment (`docs/security/pentest-2026-06-09.md`). The injection surface is clean (all SQL is parameterized, the sort field is allowlisted), CORS is locked to the frontend origin, client IPs are hashed at rest, the page size is capped at 100, and secrets are kept out of the image and out of git. Low effort hardening from that assessment is already applied: the OpenAPI schema is disabled in production, the API returns baseline security headers, and the backend container runs as a non root user.
+A security assessment was run against the live deployment. The injection surface is clean (all SQL is parameterized, the sort field is allowlisted), CORS is locked to the frontend origin, client IPs are hashed at rest, the page size is capped at 100, and secrets are kept out of the image and out of git. Low effort hardening from that assessment is already applied: the OpenAPI schema is disabled in production, the API returns baseline security headers, and the backend container runs as a non root user.
 
 Two larger gaps remain open by design. They are acceptable for a synthetic showcase but would be blockers for a production deployment handling real customer data.
 
