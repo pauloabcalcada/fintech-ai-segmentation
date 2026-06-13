@@ -15,7 +15,8 @@
 </p>
 
 <p align="center">
-  <a href="SETUP.md">Local setup guide</a>
+  <a href="SETUP.md">Local setup guide</a> &nbsp;·&nbsp;
+  <a href="docs/fintech-ai-segmentation-summary.md">Detailed project overview</a>
 </p>
 
 ---
@@ -131,38 +132,6 @@ All fields are Pydantic-validated. The agent's reasoning is grounded in the cust
 | Containerization | Docker + Docker Compose | Local and VPS orchestration |
 | Deployment | Railway | Auto-deploy on push (frontend + backend) |
 | Dependency management | Poetry | Reproducible Python environment |
-
----
-
-## Running Locally
-
-**Prerequisites:** Python 3.11+, Poetry, Node 18+
-
-```bash
-# Clone and install backend dependencies
-git clone https://github.com/pauloabcalcada/fintech-ai-segmentation
-cd fintech-ai-segmentation
-poetry install --with dev
-```
-
-Create a `.env` file at the project root with:
-
-```
-SUPABASE_DATABASE_URL=your_supabase_postgres_url
-OPENROUTER_API_KEY=your_openrouter_key
-LANGSMITH_API_KEY=your_langsmith_key        # optional, for tracing
-```
-
-```bash
-# Start the backend (from project root)
-PYTHONPATH=src .venv/bin/uvicorn fintech_ai_segmentation.app.main:app --reload
-
-# Start the frontend (from project root, in a separate terminal)
-npm --prefix frontend install
-npm --prefix frontend run dev
-```
-
-The dashboard will be available at `http://localhost:5173`.
 
 ---
 
