@@ -14,7 +14,7 @@ Fintech_AI_Segmentation/
 │       ├── agent/
 │       │   ├── llm_client.py           # OpenRouter LLM client (OpenAI-compatible)
 │       │   ├── prompts.py              # Prompt templates
-│       │   ├── recommendation_agent.py # LangGraph agent (4-node conditional graph)
+│       │   ├── recommendation_agent.py # LangGraph agent (3-cluster conditional graph + no-tx fallback)
 │       │   └── schemas.py              # Pydantic output schemas
 │       └── app/
 │           ├── main.py                 # FastAPI entry point + CORS + rate limiter
@@ -73,8 +73,6 @@ Fintech_AI_Segmentation/
 │   ├── data-generation-summary.md
 │   ├── kpi-dashboard-ranking.md
 │   ├── project-journey.md
-│   ├── security/
-│   │   └── pentest-2026-06-09.md
 │   └── images/
 ├── Dockerfile                          # Backend Dockerfile (multi-stage, runs as non-root)
 ├── docker-compose.yml                  # backend + frontend + data-loader (one-shot setup service)
