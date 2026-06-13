@@ -53,7 +53,7 @@ Fintech_AI_Segmentation/
 │   ├── 3.EDA_RFM_Clustering.ipynb
 │   ├── EDA_Validation_Fake_Dataset.ipynb
 │   └── snapshots/                      # Static HTML exports of key notebook states
-├── data/
+├── data/                               # gitignored — generated locally by data_loader.py
 │   └── raw/                            # Synthetic CSVs (customers, transactions, products, customer_products)
 ├── tests/
 │   ├── unit/                           # Unit tests (pytest) — no DB required
@@ -65,14 +65,12 @@ Fintech_AI_Segmentation/
 ├── scripts/
 │   ├── load_raw_tables.sh              # Legacy: bulk-loads raw CSVs via psql COPY
 │   ├── data_loader.py                  # Zero-click setup: schema → Faker generation → COPY load → RFM mart
-│   └── load_test_analyze.py            # Concurrent load test for POST /customers/:id/analyze
+│   └── load_test_analyze.py            # Concurrent load test for POST /customers/:id/analyze (gitignored)
 ├── docs/
 │   ├── fintech-ai-segmentation-summary.md
 │   ├── project-structure.md            # This file
 │   ├── deployment-guide.md             # Railway production deployment (step-by-step)
 │   ├── data-generation-summary.md
-│   ├── kpi-dashboard-ranking.md
-│   ├── project-journey.md
 │   └── images/
 ├── Dockerfile                          # Backend Dockerfile (multi-stage, runs as non-root)
 ├── docker-compose.yml                  # backend + frontend + data-loader (one-shot setup service)
