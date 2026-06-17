@@ -91,9 +91,20 @@ _STRATEGY_BODIES: dict[str, str] = {
 }
 
 
+_LANGUAGE_NAMES: dict[str, str] = {
+    "en": "English",
+    "pt-BR": "Brazilian Portuguese",
+}
+
+
 def build_system_prompt(strategy: str, language: str = "en") -> str:
     body = _STRATEGY_BODIES[strategy]
-    lang_instruction = f"\nRespond entirely in {language}. All fields including notification_text must be in that language."
+    lang_name = _LANGUAGE_NAMES.get(language, language)
+    lang_instruction = (
+        f"\nIMPORTANT: You must respond entirely in {lang_name}. "
+        f"Every field in the JSON output — including notification_text — must be written in {lang_name}. "
+        f"Do not switch languages for any field, even if the customer is Brazilian."
+    )
     return f"{body}\n\n{_PARAMETER_GLOSSARY}\n{_JSON_SCHEMA}{lang_instruction}"
 
 
