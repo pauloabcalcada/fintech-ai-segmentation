@@ -273,7 +273,7 @@ export function CustomerDetailPage() {
         if (err instanceof NotFoundError) setNotFound(true);
       })
       .finally(() => setLoading(false));
-  }, [id]);
+  }, [id, i18n.language]);
 
   if (notFound) {
     return (
