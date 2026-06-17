@@ -389,6 +389,16 @@ Chart: Line chart showing acquisition trend over time
 ⬜ Run history log — persists each pipeline run with timestamp, row count processed, cluster quality metrics, and duration
 ```
 
+### Phase 5 — Agent Evaluation
+```
+⬜ Eval dataset — curated set of customer profiles with expected recommendation outputs per segment (ground-truth fixtures)
+⬜ LLM-as-judge scorer — secondary LLM call that scores each recommendation on grounding, actionability, and tone alignment; logs score to recommendation_log
+⬜ Human feedback loop — thumbs up/down on recommendations in the customer detail page; stored in Supabase and surfaced in LangSmith
+⬜ Prompt regression tests — run eval dataset on every prompt or model change; fail CI if mean score drops below threshold
+⬜ LangSmith eval integration — use LangSmith Datasets + Evaluators to track quality metrics across runs and model versions
+⬜ Eval dashboard panel — displays avg recommendation score per segment, pass/fail rate on regression suite, and recent human feedback trends
+```
+
 
 ---
 

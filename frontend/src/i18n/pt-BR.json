@@ -329,6 +329,12 @@
           "title": "Automação do Pipeline",
           "status": "PLANNED",
           "items": ["ETL totalmente automatizado — extração, transformação e carga no mart analítico sem etapas manuais", "Retreinamento do K-Means a cada atualização de dados, com resultados gravados de volta ao Supabase automaticamente", "Dashboard atualizado em tempo real à medida que novos dados de cluster e RFM chegam", "Verificações de qualidade agendadas monitorando inércia, silhouette score e equilíbrio de tamanho dos clusters ao longo do tempo", "Alertas de drift quando a composição dos segmentos muda além de um limite configurável entre execuções"]
+        },
+        {
+          "phase": "Fase 5",
+          "title": "Avaliação do Agente",
+          "status": "PLANNED",
+          "items": ["Dataset de avaliação com outputs esperados por segmento — o baseline contra o qual toda mudança de prompt é testada", "Avaliador LLM-as-judge que pontua cada recomendação em fundamentação, acionabilidade e tom — registrado no log de recomendações", "Loop de feedback humano: curtir ou rejeitar recomendações no dashboard, alimentando o LangSmith", "Testes de regressão de prompt no CI — qualquer queda de qualidade abaixo do limite bloqueia o build", "Datasets e Evaluators do LangSmith para comparação lado a lado da qualidade entre versões de modelos e prompts"]
         }
       ]
     },

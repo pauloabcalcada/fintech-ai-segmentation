@@ -329,6 +329,12 @@
           "title": "Pipeline Automation",
           "status": "PLANNED",
           "items": ["Fully automated ETL — extraction, transformation, and load into the analytics mart without manual steps", "K-Means retraining on every data refresh, with results written back to Supabase automatically", "Dashboard updates in real time as new cluster and RFM data lands", "Scheduled quality checks tracking inertia, silhouette score, and cluster size balance over time", "Drift alerts when segment composition shifts beyond a configurable threshold between runs"]
+        },
+        {
+          "phase": "Phase 5",
+          "title": "Agent Evaluation",
+          "status": "PLANNED",
+          "items": ["Curated eval dataset with expected outputs per segment — the baseline every prompt change is tested against", "LLM-as-judge scorer that rates each recommendation on grounding, actionability, and tone — logged to the recommendation store", "Human feedback loop: thumbs up/down on recommendations in the dashboard, feeding back into LangSmith", "Prompt regression tests in CI — any quality drop below threshold blocks the build", "LangSmith Datasets and Evaluators for side-by-side quality comparison across model and prompt versions"]
         }
       ]
     },
