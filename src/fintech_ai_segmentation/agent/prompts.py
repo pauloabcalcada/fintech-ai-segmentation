@@ -45,16 +45,16 @@ Parameter reference — use these definitions to interpret each field:
 - activity_trend: monthly transaction summary — shows engagement trajectory over time
 """
 
-_JSON_SCHEMA = """
+_JSON_SCHEMA_TEMPLATE = """
 Respond with a JSON object and nothing else — no markdown, no explanation outside the JSON:
-{
+{{
   "risk_level": "low" | "medium" | "high" | "critical",
   "recommended_action": "<one concrete action for the account manager to take>",
   "suggested_product": "<specific product or feature to offer>",
   "message_tone": "<tone descriptor for customer communication>",
   "reasoning": "<2-3 sentences grounded in the customer's actual data values — cite specific numbers>",
-  "notification_text": "<short personalised push notification (~160 chars) ready to send via app>"
-}
+  "notification_text": "<short personalised push notification (~160 chars) ready to send via app — write this in {lang_name}, regardless of the customer's nationality>"
+}}
 """
 
 _STRATEGY_BODIES: dict[str, str] = {
@@ -100,12 +100,9 @@ _LANGUAGE_NAMES: dict[str, str] = {
 def build_system_prompt(strategy: str, language: str = "en") -> str:
     body = _STRATEGY_BODIES[strategy]
     lang_name = _LANGUAGE_NAMES.get(language, language)
-    lang_instruction = (
-        f"\nIMPORTANT: You must respond entirely in {lang_name}. "
-        f"Every field in the JSON output — including notification_text — must be written in {lang_name}. "
-        f"Do not switch languages for any field, even if the customer is Brazilian."
-    )
-    return f"{body}\n\n{_PARAMETER_GLOSSARY}\n{_JSON_SCHEMA}{lang_instruction}"
+    json_schema = _JSON_SCHEMA_TEMPLATE.format(lang_name=lang_name)
+    lang_preamble = f"LANGUAGE RULE: Every field in your JSON response must be written in {lang_name}. This includes notification_text — write it in {lang_name} even though the customer is Brazilian.\n\n"
+    return f"{lang_preamble}{body}\n\n{_PARAMETER_GLOSSARY}\n{json_schema}"
 
 
 # Backward-compatible aliases used by recommendation_agent.py
