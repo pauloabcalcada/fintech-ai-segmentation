@@ -75,7 +75,11 @@ def _strategy_node(strategy_name: str, llm_client: OpenRouterLLMClient):
         )
         system_prompt = build_system_prompt(strategy_name, state["language"])
         user_message = build_user_message(
-            profile, timeline, cluster_avg_rfm, cohort_health=None
+            profile,
+            timeline,
+            cluster_avg_rfm,
+            cohort_health=None,
+            language=state["language"],
         )
         messages = [
             {"role": "system", "content": system_prompt},

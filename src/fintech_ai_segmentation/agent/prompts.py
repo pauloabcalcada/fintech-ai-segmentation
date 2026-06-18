@@ -141,10 +141,14 @@ def build_user_message(
     timeline: list[ActivityTimelineEntry],
     cluster_avg_rfm: float | None,
     cohort_health: str | None,
+    language: str = "en",
 ) -> str:
+    lang_name = _LANGUAGE_NAMES.get(language, language)
     avg = f"{cluster_avg_rfm:.2f}" if cluster_avg_rfm is not None else "n/a"
     health = _sanitize(cohort_health) if cohort_health else "n/a"
-    return f"""Customer profile:
+    return f"""Respond entirely in {lang_name}. Every JSON field must be in {lang_name}.
+
+Customer profile:
 - customer_name: {_sanitize(profile.name)}
 - cluster_name: {_sanitize(profile.cluster_name) if profile.cluster_name else "none (no transaction history)"}
 - cluster_position: {_sanitize(profile.cluster_position) if profile.cluster_position else "n/a"}
